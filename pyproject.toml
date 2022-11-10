@@ -29,7 +29,7 @@ addopts = "--benchmark-disable --doctest-modules"
 norecursedirs = [ "wps", "benchmarks", "test_data" ]
 testpaths = [
   "tests",
-  "opendrift",
+  "trajan",
 ]
 markers = [
   "slow:mark tests as slow",
