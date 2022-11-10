@@ -20,6 +20,7 @@ jobs:
           environment-file: environment.yml
           miniforge-version: latest
           miniforge-variant: Mambaforge
+          auto-update-conda: true
           python-version: ${{ matrix.python-version }}
       - name: Run tests
         run: |
