@@ -1,0 +1,9 @@
+name: trajan
+channels:
+  conda-forge
+dependencies:
+  - xarray
+  - netcdf4
+  - coloredlogs
+  - pytest
+  - toml

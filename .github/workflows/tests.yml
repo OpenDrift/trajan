@@ -1,0 +1,28 @@
+name: Tests
+
+on: [push]
+
+jobs:
+  tests:
+    name: pytests (${{ matrix.os }}, Mambaforge)
+    runs-on: ${{ matrix.os }}-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    strategy:
+      matrix:
+        os: ["ubuntu", "macos", "windows"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          environment-file: environment.yml
+          miniforge-version: latest
+          miniforge-variant: Mambaforge
+          python-version: ${{ matrix.python-version }}
+      - name: Run tests
+        run: |
+          conda activate test
+          pytest -vs --log-cli-level=debug
+
