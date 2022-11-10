@@ -15,13 +15,14 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v2.0
         with:
           environment-file: environment.yml
           miniforge-version: latest
           miniforge-variant: Mambaforge
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
+          use-mamba: true
       - name: Run tests
         run: |
           conda activate test
