@@ -6,4 +6,5 @@ dependencies:
   - netcdf4
   - coloredlogs
   - pytest
+  - pytest-benchmark
   - toml
