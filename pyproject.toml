@@ -13,6 +13,7 @@ scipy = ">=1.9"
 netCDF4 = ">=1.6"
 pyproj = ">=2.3"
 xarray = ">=2022.6.0"
+cartopy = ">=0.21"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.3"
