@@ -6,6 +6,7 @@ dependencies:
   - numpy
   - scipy
   - netcdf4
+  - h5netcdf
   - coloredlogs
   - pytest
   - pytest-benchmark
