@@ -2,7 +2,7 @@
 name = "trajan"
 version = "0.1.0"
 description = "Trajectory analysis package for simulated and observed trajectories"
-authors = ["Knut-Frode Dagestad <knutfd@met.no>", "Gaute Hope <gauteh@met.no>"]
+authors = ["Gaute Hope <gauteh@met.no>", "Knut-Frode Dagestad <knutfd@met.no>"]
 license = "GPLv2"
 
 [tool.poetry.dependencies]
