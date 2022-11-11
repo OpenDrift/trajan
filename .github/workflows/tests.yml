@@ -17,8 +17,6 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           environment-file: environment.yml
-          miniforge-version: latest
-          miniforge-variant: Mambaforge
       - name: Run tests
         run: |
           conda activate test
