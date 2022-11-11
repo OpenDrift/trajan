@@ -49,9 +49,11 @@ def set_up_map(td=None, buffer=.1, corners=None, landmask='auto', lscale='auto',
     # Landmask
     ####################
     if landmask == 'auto':
-        from opendrift.readers import reader_global_landmask
-        reader_global_landmask.plot_land(ax, lonmin, latmin, lonmax, latmax,
-                                         fast, ocean_color, land_color, lscale, globe)
+        # XXX: Opendrift cannot be imported in trajan.
+        pass
+        # from opendrift.readers import reader_global_landmask
+        # reader_global_landmask.plot_land(ax, lonmin, latmin, lonmax, latmax,
+        #                                  fast, ocean_color, land_color, lscale, globe)
 
     return ax, fig, gcrs
 
