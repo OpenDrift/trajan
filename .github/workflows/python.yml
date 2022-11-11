@@ -40,6 +40,8 @@ jobs:
         if: matrix.python-version == '3.10'
         uses: actions/upload-artifact@v2
         with:
+          name: wheels
+          path: dist
 
   release:
     name: Release
@@ -63,6 +65,4 @@ jobs:
         run: |
           pip install --upgrade twine
           twine upload --skip-existing *
-        name: wheels
-        path: dist
 
