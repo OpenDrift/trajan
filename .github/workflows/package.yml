@@ -38,6 +38,7 @@ jobs:
 
     - name: Install poetry & package
       run: |
+        mamba install -c conda-forge poetry
         poetry install
       env:
         POETRY_VIRTUALENVS_CREATE: false
