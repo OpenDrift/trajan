@@ -1,6 +1,6 @@
 name: trajan
 channels:
-  conda-forge
+  - conda-forge
 dependencies:
   - xarray
   - netcdf4
