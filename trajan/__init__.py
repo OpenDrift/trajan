@@ -1,3 +1,6 @@
+"""
+Trajan API
+"""
 import numpy as np
 import pyproj
 import matplotlib.pyplot as plt
