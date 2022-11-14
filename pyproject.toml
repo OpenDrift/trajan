@@ -5,6 +5,9 @@ description = "Trajectory analysis package for simulated and observed trajectori
 authors = ["Gaute Hope <gauteh@met.no>", "Knut-Frode Dagestad <knutfd@met.no>"]
 license = "GPLv2"
 
+[tool.poetry.scripts]
+trajanshow = "trajan.scripts.trajanshow:main"
+
 [tool.poetry.dependencies]
 python = "^3.8"
 matplotlib = ">=3.5"
