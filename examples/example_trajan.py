@@ -1,4 +1,5 @@
 import os
+import lzma
 import matplotlib.pyplot as plt
 import xarray as xr
 import trajan as ta
@@ -8,15 +9,13 @@ import trajan as ta
 # can be analysed and plotted with Trajan
 ###########################################################
 
-if not os.path.exists('openoil.nc'):
-    raise ValueError('Please run create_test_dataset.py first')
-
 ###################################################################################################
-# Importing a trajectory dataset from a simulation with OpenDrift
-# decode_coords is needed so that lon and lat are not interpreted as coordinate variables
-d = xr.open_dataset('openoil.nc', decode_coords=False)
-# Requirement that status>=0 is needed since non-valid points are not masked in OpenDrift output
-d = d.where(d.status>=0)  # only active particles
+# Importing a trajectory dataset from a simulation with OpenDrift.
+# decode_coords is needed so that lon and lat are not interpreted as coordinate variables.
+with lzma.open('openoil.nc.xz') as oil:
+    d = xr.open_dataset(oil, decode_coords=False)
+    # Requirement that status>=0 is needed since non-valid points are not masked in OpenDrift output
+    d = d.where(d.status>=0)  # only active particles
 ###################################################################################################
 
 # Displaying a basic plot of trajectories
