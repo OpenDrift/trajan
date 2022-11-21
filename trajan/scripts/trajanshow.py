@@ -1,13 +1,14 @@
 # Utility script to quickly plot a drifter collection file
 
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
 import trajan as ta
+import click
 
-def main():
-    tf = sys.argv[1]
+@click.command()
+@click.argument('tf')
+def main(tf):
     ds = xr.open_dataset(tf)
     if 'status' in ds:  # hack for OpenDrift files
         ds = ds.where(ds.status>=0)
