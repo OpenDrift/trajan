@@ -17,3 +17,4 @@ dependencies:
   - cartopy
   - pyproj
   - toml
+  - click
