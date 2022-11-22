@@ -30,5 +30,3 @@ class TrajAccessor:
 
         return self.__plot__
 
-    # def plot(self, **kwargs):
-    #     ta.plot(self._obj, **kwargs)

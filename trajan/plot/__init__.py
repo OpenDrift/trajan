@@ -6,6 +6,7 @@ import cartopy.feature as cfeature
 
 logger = logging.getLogger(__name__)
 
+
 class Plot:
     ds = None
     ax = None
@@ -32,17 +33,20 @@ class Plot:
             An matplotlib axes with a Cartopy projection.
 
         """
+        if self.ax is not None:
+            return self.ax
+
         crs = crs if crs is not None else ccrs.Mercator()
         self.gcrs = ccrs.PlateCarree(globe=crs.globe)
 
-        ax = plt.axes(projection=crs)
+        self.ax = plt.axes(projection=crs)
 
-        gl = ax.gridlines(self.gcrs, draw_labels=True)
+        gl = self.ax.gridlines(self.gcrs, draw_labels=True)
         gl.top_labels = None
 
         # TODO: Add landmask
 
-        return ax
+        return self.ax
 
     def __call__(self, *args, **kwargs):
         return self.lines(*args, **kwargs)
@@ -69,7 +73,10 @@ class Plot:
         if 'color' not in kwargs:
             kwargs['color'] = self.DEFAULT_LINE_COLOR
 
-        paths = ax.plot(self.ds.lon.T, self.ds.lat.T, transform=self.gcrs, *args, **kwargs)
+        paths = ax.plot(self.ds.lon.T,
+                        self.ds.lat.T,
+                        transform=self.gcrs,
+                        *args,
+                        **kwargs)
 
         return paths, ax
-

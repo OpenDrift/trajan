@@ -61,6 +61,7 @@ def set_up_map(td=None, buffer=.1, corners=None, landmask='auto', lscale='auto',
     return ax, fig, gcrs
 
 def plot(td, background=None, show=True, trajectory_kwargs={}, map_kwargs={}):
+    return td.traj.plot(*args, **kwargs)
 
     # td: trajectory Xarray Dataset
     # background: DataArray with background field (not yet implemented)
