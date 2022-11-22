@@ -14,6 +14,7 @@ import trajan as ta
 # decode_coords is needed so that lon and lat are not interpreted as coordinate variables.
 with lzma.open('openoil.nc.xz') as oil:
     d = xr.open_dataset(oil, decode_coords=False)
+    d.load()
     # Requirement that status>=0 is needed since non-valid points are not masked in OpenDrift output
     d = d.where(d.status>=0)  # only active particles
 ###################################################################################################
