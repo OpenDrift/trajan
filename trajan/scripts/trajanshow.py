@@ -5,11 +5,20 @@ import matplotlib.pyplot as plt
 import xarray as xr
 import trajan as ta
 import click
+from pathlib import Path
+import lzma
 
 @click.command()
 @click.argument('tf')
 def main(tf):
-    ds = xr.open_dataset(tf)
+    tf = Path(tf)
+    if tf.suffix == '.xz':
+        with lzma.open(tf) as fd:
+            ds = xr.open_dataset(fd)
+            ds.load()
+    else:
+        ds = xr.open_dataset(tf)
+
     if 'status' in ds:  # hack for OpenDrift files
         ds = ds.where(ds.status>=0)
 
