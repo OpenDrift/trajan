@@ -27,9 +27,7 @@ class Plot:
 
     def set_up_map(
         self,
-        crs=None,
-        buffer=.1,
-        corners=None,
+        kwargs,
     ):
         """
         Set up axes for plotting.
@@ -38,21 +36,46 @@ class Plot:
 
             crs: Use a different crs than Mercator.
 
+            margin: margin (decimal degrees) in addition to extent of trajectories.
+
+            land: Add land shapes based on GSHHG to map.
+
+                'auto' (default): use automatic scaling.
+
+                'c', 'l','i','h','f' or
+                'coarse', 'low', 'intermediate', 'high', 'full': use corresponding GSHHG level.
+
+                'mask' (fastest): use a raster mask generated from GSHHG.
+
+                None: do not add land shapes.
+
         Returns:
 
             An matplotlib axes with a Cartopy projection.
 
         """
+        # By popping the args from kwargs they are not passed onto matplotlib later.
+        ax = kwargs.pop('ax', None)
+        crs = kwargs.pop('crs', None)
+        margin = kwargs.pop('margin', .1)
+        corners = kwargs.pop('corners', None)
+        land = kwargs.pop('land', 'auto')
+
+        assert crs is None or ax is None, "Only one of `ax` and `crs` may be specified."
+
+        if ax is not None:
+            self.ax = ax
+
         # It is not possible to change the projection of existing axes. The type of axes object returned
         # by `plt.axes` depends on the input projection.
         if self.ax is not None:
             return self.ax
 
         if corners is None:
-            lonmin = self.ds.lon.min() - buffer
-            lonmax = self.ds.lon.max() + buffer
-            latmin = self.ds.lat.min() - buffer
-            latmax = self.ds.lat.max() + buffer
+            lonmin = self.ds.lon.min() - margin
+            lonmax = self.ds.lon.max() + margin
+            latmin = self.ds.lat.min() - margin
+            latmax = self.ds.lat.max() + margin
         else:
             lonmin = corners[0]
             lonmax = corners[1]
@@ -90,7 +113,7 @@ class Plot:
     def __call__(self, *args, **kwargs):
         return self.lines(*args, **kwargs)
 
-    def lines(self, ax=None, crs=None, *args, **kwargs):
+    def lines(self, *args, **kwargs):
         """
         Plot the trajectory lines.
 
@@ -104,10 +127,8 @@ class Plot:
 
             Matplotlib lines, and axes.
         """
-        assert crs is None or ax is None, "Only one of `ax` and `crs` may be specified."
-
-        logger.debug(f'Plotting lines {ax=}')
-        ax = ax if ax is not None else self.set_up_map(crs=crs)
+        logger.debug(f'Plotting lines')
+        ax = self.set_up_map(kwargs)
 
         if 'color' not in kwargs:
             kwargs['color'] = self.DEFAULT_LINE_COLOR
