@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Plot:
     ds: xr.Dataset
-    ax: plt.Axes | None = None
+    ax: plt.Axes
 
     # A lon-lat projection with the currently used globe.
     gcrs = None
