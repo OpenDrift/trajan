@@ -14,3 +14,11 @@ def opendrift_sim():
         ds = xr.open_dataset(oil)
         ds.load()
         return ds
+
+@pytest.fixture(scope='session')
+def barents():
+    fn = Path(__file__).parent.parent / 'examples' / 'barents.nc.xz'
+    with lzma.open(fn) as b:
+        ds = xr.open_dataset(b)
+        ds.load()
+        return ds
