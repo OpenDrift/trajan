@@ -1,3 +1,5 @@
+import os, sys
+sys.path.insert(0, os.path.abspath('../../trajan/'))
 # Configuration file for the Sphinx documentation builder.
 
 # -- Project information
