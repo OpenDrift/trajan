@@ -1,6 +1,7 @@
 """
 Trajan API
 """
+import collections
 import numpy as np
 import xarray as xr
 
@@ -33,6 +34,9 @@ def trajectory_dict_to_dataset(trajectory_dict, attributes=None):
 
     # Fill arrays with data from dictionaries
     for drifter_num, (drifter_name, drifter_dict) in enumerate(trajectory_dict.items()):
+        # Make sure that positions are sorted by time
+        drifter_dict = collections.OrderedDict(sorted(drifter_dict.items()))
+
         t = slice(0, len(drifter_dict))
         lon[drifter_num, t] = np.array([di['lon'] for d, di in drifter_dict.items()])
         lat[drifter_num, t] = np.array([di['lat'] for d, di in drifter_dict.items()])
