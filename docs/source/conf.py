@@ -1,5 +1,5 @@
 import os, sys
-sys.path.insert(0, os.path.abspath('../../trajan/'))
+sys.path.insert(0, os.path.abspath('../..'))
 # Configuration file for the Sphinx documentation builder.
 
 # -- Project information
@@ -13,10 +13,17 @@ version = '0.1.0'
 
 # -- General configuration
 
+autoapi_type = 'python'
+autoapi_dirs = [ '../../opendrift' ]
+autoapi_keep_files = True  # set to True when debugging autoapi generated files
+autoapi_python_class_content = 'both'
+autodoc_typehints = 'description'
+
 extensions = [
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
+    'autoapi.extension',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
 ]

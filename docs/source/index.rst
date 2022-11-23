@@ -14,4 +14,14 @@ Contents
 .. toctree::
 
    usage
-   api
+   autoapi/index
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`search`
+* :doc:`autoapi/index`
+
+.. *:ref:`modindex`
+
