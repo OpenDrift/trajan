@@ -1,3 +1,7 @@
+"""
+Demonstrating basic plotting
+============================
+"""
 import cartopy.crs as ccrs
 import lzma
 import matplotlib.pyplot as plt
