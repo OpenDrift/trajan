@@ -83,18 +83,18 @@ class Plot:
             return self.ax
 
         # Create a new figure if none exists.
-        if len(plt.get_fignums()) == 0:
-            if corners is None:
-                lonmin = self.ds.lon.min() - margin
-                lonmax = self.ds.lon.max() + margin
-                latmin = self.ds.lat.min() - margin
-                latmax = self.ds.lat.max() + margin
-            else:
-                lonmin = corners[0]
-                lonmax = corners[1]
-                latmin = corners[2]
-                latmax = corners[3]
+        if corners is None:
+            lonmin = self.ds.lon.min() - margin
+            lonmax = self.ds.lon.max() + margin
+            latmin = self.ds.lat.min() - margin
+            latmax = self.ds.lat.max() + margin
+        else:
+            lonmin = corners[0]
+            lonmax = corners[1]
+            latmin = corners[2]
+            latmax = corners[3]
 
+        if len(plt.get_fignums()) == 0:
             meanlat = (latmin + latmax) / 2
             aspect_ratio = float(latmax - latmin) / (float(lonmax - lonmin))
             aspect_ratio = aspect_ratio / np.cos(np.radians(meanlat))
