@@ -1,13 +1,15 @@
-import os
+import cartopy.crs as ccrs
 import lzma
 import matplotlib.pyplot as plt
 import xarray as xr
 import trajan as ta
+import coloredlogs
 
 ###########################################################
 # Demonstrating how a trajectory dataset (from OpenDrift)
 # can be analysed and plotted with Trajan
 ###########################################################
+coloredlogs.install(level='debug')
 
 ###################################################################################################
 # Importing a trajectory dataset from a simulation with OpenDrift.
@@ -21,13 +23,13 @@ with lzma.open('openoil.nc.xz') as oil:
 
 # Displaying a basic plot of trajectories
 d.traj.plot()
-# which is equivalent to
-ta.plot(d)
 
 # Creating a plot, but adding customization (title) before saving to file
-ax, fig, gcrs = ta.plot(d, show=False)
+plt.figure()
+d.traj.plot()
+ax = d.traj.plot.axes
 ax.set_title('Adding custom title')
-fig.savefig('testplot.png')
+ax.get_figure().savefig('testplot.png')
 
 ##################################################################################
 # Demonstrating how the Xarray Dataset can be modified, allowing for
@@ -39,11 +41,13 @@ dsub = d.isel(trajectory=range(0, 100), time=range(0, len(d.time), 4))
 dsub.traj.plot()
 
 # Plotting a "mean" trajectory
+plt.figure()
 dmean = d.mean('trajectory', skipna=True)
-dmean.traj.plot(trajectory_kwargs={'color': 'red', 'linewidth': 5})
+dmean.traj.plot.lines(color='red', linewidth=5)
 
 # Using set_up_map only, and plotting trajectories manually
-ax, fig, gcrs = ta.set_up_map(d, land_color='green')
+gcrs = ccrs.PlateCarree()
+ax = d.traj.plot.set_up_map(ax=None, land_color='green')
 ax.plot(d.lon.T, d.lat.T, color='red', alpha=0.01, transform=gcrs)  # Plotting trajectories in red
 ax.plot(dmean.lon.T, dmean.lat.T, color='black', alpha=1, linewidth=5, transform=gcrs)  # Plotting mean trajectory in black
 # Plotting the mean trajectory for a sub period in yellow

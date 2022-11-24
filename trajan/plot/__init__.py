@@ -27,7 +27,8 @@ class Plot:
 
     def set_up_map(
         self,
-        kwargs,
+        kwargs_d=None,
+        **kwargs
     ):
         """
         Set up axes for plotting.
@@ -55,15 +56,22 @@ class Plot:
 
         """
         # By popping the args from kwargs they are not passed onto matplotlib later.
-        ax = kwargs.pop('ax', None)
-        crs = kwargs.pop('crs', None)
-        margin = kwargs.pop('margin', .1)
-        corners = kwargs.pop('corners', None)
-        land = kwargs.pop('land', 'auto')
+        if kwargs_d is None:
+            kwargs_d = kwargs
+        else:
+            for k,v in kwargs:
+                kwargs_d[k] = v
+
+        ax = kwargs_d.pop('ax', None)
+        crs = kwargs_d.pop('crs', None)
+        margin = kwargs_d.pop('margin', .1)
+        corners = kwargs_d.pop('corners', None)
+        land = kwargs_d.pop('land', 'auto')
 
         assert crs is None or ax is None, "Only one of `ax` and `crs` may be specified."
 
         if ax is not None:
+            logger.debug('axes already set up')
             self.ax = ax
 
         # It is not possible to change the projection of existing axes. The type of axes object returned
