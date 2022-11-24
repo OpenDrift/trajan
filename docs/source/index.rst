@@ -20,8 +20,6 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`search`
+* :ref:`modindex`
 * :doc:`autoapi/index`
-
-.. *:ref:`modindex`
 

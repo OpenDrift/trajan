@@ -15,7 +15,7 @@ version = '0.1.0'
 
 autoapi_type = 'python'
 autoapi_dirs = [ '../../trajan' ]
-autoapi_keep_files = True  # set to True when debugging autoapi generated files
+autoapi_keep_files = False  # set to True when debugging autoapi generated files
 autoapi_python_class_content = 'both'
 autodoc_typehints = 'description'
 
