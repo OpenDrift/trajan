@@ -19,6 +19,17 @@ autoapi_keep_files = False  # set to True when debugging autoapi generated files
 autoapi_python_class_content = 'both'
 autodoc_typehints = 'description'
 
+sphinx_gallery_conf = {
+     'examples_dirs': '../../examples/',   # path to your example scripts
+     'gallery_dirs': './gallery',  # path to where to save gallery generated output,
+     'filename_pattern': '/example_(?!long_)',
+     'backreferences_dir': None,
+     'capture_repr': ('_repr_html_', '__repr__'),
+     'abort_on_example_error': False,
+     'thumbnail_size': (300, 300),
+     'junit': '../../test-results/sphinx-gallery/junit.xml',
+}
+
 extensions = [
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
@@ -26,6 +37,10 @@ extensions = [
     'autoapi.extension',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.mathjax',
+    'sphinx_gallery.gen_gallery',
+    'matplotlib.sphinxext.plot_directive',
 ]
 
 intersphinx_mapping = {

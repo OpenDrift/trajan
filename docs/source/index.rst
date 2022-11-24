@@ -12,8 +12,10 @@ Contents
 --------
 
 .. toctree::
+   :maxdepth: 2
 
    usage
+   gallery/index
    autoapi/index
 
 Indices and tables
