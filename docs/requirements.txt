@@ -3,3 +3,13 @@ sphinx-rtd-theme
 sphinx-gallery>=0.5.0
 sphinx-autoapi
 matplotlib
+xarray
+numpy
+scipy
+netcdf4
+h5netcdf
+coloredlogs
+cartopy
+pyproj
+toml
+click

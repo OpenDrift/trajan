@@ -12,7 +12,6 @@ dependencies:
   - pytest-benchmark
   - pytest-mpl
   - pytest-cov
-  - coloredlogs
   - matplotlib
   - cartopy
   - pyproj
