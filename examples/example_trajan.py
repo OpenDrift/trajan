@@ -27,34 +27,36 @@ with lzma.open('openoil.nc.xz') as oil:
 
 # Displaying a basic plot of trajectories
 d.traj.plot()
-
-# Creating a plot, but adding customization (title) before saving to file
-plt.figure()
-d.traj.plot()
-ax = d.traj.plot.axes
-ax.set_title('Adding custom title')
-ax.get_figure().savefig('testplot.png')
+d.traj.plot.axes.set_title('Basic trajectory plot')
+plt.show()
 
 ##################################################################################
 # Demonstrating how the Xarray Dataset can be modified, allowing for
 # more flexibility than can be provided through the plotting method of OpenDrift
 ##################################################################################
 
-# Extracting only the first 100 elements, and every 4th output time steps:
-dsub = d.isel(trajectory=range(0, 100), time=range(0, len(d.time), 4))
-dsub.traj.plot()
+# Extracting only the first 10 elements, and every 4th output time steps:
+d.isel(trajectory=range(0, 10), time=range(0, len(d.time), 4)).traj.plot()
+# TODO: the above title is not shown, since a subset of d is plotted (and not d itself)
+d.traj.plot.axes.set_title('First 10 elements, and every 4th time steps')
+plt.show()
 
-# Plotting a "mean" trajectory
-plt.figure()
+# Plotting a "mean" trajectory on top
+###################################################################
+# TODO: the below does not work: only the mean trajectory is shown
+###################################################################
+d.traj.plot(color='red', alpha=0.01)  # Plotting trajectories in red
 dmean = d.mean('trajectory', skipna=True)
-dmean.traj.plot.lines(color='red', linewidth=5)
+dmean.traj.plot.lines(color='black', linewidth=5)  # Plotting mean trajectory in black
+plt.show()
 
-# Using set_up_map only, and plotting trajectories manually
-gcrs = ccrs.PlateCarree()
-ax = d.traj.plot.set_up_map(ax=None, land_color='green')
-ax.plot(d.lon.T, d.lat.T, color='red', alpha=0.01, transform=gcrs)  # Plotting trajectories in red
-ax.plot(dmean.lon.T, dmean.lat.T, color='black', alpha=1, linewidth=5, transform=gcrs)  # Plotting mean trajectory in black
+# Calling set_up_map explicitly
+ax = d.traj.plot.set_up_map(margin=2)
+d.traj.plot(ax=ax, color='red', alpha=0.01)  # Plotting trajectories in red
+dmean.traj.plot(ax=ax, color='black', alpha=1, linewidth=5)  # Plotting mean trajectory in black
 # Plotting the mean trajectory for a sub period in yellow
 dmean17nov = d.sel(time=slice('2015-11-17', '2015-11-17 12')).mean('trajectory', skipna=True)
-ax.plot(dmean17nov.lon.T, dmean17nov.lat.T, color='yellow', alpha=1, linewidth=5, transform=gcrs)
-plt.show()
+dmean17nov.traj.plot(ax=ax, color='yellow', alpha=1, linewidth=5)
+#plt.show()  # TODO: this shows nothing
+#ax.get_figure().show()  # TODO: this shows nothing
+ax.get_figure().savefig('testplot.png')  # TODO: this produces a figure, but with title from previous

@@ -6,6 +6,7 @@ import numpy as np
 import xarray as xr
 
 logger = logging.getLogger(__name__)
+logging.getLogger('matplotlib.font_manager').disabled = True
 
 
 class Plot:
