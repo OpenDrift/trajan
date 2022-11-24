@@ -69,6 +69,7 @@ class Plot:
         margin = kwargs_d.pop('margin', .1)
         corners = kwargs_d.pop('corners', None)
         land = kwargs_d.pop('land', 'auto')
+        figsize = kwargs_d.pop('figsize', 11)
 
         assert crs is None or ax is None, "Only one of `ax` and `crs` may be specified."
 
