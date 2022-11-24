@@ -24,6 +24,7 @@ class Plot:
     def __init__(self, ds, ax=None):
         self.ds = ds
         self.ax = ax
+        self.gcrs = ccrs.PlateCarree()
 
     def set_up_map(
         self,
@@ -79,27 +80,23 @@ class Plot:
         if self.ax is not None:
             return self.ax
 
-        if corners is None:
-            lonmin = self.ds.lon.min() - margin
-            lonmax = self.ds.lon.max() + margin
-            latmin = self.ds.lat.min() - margin
-            latmax = self.ds.lat.max() + margin
-        else:
-            lonmin = corners[0]
-            lonmax = corners[1]
-            latmin = corners[2]
-            latmax = corners[3]
-
-        crs = crs if crs is not None else ccrs.Mercator()
-        self.gcrs = ccrs.PlateCarree(globe=crs.globe)
-
-        meanlat = (latmin + latmax) / 2
-        aspect_ratio = float(latmax - latmin) / (float(lonmax - lonmin))
-        aspect_ratio = aspect_ratio / np.cos(np.radians(meanlat))
-
         # Create a new figure if none exists.
-        fig = plt.gcf()
-        if fig is None:
+        if len(plt.get_fignums()) == 0:
+            if corners is None:
+                lonmin = self.ds.lon.min() - margin
+                lonmax = self.ds.lon.max() + margin
+                latmin = self.ds.lat.min() - margin
+                latmax = self.ds.lat.max() + margin
+            else:
+                lonmin = corners[0]
+                lonmax = corners[1]
+                latmin = corners[2]
+                latmax = corners[3]
+
+            meanlat = (latmin + latmax) / 2
+            aspect_ratio = float(latmax - latmin) / (float(lonmax - lonmin))
+            aspect_ratio = aspect_ratio / np.cos(np.radians(meanlat))
+
             if aspect_ratio > 1:
                 fig = plt.figure(figsize=(figsize / aspect_ratio, figsize))
             else:
@@ -107,6 +104,12 @@ class Plot:
 
             # fig.canvas.draw()  # maybe needed?
             fig.set_tight_layout(True)
+        else:
+            fig = plt.gcf()
+
+
+        crs = crs if crs is not None else ccrs.Mercator()
+        self.gcrs = ccrs.PlateCarree(globe=crs.globe)
 
         self.ax = fig.add_subplot(projection=crs)
         self.ax.set_extent([lonmin, lonmax, latmin, latmax], crs=self.gcrs)

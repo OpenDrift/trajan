@@ -19,10 +19,14 @@ autoapi_keep_files = False  # set to True when debugging autoapi generated files
 autoapi_python_class_content = 'both'
 autodoc_typehints = 'description'
 
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning,
+                        message='Matplotlib is currently using agg, which is a'
+                                ' non-GUI backend, so cannot show the figure.')
 sphinx_gallery_conf = {
      'examples_dirs': '../../examples/',   # path to your example scripts
      'gallery_dirs': './gallery',  # path to where to save gallery generated output,
-     'filename_pattern': '/example_(?!long_)',
+     # 'filename_pattern': '/example_(?!long_)',
      'ignore_pattern': 'create_test',
      'backreferences_dir': None,
      'capture_repr': ('_repr_html_', '__repr__'),
@@ -40,7 +44,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
-    'sphinx_gallery.gen_gallery',
+    # 'sphinx_gallery.gen_gallery',
     'matplotlib.sphinxext.plot_directive',
 ]
 
