@@ -8,7 +8,6 @@ https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions
 import xarray as xr
 import trajan as ta
 import logging
-from xhistogram.xarray import histogram
 
 from .plot import Plot
 
