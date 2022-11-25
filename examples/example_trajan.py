@@ -27,7 +27,7 @@ with lzma.open('openoil.nc.xz') as oil:
 
 # Displaying a basic plot of trajectories
 d.traj.plot()
-d.traj.plot.axes.set_title('Basic trajectory plot')
+plt.title('Basic trajectory plot')
 plt.show()
 
 ##################################################################################
@@ -38,7 +38,7 @@ plt.show()
 # Extracting only the first 10 elements, and every 4th output time steps:
 d.isel(trajectory=range(0, 10), time=range(0, len(d.time), 4)).traj.plot()
 # TODO: the above title is not shown, since a subset of d is plotted (and not d itself)
-d.traj.plot.axes.set_title('First 10 elements, and every 4th time steps')
+plt.title('First 10 elements, and every 4th time steps')
 plt.show()
 
 # Plotting a "mean" trajectory on top
@@ -51,7 +51,8 @@ dmean.traj.plot.lines(color='black', linewidth=5)  # Plotting mean trajectory in
 plt.show()
 
 # Calling set_up_map explicitly
-ax = d.traj.plot.set_up_map(margin=2)
+plt.figure()
+ax = d.traj.plot.set_up_map(margin=0)
 d.traj.plot(ax=ax, color='red', alpha=0.01)  # Plotting trajectories in red
 dmean.traj.plot(ax=ax, color='black', alpha=1, linewidth=5)  # Plotting mean trajectory in black
 # Plotting the mean trajectory for a sub period in yellow

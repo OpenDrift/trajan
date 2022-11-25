@@ -11,20 +11,14 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 
 class Plot:
     ds: xr.Dataset
-    ax: plt.Axes
 
     # A lon-lat projection with the currently used globe.
     gcrs = None
 
     DEFAULT_LINE_COLOR = 'gray'
 
-    @property
-    def axes(self):
-        return self.ax
-
-    def __init__(self, ds, ax=None):
+    def __init__(self, ds):
         self.ds = ds
-        self.ax = ax
         self.gcrs = ccrs.PlateCarree()
 
     def set_up_map(
@@ -75,12 +69,10 @@ class Plot:
 
         if ax is not None:
             logger.debug('axes already set up')
-            self.ax = ax
+            return ax
 
         # It is not possible to change the projection of existing axes. The type of axes object returned
         # by `plt.axes` depends on the input projection.
-        if self.ax is not None:
-            return self.ax
 
         # Create a new figure if none exists.
         if corners is None:
@@ -95,6 +87,7 @@ class Plot:
             latmax = corners[3]
 
         if len(plt.get_fignums()) == 0:
+            logger.debug('Creating new figure and axes..')
             meanlat = (latmin + latmax) / 2
             aspect_ratio = float(latmax - latmin) / (float(lonmax - lonmin))
             aspect_ratio = aspect_ratio / np.cos(np.radians(meanlat))
@@ -106,22 +99,27 @@ class Plot:
 
             # fig.canvas.draw()  # maybe needed?
             fig.set_tight_layout(True)
+
         else:
             fig = plt.gcf()
-
+            if len(fig.axes) > 0:
+                logger.debug('Axes already exist on existing figure.')
+                return fig.gca()
+            else:
+                logger.debug('Figure exists, setting up axes.')
 
         crs = crs if crs is not None else ccrs.Mercator()
         self.gcrs = ccrs.PlateCarree(globe=crs.globe)
 
-        self.ax = fig.add_subplot(projection=crs)
-        self.ax.set_extent([lonmin, lonmax, latmin, latmax], crs=self.gcrs)
+        ax = fig.add_subplot(111, projection=crs)
+        ax.set_extent([lonmin, lonmax, latmin, latmax], crs=self.gcrs)
 
-        gl = self.ax.gridlines(self.gcrs, draw_labels=True)
+        gl = ax.gridlines(self.gcrs, draw_labels=True)
         gl.top_labels = None
 
         # TODO: Add landmask
 
-        return self.ax
+        return ax
 
     def __call__(self, *args, **kwargs):
         return self.lines(*args, **kwargs)
