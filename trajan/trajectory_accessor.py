@@ -35,6 +35,7 @@ class TrajAccessor:
     def gridtime(self, times):
         """Interpolate dataset to regular time interval"""
 
+        # Create empty dataset to hold interpolated values
         d = xr.Dataset(
             coords={
                 'time': (["obs"], times),
@@ -46,31 +47,28 @@ class TrajAccessor:
         for varname, var in self._obj.variables.items():
             if varname == 'time':
                 continue
+            if var.dtype != np.float64:  # Copy without interpolation
+                d['varname'] = var
+                continue
 
+            # Create empty dataarray to hold interpolated values for given variable
             da = xr.DataArray(
-                data=np.zeros((len(self._obj['trajectory'], )))*np.nan,
+                data=np.zeros(tuple(d.dims[di] for di in ['trajectory', 'obs']))*np.nan,
                 dims=self._obj.dims,
                 coords=self._obj.coords,
-                attrs=self._obj.attrs
+                attrs=var.attrs
                 )
 
-            print(da)
+            for t in range(self._obj.dims['trajectory']):  # loop over trajectories
+                origtimes = self._obj['time'].isel(trajectory=t).astype(np.float64).values
+                validtime = np.nonzero(~np.isnan(origtimes))[0]
+                interptime = origtimes[validtime]
+                interpvar = var.isel(trajectory=t).data
+                # Make interpolator
+                f = interp1d(interptime, interpvar, bounds_error=False)
+                # Interpolate onto given times
+                da.loc[{'trajectory': t}] = f(times.to_numpy().astype(np.float64))
 
-#            for t in range(self._obj.dims['trajectory']):  # loop over trajectories
-#                f = interp1d(self._obj['time'].isel(trajectory=t),
-#                             var.isel(trajectory=t))
-#            print(var)
+            d[varname] = da
 
-    def gridtime_old(self, times):
-        """Interpolate dataset to regular time interval"""
-
-        # Remove drifter names, as mean cannot be applied to strings
-        drifter_names = self._obj['drifter_names']
-        self._obj = self._obj.drop_vars('drifter_names')
-
-        d = xr.concat([self._obj.isel(trajectory=t).groupby_bins(
-                       'time', bins=times).mean() for t in
-                       range(self._obj.dims['trajectory'])], dim='trajectory')
-
-        d['drifter_names'] = drifter_names
         return d
