@@ -5,6 +5,8 @@ Presently supporting Cf convention H.4.1
 https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html#_multidimensional_array_representation_of_trajectories.
 """
 
+import numpy as np
+from scipy.interpolate import interp1d
 import xarray as xr
 import trajan as ta
 import logging
@@ -31,6 +33,35 @@ class TrajAccessor:
         return self.__plot__
 
     def gridtime(self, times):
+        """Interpolate dataset to regular time interval"""
+
+        d = xr.Dataset(
+            coords={
+                'time': (["obs"], times),
+                'trajectory': (["trajectory"], self._obj['drifter_names'].data)
+                    },
+            attrs = self._obj.attrs
+            )
+
+        for varname, var in self._obj.variables.items():
+            if varname == 'time':
+                continue
+
+            da = xr.DataArray(
+                data=np.zeros((len(self._obj['trajectory'], )))*np.nan,
+                dims=self._obj.dims,
+                coords=self._obj.coords,
+                attrs=self._obj.attrs
+                )
+
+            print(da)
+
+#            for t in range(self._obj.dims['trajectory']):  # loop over trajectories
+#                f = interp1d(self._obj['time'].isel(trajectory=t),
+#                             var.isel(trajectory=t))
+#            print(var)
+
+    def gridtime_old(self, times):
         """Interpolate dataset to regular time interval"""
 
         # Remove drifter names, as mean cannot be applied to strings
