@@ -5,6 +5,8 @@ import cartopy.feature as cfeature
 import numpy as np
 import xarray as xr
 
+from .land import add_land
+
 logger = logging.getLogger(__name__)
 logging.getLogger('matplotlib.font_manager').disabled = True
 
@@ -42,7 +44,7 @@ class Plot:
                 'c', 'l','i','h','f' or
                 'coarse', 'low', 'intermediate', 'high', 'full': use corresponding GSHHG level.
 
-                'mask' (fastest): use a raster mask generated from GSHHG.
+                'mask' or 'fast' (fastest): use a raster mask generated from GSHHG.
 
                 None: do not add land shapes.
 
@@ -117,7 +119,7 @@ class Plot:
         gl = ax.gridlines(self.gcrs, draw_labels=True)
         gl.top_labels = None
 
-        # TODO: Add landmask
+        add_land(ax, lonmin, latmin, lonmax, latmax, fast=(land == 'mask' or land == 'fast'), lscale=land, globe=crs.globe)
 
         return ax
 
