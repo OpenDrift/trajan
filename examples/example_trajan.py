@@ -45,7 +45,7 @@ plt.show()
 ###################################################################
 # TODO: the below does not work: only the mean trajectory is shown
 ###################################################################
-d.traj.plot(color='red', alpha=0.01)  # Plotting trajectories in red
+d.traj.plot(color='red', alpha=0.01, land='fast')  # Plotting trajectories in red, and with landmask as land.
 dmean = d.mean('trajectory', skipna=True)
 dmean.traj.plot.lines(color='black', linewidth=5)  # Plotting mean trajectory in black
 plt.show()
