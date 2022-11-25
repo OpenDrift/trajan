@@ -30,3 +30,16 @@ class TrajAccessor:
 
         return self.__plot__
 
+    def gridtime(self, times):
+        """Interpolate dataset to regular time interval"""
+
+        # Remove drifter names, as mean cannot be applied to strings
+        drifter_names = self._obj['drifter_names']
+        self._obj = self._obj.drop_vars('drifter_names')
+
+        d = xr.concat([self._obj.isel(trajectory=t).groupby_bins(
+                       'time', bins=times).mean() for t in
+                       range(self._obj.dims['trajectory'])], dim='trajectory')
+
+        d['drifter_names'] = drifter_names
+        return d
