@@ -7,6 +7,7 @@ https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions
 
 import numpy as np
 from scipy.interpolate import interp1d
+import pandas as pd
 import xarray as xr
 import trajan as ta
 import logging
@@ -35,27 +36,36 @@ class TrajAccessor:
     def gridtime(self, times):
         """Interpolate dataset to regular time interval"""
 
+        if isinstance(times, str):  # Make time series with given interval
+            freq = times
+            start_time = self._obj.time.min()
+            start_time = pd.to_datetime(start_time.values).strftime('%Y-%m-%d')
+            end_time = self._obj.time.max() + np.timedelta64(23, 'h') + np.timedelta64(59, 'm')
+            end_time = pd.to_datetime(end_time.values).strftime('%Y-%m-%d')
+            times = pd.date_range(start_time, end_time, freq=freq)
+
         # Create empty dataset to hold interpolated values
+        trajcoord = range(self._obj.dims['trajectory'])
         d = xr.Dataset(
             coords={
-                'time': (["obs"], times),
-                'trajectory': (["trajectory"], self._obj['drifter_names'].data)
+                'trajectory': (["trajectory"], trajcoord),
+                'time': (["obs"], times)
                     },
             attrs = self._obj.attrs
             )
 
         for varname, var in self._obj.variables.items():
-            if varname == 'time':
+            if varname in ['time', 'obs']:
                 continue
-            if var.dtype != np.float64:  # Copy without interpolation
+            if var.dtype != np.float64 and var.dtype != np.float32:  # Copy without interpolation
                 d['varname'] = var
                 continue
 
             # Create empty dataarray to hold interpolated values for given variable
             da = xr.DataArray(
                 data=np.zeros(tuple(d.dims[di] for di in ['trajectory', 'obs']))*np.nan,
-                dims=self._obj.dims,
-                coords=self._obj.coords,
+                dims=d.dims,
+                coords=d.coords,
                 attrs=var.attrs
                 )
 
