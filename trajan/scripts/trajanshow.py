@@ -28,7 +28,7 @@ def main(tf):
     end_time = np.nanmax(ds.time.data).astype('datetime64[s]')
     name = tf
 
-    ds.traj.plot.axes.set_title(f'{name} [ {start_time} to {end_time} ]')
+    plt.gca().set_title(f'{name} [ {start_time} to {end_time} ]')
 
     plt.show()
 
