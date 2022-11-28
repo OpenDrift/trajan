@@ -17,3 +17,4 @@ dependencies:
   - pyproj
   - toml
   - click
+  - roaring-landmask
