@@ -37,27 +37,21 @@ plt.show()
 
 # Extracting only the first 10 elements, and every 4th output time steps:
 d.isel(trajectory=range(0, 10), time=range(0, len(d.time), 4)).traj.plot()
-# TODO: the above title is not shown, since a subset of d is plotted (and not d itself)
 plt.title('First 10 elements, and every 4th time steps')
 plt.show()
 
 # Plotting a "mean" trajectory on top
-###################################################################
-# TODO: the below does not work: only the mean trajectory is shown
-###################################################################
 d.traj.plot(color='red', alpha=0.01, land='fast')  # Plotting trajectories in red, and with landmask as land.
 dmean = d.mean('trajectory', skipna=True)
 dmean.traj.plot.lines(color='black', linewidth=5)  # Plotting mean trajectory in black
 plt.show()
 
 # Calling set_up_map explicitly
-plt.figure()
-ax = d.traj.plot.set_up_map(margin=0)
-d.traj.plot(ax=ax, color='red', alpha=0.01)  # Plotting trajectories in red
-dmean.traj.plot(ax=ax, color='black', alpha=1, linewidth=5)  # Plotting mean trajectory in black
+d.traj.plot.set_up_map(margin=0)
+d.traj.plot(color='red', alpha=0.01)  # Plotting trajectories in red
+dmean.traj.plot(color='black', alpha=1, linewidth=5)  # Plotting mean trajectory in black
 # Plotting the mean trajectory for a sub period in yellow
 dmean17nov = d.sel(time=slice('2015-11-17', '2015-11-17 12')).mean('trajectory', skipna=True)
-dmean17nov.traj.plot(ax=ax, color='yellow', alpha=1, linewidth=5)
-#plt.show()  # TODO: this shows nothing
-#ax.get_figure().show()  # TODO: this shows nothing
-ax.get_figure().savefig('testplot.png')  # TODO: this produces a figure, but with title from previous
+dmean17nov.traj.plot(color='yellow', alpha=1, linewidth=5)
+plt.tight_layout()
+plt.savefig('testplot.png')  # TODO: this produces a figure, but with title from previous

@@ -10,7 +10,7 @@ def test_interpolate_barents(barents, plot):
     times = pd.date_range("2022-10-01", "2022-11-01", freq='6H')
 
     barents_gridded = barents.traj.gridtime(times)
-    assert_almost_equal(barents_gridded.isel(trajectory=1).isel(obs=100).lon, 19.94633948)
+    assert_almost_equal(barents_gridded.isel(trajectory=1).isel(time=100).lon, 19.94633948)
 
     if plot:
         drifter_names = barents['drifter_names'].data

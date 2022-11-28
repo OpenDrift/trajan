@@ -100,7 +100,7 @@ class Plot:
                 fig = plt.figure(figsize=(figsize, figsize * aspect_ratio))
 
             # fig.canvas.draw()  # maybe needed?
-            fig.set_tight_layout(True)
+            plt.tight_layout()
 
         else:
             fig = plt.gcf()
@@ -119,7 +119,8 @@ class Plot:
         gl = ax.gridlines(self.gcrs, draw_labels=True)
         gl.top_labels = None
 
-        add_land(ax, lonmin, latmin, lonmax, latmax, fast=(land == 'mask' or land == 'fast'), lscale=land, globe=crs.globe)
+        add_land(ax, lonmin, latmin, lonmax, latmax,
+                 fast=(land == 'mask' or land == 'fast'), lscale=land, globe=crs.globe)
 
         return ax
 
@@ -149,7 +150,7 @@ class Plot:
         if 'alpha' not in kwargs and 'trajectory' in self.ds.dims:
             num = self.ds.dims['trajectory']
             if num>100:  # If many trajectories, make more transparent
-                kwargs['alpha'] = np.maximum(.1, 100/np.float(num))
+                kwargs['alpha'] = np.maximum(.1, 100/np.float64(num))
 
         paths = ax.plot(self.ds.lon.T,
                         self.ds.lat.T,

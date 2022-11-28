@@ -23,7 +23,16 @@ class TrajAccessor:
 
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
-
+        
+        # Identify dimension names
+        for dim in ['obs', 'time']:
+            if dim in self._obj.dims:
+                self.timedim = dim
+        for dim in ['traj', 'trajectory']:
+            if dim in self._obj.dims:
+                self.trajdim = dim
+        if not hasattr(self, 'timedim'):
+            raise ValueError(f'Time dimension not identified: {self._obj.dims}')
 
     @property
     def plot(self):
@@ -34,14 +43,22 @@ class TrajAccessor:
         return self.__plot__
 
     def gridtime(self, times):
-        """Interpolate dataset to regular time interval"""
+        """Interpolate dataset to regular time interval
+
+        times:
+            - an array of times, or
+            - a string "freq" specifying a Pandas daterange (e.g. 'h', '6h, 'D'...)
+
+        Note that the resulting DataSet will have "time" as a dimension coordinate.
+        """
 
         if isinstance(times, str):  # Make time series with given interval
             freq = times
-            start_time = self._obj.time.min()
-            start_time = pd.to_datetime(start_time.values).strftime('%Y-%m-%d')
-            end_time = self._obj.time.max() + np.timedelta64(23, 'h') + np.timedelta64(59, 'm')
-            end_time = pd.to_datetime(end_time.values).strftime('%Y-%m-%d')
+            start_time = np.nanmin(np.asarray(self._obj.time))
+            start_time = pd.to_datetime(start_time).strftime('%Y-%m-%d')
+            end_time = np.nanmax(np.asarray(self._obj.time)) + \
+                            np.timedelta64(23, 'h') + np.timedelta64(59, 'm')
+            end_time = pd.to_datetime(end_time).strftime('%Y-%m-%d')
             times = pd.date_range(start_time, end_time, freq=freq)
 
         # Create empty dataset to hold interpolated values
@@ -49,7 +66,7 @@ class TrajAccessor:
         d = xr.Dataset(
             coords={
                 'trajectory': (["trajectory"], trajcoord),
-                'time': (["obs"], times)
+                'time': (["time"], times)
                     },
             attrs = self._obj.attrs
             )
@@ -57,13 +74,13 @@ class TrajAccessor:
         for varname, var in self._obj.variables.items():
             if varname in ['time', 'obs']:
                 continue
-            if var.dtype != np.float64 and var.dtype != np.float32:  # Copy without interpolation
+            if self.timedim not in var.dims:
                 d['varname'] = var
                 continue
 
             # Create empty dataarray to hold interpolated values for given variable
             da = xr.DataArray(
-                data=np.zeros(tuple(d.dims[di] for di in ['trajectory', 'obs']))*np.nan,
+                data=np.zeros(tuple(d.dims[di] for di in ['trajectory', 'time']))*np.nan,
                 dims=d.dims,
                 coords=d.coords,
                 attrs=var.attrs
