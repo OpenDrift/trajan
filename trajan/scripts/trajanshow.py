@@ -11,8 +11,8 @@ import lzma
 @click.command()
 @click.argument('tf')
 @click.option('-l', '--land',
-              default='a',
-              help='Scale of coastline (f, h, i, l, c)',
+              default='auto',
+              help='Scale of coastline (f, h, i, l, c or mask)',
               type=str,
               multiple=False)
 @click.option('-m', '--margin',
@@ -44,9 +44,9 @@ def main(tf, land, start_time, end_time, margin):
         ds = ds.where(ds.status>=0)
 
     trajectory_names = None
-    color = 'k'
+    color = 'gray'
     dsub = ds.filter_by_attrs(cf_role='trajectory_id')
-    if len(dsub.variables) == 1:
+    if len(dsub.data_vars) == 1:
         trajectory_names = dsub.to_array().values[0]
         color = None
 
