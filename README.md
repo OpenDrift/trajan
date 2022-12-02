@@ -21,10 +21,10 @@ which will produce a plot of the mean of the first 100 trajectories in a dataset
 The above example assumes that obs (time) is constant for all trajectories in the dataset, which is the case for e.g. output from lagrangian models.
 For a collection of “raw data” of a set of ocean drifters, time will generally be a 2D variable (obs, trajectory), as each drifter may sample its position at different times. Such datasets may be interpolated to a common, regular time, with e.g.:
 
-`>>> ds_obs_regular = ds_obs.traj.interpolate_time(‘1H’)`
+`>>> ds_obs_regular = ds_obs.traj.gridtime(‘1H’)`
 
 to interpolate to a fixed hourly times step, or
 
-`>>> ds_obs_regular = ds_obs.traj.interpolate_time(ds_model)`
+`>>> ds_obs_regular = ds_obs.traj.gridtime(ds_model)`
 
 to interpolate and subselect a drifter dataset to the same time step and period as the output of a trajectory model (ds_model). This facilitates e.g. comparison of modelled and observed trajectories.
