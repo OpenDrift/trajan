@@ -21,8 +21,8 @@ def trajectory_dict_to_dataset(trajectory_dict, attributes=None):
             ...
     """
 
-    drifter_names = [td.dev for td in trajectory_dict]
-    num_drifters = len(trajectory_dict)
+    drifter_names = list(trajectory_dict)
+    num_drifters = len(drifter_names)
     num_times = np.max([len(d) for dn, d in trajectory_dict.items()])
     # Allocate  arrays
     lon = np.empty((num_drifters, num_times))
