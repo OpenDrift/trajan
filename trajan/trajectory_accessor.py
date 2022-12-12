@@ -7,8 +7,10 @@ https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions
 
 import numpy as np
 from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
 import pandas as pd
 import xarray as xr
+import pyproj
 import trajan as ta
 import logging
 
@@ -75,7 +77,7 @@ class TrajAccessor:
             if varname in ['time', 'obs']:
                 continue
             if self.timedim not in var.dims:
-                d['varname'] = var
+                d[varname] = var
                 continue
 
             # Create empty dataarray to hold interpolated values for given variable
@@ -99,3 +101,100 @@ class TrajAccessor:
             d[varname] = da
 
         return d
+
+    def time_to_next(self):
+        """Returns time from one position to the next
+
+           Returned datatype is np.timedelta64
+           Last time is repeated for last position (which has no next position)
+        """
+        time = self._obj.time
+        lenobs = self._obj.dims['obs']
+        td = time.isel(obs=slice(1, lenobs))-time.isel(obs=slice(0, lenobs-1))
+        td = xr.concat((td, td.isel(obs=-1)), dim='obs')  # repeating last time step
+        return td
+
+    def distance_to_next(self):
+        """Returns distance in m from one position to the next
+
+           Last time is repeated for last position (which has no next position)
+        """
+        lon = self._obj.lon
+        lat = self._obj.lat
+        lenobs = self._obj.dims['obs']
+        lonfrom = lon.isel(obs=slice(0, lenobs-1))
+        latfrom = lat.isel(obs=slice(0, lenobs-1))
+        lonto = lon.isel(obs=slice(1, lenobs))
+        latto = lat.isel(obs=slice(1, lenobs))
+        geod = pyproj.Geod(ellps='WGS84')
+        azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto, latto)
+
+        distance = xr.DataArray(distance, coords=lon.coords, dims=lon.dims)
+        distance = xr.concat((distance, distance.isel(obs=-1)), dim='obs')  # repeating last time step to 
+        return distance
+
+    def speed(self):
+        """Returns the speed [m/s] along trajectories"""
+
+        distance = self.distance_to_next()
+        timedelta_seconds = self.time_to_next()/np.timedelta64(1, 's')
+
+        return distance / timedelta_seconds
+
+    def index_of_last(self):
+        """Find index of last valid position along each trajectory"""
+        return np.ma.notmasked_edges(np.ma.masked_invalid(self._obj.lon.values), axis=1)[1][1]
+
+    def insert_nan_where(self, condition):
+        """Insert NaN-values in trajectories at given positions, shifting rest of trajectory"""
+
+        index_of_last = self.index_of_last()
+        num_inserts = condition.sum(dim='obs')
+        max_obs = (index_of_last + num_inserts).max().values
+
+        # Create new empty dataset with extended obs dimension
+        trajcoord = range(self._obj.dims['trajectory'])
+        nd = xr.Dataset(
+            coords={
+                'trajectory': (["trajectory"], range(self._obj.dims['trajectory'])),
+                'obs': (["obs"], range(max_obs))  # Longest trajectory
+                    },
+            attrs = self._obj.attrs
+            )
+
+        # Add extended variables
+        for varname, var in self._obj.data_vars.items():
+            if self.timedim not in var.dims:
+                nd[varname] = var
+                continue
+            # Create empty dataarray to hold interpolated values for given variable
+            da = xr.DataArray(
+                data=np.zeros(tuple(nd.dims[di] for di in nd.dims))*np.nan,
+                dims=nd.dims,
+                attrs=var.attrs,
+                )
+
+            for t in range(self._obj.dims['trajectory']):  # loop over trajectories
+                numins = num_inserts[t]
+                olddata = var.isel(trajectory=t).values
+                wh = np.argwhere(condition.isel(trajectory=t).values)
+                if len(wh) == 0:
+                    newdata = olddata
+                else:
+                    insert_indices = np.concatenate(wh)
+                    s = np.split(olddata, insert_indices)
+
+                    if np.issubdtype(var.dtype, np.datetime64):
+                        na = np.atleast_1d(np.datetime64("NaT"))
+                    else:
+                        na = np.atleast_1d(np.nan)
+                    newdata = np.concatenate([np.concatenate((ss, na)) for ss in s])
+
+                newdata = newdata[slice(0, max_obs-1)]  # truncating, should be checked
+                da[{'trajectory': t, 'obs': slice(0, len(newdata))}] = newdata
+
+            nd[varname] = da.astype(var.dtype)
+
+        nd = nd.drop_vars(('obs', 'trajectory'))  # Remove coordinates
+
+        return nd
