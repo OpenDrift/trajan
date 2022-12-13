@@ -198,3 +198,15 @@ class TrajAccessor:
         nd = nd.drop_vars(('obs', 'trajectory'))  # Remove coordinates
 
         return nd
+
+    def drop_where(self, condition):
+        """Remove positions where condition is True, shifting rest of trajectory"""
+
+        trajs = []
+        for i in range(self._obj.dims['trajectory']):
+            new = self._obj.isel(trajectory=i).drop_sel(
+                obs=np.where(condition.isel(trajectory=i))[0])  # Dropping from given trajectory
+            new = new.pad(pad_width={'obs': (0, self._obj.dims['obs']-new.dims['obs'])}) # Pad with NaN
+            trajs.append(new)
+
+        return xr.concat(trajs, dim='trajectory')

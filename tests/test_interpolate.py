@@ -48,3 +48,20 @@ def test_insert_nan_where(barents, plot):
         barents.traj.plot(color='b', linewidth=2)
         b2.traj.plot(color='r')
         plt.show()
+
+def test_drop_where(barents, plot):
+
+    t2n = barents.traj.time_to_next()/np.timedelta64(1, 'm')
+    assert_almost_equal(t2n.min(), 0.0166, 3)
+    assert_almost_equal(barents.traj.speed().max(), 1008.3, 1) # Unreasonably large due to small timestep
+
+    b2 = barents.traj.drop_where(t2n<5)  # Delete where timestep < 5 minutes
+    t2n = b2.traj.time_to_next()/np.timedelta64(1, 'm')
+    assert_almost_equal(t2n.min(), 24.166, 3)
+    # After removing positions with very small time step, calculated maximum speed is reasonable
+    assert_almost_equal(b2.traj.speed().max(), 1.287, 1)
+
+    assert barents.dims['obs'] == 2287
+    assert b2.dims['obs'] == 2287
+    # Trimming off the empty positions at the end
+    assert b2.dropna(dim='obs', how='all').dims['obs'] == 2279
