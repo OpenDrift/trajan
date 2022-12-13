@@ -10,3 +10,18 @@ def test_barents(barents, plot):
     if plot:
         plt.show()
 
+def test_barents_linecolor(barents, plot):
+    speed = barents.traj.speed()
+    mappable = barents.traj.plot(color=speed.where(speed<10),
+                                 linewidth=2, land='h', margin=.4)
+
+    cb = plt.gcf().colorbar(mappable,
+              orientation='horizontal',
+              pad=.05,
+              aspect=30,
+              shrink=.8,
+              drawedges=False)
+    cb.set_label('Drifter speed  [m/s]')
+
+    if plot:
+        plt.show()
