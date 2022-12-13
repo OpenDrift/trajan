@@ -139,7 +139,7 @@ class Plot:
 
         Returns:
 
-            Matplotlib lines, and axes.
+            Matplotlib lines.
         """
         logger.debug(f'Plotting lines')
         ax = self.set_up_map(kwargs)
@@ -172,7 +172,7 @@ class Plot:
 
         Returns:
 
-            Matplotlib lines, and axes.
+            Matplotlib lines.
         """
         logger.debug(f'Plotting lines')
         ax = self.set_up_map(kwargs)
