@@ -133,7 +133,7 @@ class Plot:
 
         Args:
 
-            ax: Use existing axes, otherwise a new one is set up.
+            ax: Use given axes, otherwise use current.
 
             crs: Specify crs for new axis.
 
@@ -155,25 +155,49 @@ class Plot:
         x = self.ds.lon.values.T
         y = self.ds.lat.values.T
 
-        if hasattr(kwargs['color'], 'shape'):
-            from matplotlib.collections import LineCollection
-            c = kwargs.pop('color').T
-            if hasattr(c, 'values'):
-                c = c.values
-            vmin = kwargs.pop('vmin', np.nanmin(c))
-            vmax = kwargs.pop('vmax', np.nanmax(c))
-            norm = plt.Normalize(vmin, vmax)
-            colorbar = kwargs.pop('colorbar', False)
+        return paths
 
-            for i in range(x.shape[1]):
-                points = np.array([x[:,i].T, y[:,i].T]).T.reshape(-1, 1, 2)
-                segments = np.concatenate([points[:-1], points[1:]], axis=1)
-                lc = LineCollection(segments, cmap='jet', norm=norm, transform=self.gcrs,
-                                    *args, **kwargs)
-                # Set the values used for colormapping
-                lc.set_array(c[:,i])
-                paths = ax.add_collection(lc)
-        else:
-            paths = ax.plot(x, y, transform=self.gcrs, *args, **kwargs)
+    def color_lines(self, s, *args, **kwargs):
+        """
+        Plot the trajectory lines with colors dependent on value.
+
+        Args:
+
+            s: Value to use for color.
+
+            ax: Use given axes, otherwise use current.
+
+            crs: Specify crs for new axis.
+
+
+        Returns:
+
+            Matplotlib lines, and axes.
+        """
+        logger.debug(f'Plotting lines')
+        ax = self.set_up_map(kwargs)
+        x = self.ds.lon.values.T
+        y = self.ds.lat.values.T
+
+        s = np.atleast_2d(s).T
+
+        from matplotlib.collections import LineCollection
+
+        vmin = kwargs.pop('vmin', np.nanmin(s.ravel()))
+        vmax = kwargs.pop('vmax', np.nanmax(s.ravel()))
+
+        norm = plt.Normalize(vmin, vmax)
+
+        paths = []
+
+        for i in range(x.shape[1]):
+            points = np.array([x[:,i].T, y[:,i].T]).T.reshape(-1, 1, 2)
+            segments = np.concatenate([points[:-1], points[1:]], axis=1)
+            lc = LineCollection(segments, cmap='jet', norm=norm, transform=self.gcrs,
+                                *args, **kwargs)
+            # Set the values used for colormapping
+            lc.set_array(s[:,i])
+            paths = ax.add_collection(lc)
 
         return paths
+
