@@ -31,7 +31,7 @@ def test_speed(barents, plot):
     speed = barents.traj.speed()
     speed = speed.where(speed<10).where(speed>0.01)
     
-    assert_almost_equal(speed.max(), 1.287, 3)
+    assert_almost_equal(speed.max(), 1.284, 3)
 
     if plot:
         plt.hist(speed.values[~np.isnan(speed.values)], 100)
@@ -62,6 +62,6 @@ def test_drop_where(barents, plot):
     assert_almost_equal(b2.traj.speed().max(), 1.287, 1)
 
     assert barents.dims['obs'] == 2287
-    assert b2.dims['obs'] == 2287
+    assert b2.dims['obs'] == 2285
     # Trimming off the empty positions at the end
     assert b2.dropna(dim='obs', how='all').dims['obs'] == 2279

@@ -146,7 +146,7 @@ class TrajAccessor:
         return np.ma.notmasked_edges(np.ma.masked_invalid(self._obj.lon.values), axis=1)[1][1]
 
     def insert_nan_where(self, condition):
-        """Insert NaN-values in trajectories at given positions, shifting rest of trajectory"""
+        """Insert NaN-values in trajectories after given positions, shifting rest of trajectory"""
 
         index_of_last = self.index_of_last()
         num_inserts = condition.sum(dim='obs')
@@ -177,7 +177,7 @@ class TrajAccessor:
             for t in range(self._obj.dims['trajectory']):  # loop over trajectories
                 numins = num_inserts[t]
                 olddata = var.isel(trajectory=t).values
-                wh = np.argwhere(condition.isel(trajectory=t).values)
+                wh = np.argwhere(condition.isel(trajectory=t).values)+1
                 if len(wh) == 0:
                     newdata = olddata
                 else:
@@ -189,6 +189,7 @@ class TrajAccessor:
                     else:
                         na = np.atleast_1d(np.nan)
                     newdata = np.concatenate([np.concatenate((ss, na)) for ss in s])
+                    
 
                 newdata = newdata[slice(0, max_obs-1)]  # truncating, should be checked
                 da[{'trajectory': t, 'obs': slice(0, len(newdata))}] = newdata
@@ -203,10 +204,14 @@ class TrajAccessor:
         """Remove positions where condition is True, shifting rest of trajectory"""
 
         trajs = []
+        newlen = 0
         for i in range(self._obj.dims['trajectory']):
             new = self._obj.isel(trajectory=i).drop_sel(
                 obs=np.where(condition.isel(trajectory=i))[0])  # Dropping from given trajectory
-            new = new.pad(pad_width={'obs': (0, self._obj.dims['obs']-new.dims['obs'])}) # Pad with NaN
+            newlen = max(newlen, new.dims['obs'])
             trajs.append(new)
+
+        # Ensure all trajectories have equal length, by padding with NaN at end
+        trajs = [t.pad(pad_width={'obs': (0, newlen-t.dims['obs'])}) for t in trajs]
 
         return xr.concat(trajs, dim='trajectory')
