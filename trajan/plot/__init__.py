@@ -166,6 +166,7 @@ class Plot:
             colorbar = kwargs.pop('colorbar', False)
 
             for i in range(x.shape[1]):
+                logger.debug(f'Plotting trajectory {i} of {x.shape[1]} with color')
                 points = np.array([x[:,i].T, y[:,i].T]).T.reshape(-1, 1, 2)
                 segments = np.concatenate([points[:-1], points[1:]], axis=1)
                 lc = LineCollection(segments, cmap='jet', norm=norm, transform=self.gcrs,
