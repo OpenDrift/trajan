@@ -22,6 +22,7 @@ class Traj2d(Traj):
         """
 
         from scipy.interpolate import interp1d
+        import pandas as pd
 
         if isinstance(times, str):  # Make time series with given interval
             freq = times
@@ -41,9 +42,9 @@ class Traj2d(Traj):
                        attrs=self.ds.attrs)
 
         for varname, var in self.ds.variables.items():
-            if varname in ['time', 'obs']:
+            if varname in ['time']:
                 continue
-            if 'time' not in var.dims:
+            if 'obs' not in var.dims:
                 d[varname] = var
                 continue
 

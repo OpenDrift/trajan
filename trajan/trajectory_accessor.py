@@ -29,17 +29,17 @@ class TrajAccessor:
         self._ds = xarray_obj
         self.__plot__ = None
 
-        if 'obs' in self.ds.dims:
-            logger.info('Normalizing dimension name from "obs" to "time".')
-            self._ds = self._ds.rename({'obs': 'time'})
+        #if 'obs' in self.ds.dims:
+        #    logger.info('Normalizing dimension name from "obs" to "time".')
+        #    self._ds = self._ds.rename({'obs': 'time'})
 
         if 'traj' in self.ds.dims:
             logger.info(
                 'Normalizing dimension name from "traj" to "trajectory".')
             self._ds = self._ds.rename({'traj': 'trajectory'})
 
-        if not 'time' in self.ds.dims:
-            raise ValueError(f'Time dimension not identified: {self.ds.dims}')
+        #if not 'time' in self.ds.dims:
+        #    raise ValueError(f'Time dimension not identified: {self.ds.dims}')
 
         if not 'trajectory' in self.ds.dims:
             raise ValueError(
@@ -83,11 +83,11 @@ class TrajAccessor:
            Last time is repeated for last position (which has no next position)
         """
         time = self.ds.time
-        lenobs = self.ds.dims['time']
-        td = time.isel(time=slice(1, lenobs)) - time.isel(
-            time=slice(0, lenobs - 1))
-        td = xr.concat((td, td.isel(time=-1)),
-                       dim='time')  # repeating last time step
+        lenobs = self.ds.dims['obs']
+        td = time.isel(obs=slice(1, lenobs)) - time.isel(
+            obs=slice(0, lenobs - 1))
+        td = xr.concat((td, td.isel(obs=-1)),
+                       dim='obs')  # repeating last time step
         return td
 
     def distance_to_next(self):
@@ -97,18 +97,18 @@ class TrajAccessor:
         """
         lon = self.ds.lon
         lat = self.ds.lat
-        lenobs = self.ds.dims['time']
-        lonfrom = lon.isel(time=slice(0, lenobs - 1))
-        latfrom = lat.isel(time=slice(0, lenobs - 1))
-        lonto = lon.isel(time=slice(1, lenobs))
-        latto = lat.isel(time=slice(1, lenobs))
+        lenobs = self.ds.dims['obs']
+        lonfrom = lon.isel(obs=slice(0, lenobs - 1))
+        latfrom = lat.isel(obs=slice(0, lenobs - 1))
+        lonto = lon.isel(obs=slice(1, lenobs))
+        latto = lat.isel(obs=slice(1, lenobs))
         geod = pyproj.Geod(ellps='WGS84')
         azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto,
                                                  latto)
 
         distance = xr.DataArray(distance, coords=lon.coords, dims=lon.dims)
-        distance = xr.concat((distance, distance.isel(time=-1)),
-                             dim='time')  # repeating last time step to
+        distance = xr.concat((distance, distance.isel(obs=-1)),
+                             dim='obs')  # repeating last time step to
         return distance
 
     def speed(self):
@@ -128,22 +128,21 @@ class TrajAccessor:
         """Insert NaN-values in trajectories after given positions, shifting rest of trajectory"""
 
         index_of_last = self.index_of_last()
-        num_inserts = condition.sum(dim='time')
+        num_inserts = condition.sum(dim='obs')
         max_obs = (index_of_last + num_inserts).max().values
 
         # Create new empty dataset with extended obs dimension
         trajcoord = range(self.ds.dims['trajectory'])
         nd = xr.Dataset(
             coords={
-                'trajectory':
-                (["trajectory"], range(self.ds.dims['trajectory'])),
-                'time': (["time"], range(max_obs))  # Longest trajectory
+                'trajectory': (["trajectory"], range(self.ds.dims['trajectory'])),
+                'obs': (['obs'], range(max_obs))  # Longest trajectory
             },
             attrs=self.ds.attrs)
 
         # Add extended variables
         for varname, var in self.ds.data_vars.items():
-            if 'time' not in var.dims:
+            if 'obs' not in var.dims:
                 nd[varname] = var
                 continue
             # Create empty dataarray to hold interpolated values for given variable
@@ -173,11 +172,11 @@ class TrajAccessor:
 
                 newdata = newdata[slice(0, max_obs -
                                         1)]  # truncating, should be checked
-                da[{'trajectory': t, 'time': slice(0, len(newdata))}] = newdata
+                da[{'trajectory': t, 'obs': slice(0, len(newdata))}] = newdata
 
             nd[varname] = da.astype(var.dtype)
 
-        nd = nd.drop_vars(('time', 'trajectory'))  # Remove coordinates
+        nd = nd.drop_vars(('obs', 'trajectory'))  # Remove coordinates
 
         return nd
 
@@ -187,15 +186,15 @@ class TrajAccessor:
         trajs = []
         newlen = 0
         for i in range(self.ds.dims['trajectory']):
-            new = self.ds.isel(trajectory=i).drop_sel(time=np.where(
+            new = self.ds.isel(trajectory=i).drop_sel(obs=np.where(
                 condition.isel(
                     trajectory=i))[0])  # Dropping from given trajectory
-            newlen = max(newlen, new.dims['time'])
+            newlen = max(newlen, new.dims['obs'])
             trajs.append(new)
 
         # Ensure all trajectories have equal length, by padding with NaN at end
         trajs = [
-            t.pad(pad_width={'time': (0, newlen - t.dims['time'])})
+            t.pad(pad_width={'obs': (0, newlen - t.dims['obs'])})
             for t in trajs
         ]
 
