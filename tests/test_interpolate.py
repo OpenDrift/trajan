@@ -32,6 +32,12 @@ def test_speed(barents, plot):
     speed = speed.where(speed<10).where(speed>0.01)
     
     assert_almost_equal(speed.max(), 1.284, 3)
+    assert_almost_equal(speed.mean(), 0.461, 3)
+
+    bh = barents.traj.gridtime('1h')
+    # TODO: should grid to 30 min and see if differences are smaller
+    assert_almost_equal(bh.traj.speed().max(), 1.170, 3)  # Note slightly smaller max after gridding
+    assert_almost_equal(bh.traj.speed().mean(), 0.384, 3) # Note significantly smaller mean
 
     if plot:
         plt.hist(speed.values[~np.isnan(speed.values)], 100)

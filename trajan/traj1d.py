@@ -8,3 +8,7 @@ class Traj1d(Traj):
     def __init__(self, ds):
         super().__init__(ds)
 
+
+    def time_to_next(self):
+        time_step = self.ds.time[1] - self.ds.time[0]
+        return time_step
