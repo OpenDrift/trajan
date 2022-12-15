@@ -26,19 +26,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          environment-file: environment.yml
+          python-version: '3.11'
+          miniforge-version: latest
+          miniforge-variant: Mambaforge
+
       - name: Setup Pages
         uses: actions/configure-pages@v2
-        
-      # build to ./_site  
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./
-          destination: ./_site
-          
+
+      - name: Install documentation dependencies
+        run: |
+          conda activate test
+          mamba install sphinx sphinx-rtd-theme sphinx-gallery sphinx-autoapi
+
+      # build to ./_site
+      - name: Build with sphinx
+        run: |
+          conda activate test
+          cd docs
+          make html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
-
+        with:
+          path: ./docs/build/html
+t
   # Deployment job
   deploy:
     environment:
