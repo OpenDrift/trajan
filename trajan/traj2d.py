@@ -5,7 +5,7 @@ from .traj import Traj
 
 class Traj2d(Traj):
     """
-    A unstructured dataset, where each trajectory may have observations at different times. Typically from a bunch of drifters.
+    A unstructured dataset, where each trajectory may have observations at different times. Typically from a collection of drifters.
     """
 
     def __init__(self, ds):
