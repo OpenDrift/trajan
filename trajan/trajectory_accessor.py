@@ -34,10 +34,6 @@ class TrajAccessor:
                 'Normalizing dimension name from "traj" to "trajectory".')
             self._ds = self._ds.rename({'traj': 'trajectory'})
 
-        if not 'trajectory' in self.ds.dims:
-            raise ValueError(
-                f'Trajectory dimension not identified: {self.ds.dims}')
-
         if len(self.ds['time'].shape) == 1:
             logger.debug('Detected structured (1D) trajectory dataset')
             self.inner = Traj1d(self._ds)
