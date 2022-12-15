@@ -34,20 +34,19 @@ jobs:
           miniforge-version: latest
           miniforge-variant: Mambaforge
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
-
       - name: Install documentation dependencies
         run: |
           conda activate test
           mamba install sphinx sphinx-rtd-theme sphinx-gallery sphinx-autoapi
 
-      # build to ./_site
-      - name: Build with sphinx
+      - name: Build docs with sphinx
         run: |
           conda activate test
           cd docs
           make html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
