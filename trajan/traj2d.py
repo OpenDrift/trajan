@@ -43,7 +43,7 @@ class Traj2d(Traj):
                        attrs=self.ds.attrs)
 
         for varname, var in self.ds.variables.items():
-            if varname in ['time']:
+            if varname == 'time':
                 continue
             if 'obs' not in var.dims:
                 d[varname] = var
@@ -56,19 +56,14 @@ class Traj2d(Traj):
                               coords=d.coords,
                               attrs=var.attrs)
 
+            origtimes = self.ds['time'].ffill(dim='obs').astype(np.float64)
+
             for t in range(
                     self.ds.dims['trajectory']):  # loop over trajectories
-                origtimes = self.ds['time'].isel(trajectory=t).astype(
-                    np.float64).values
-                validtime = np.nonzero(~np.isnan(origtimes))[0]
-                interptime = origtimes[validtime]
-                interpvar = var.isel(trajectory=t).data
                 # Make interpolator
-                f = interp1d(interptime, interpvar, bounds_error=False)
+                f = interp1d(origtimes.isel(trajectory=t), var.isel(trajectory=t), bounds_error=False)
                 # Interpolate onto given times
-                da.loc[{
-                    'trajectory': t
-                }] = f(times.to_numpy().astype(np.float64))
+                da.loc[{'trajectory': t}] = f(times.to_numpy().astype(np.float64))
 
             d[varname] = da
 
