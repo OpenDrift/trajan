@@ -37,16 +37,14 @@ class Traj:
         lon = self.ds.lon
         lat = self.ds.lat
         lenobs = self.ds.dims[self.obsdim]
-        lonfrom = lon.isel(obs=slice(0, lenobs - 1))
-        latfrom = lat.isel(obs=slice(0, lenobs - 1))
-        lonto = lon.isel(obs=slice(1, lenobs))
-        latto = lat.isel(obs=slice(1, lenobs))
+        lonfrom = lon.isel({self.obsdim: slice(0, lenobs - 1)})
+        latfrom = lat.isel({self.obsdim: slice(0, lenobs - 1)})
+        lonto = lon.isel({self.obsdim: slice(1, lenobs)})
+        latto = lat.isel({self.obsdim: slice(1, lenobs)})
         geod = pyproj.Geod(ellps='WGS84')
-        azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto,
-                                                 latto)
+        azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto, latto)
 
-        distance = xr.DataArray(distance, coords=lon.coords, dims=lon.dims)
-        distance = xr.concat((distance, distance.isel(obs=-1)),
+        distance = xr.DataArray(distance, coords=lonfrom.coords, dims=lon.dims)
+        distance = xr.concat((distance, distance.isel({self.obsdim: -1})),
                              dim=self.obsdim)  # repeating last time step to
         return distance
-
