@@ -29,17 +29,10 @@ class TrajAccessor:
         self._ds = xarray_obj
         self.__plot__ = None
 
-        #if 'obs' in self.ds.dims:
-        #    logger.info('Normalizing dimension name from "obs" to "time".')
-        #    self._ds = self._ds.rename({'obs': 'time'})
-
         if 'traj' in self.ds.dims:
             logger.info(
                 'Normalizing dimension name from "traj" to "trajectory".')
             self._ds = self._ds.rename({'traj': 'trajectory'})
-
-        #if not 'time' in self.ds.dims:
-        #    raise ValueError(f'Time dimension not identified: {self.ds.dims}')
 
         if not 'trajectory' in self.ds.dims:
             raise ValueError(
@@ -53,9 +46,6 @@ class TrajAccessor:
             self.inner = Traj2d(self._ds)
         else:
             raise ValueError(f'Time dimension has shape greater than 2: {self.ds["time"].shape}')
-
-        print (self.ds)
-
 
 
     @property
