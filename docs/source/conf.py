@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore", category=UserWarning,
 sphinx_gallery_conf = {
      'examples_dirs': '../../examples/',   # path to your example scripts
      'gallery_dirs': './gallery',  # path to where to save gallery generated output,
-     # 'filename_pattern': '/example_(?!long_)',
+     'filename_pattern': '/example_(?!long_)',
      'ignore_pattern': 'create_test',
      'backreferences_dir': None,
      'capture_repr': ('_repr_html_', '__repr__'),
