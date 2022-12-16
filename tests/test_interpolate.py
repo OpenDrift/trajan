@@ -27,20 +27,28 @@ def test_interpolate_barents(barents, plot):
 
 def test_speed(barents, plot):
     """Implicitly also testing distance_to_next and time_to_next"""
-    barents = barents.traj.insert_nan_where(barents.traj.time_to_next()>np.timedelta64(30, 'm'))
+    barents = barents.traj.insert_nan_where(barents.traj.time_to_next()>np.timedelta64(60, 'm'))
+    barents = barents.traj.drop_where(barents.traj.time_to_next()<np.timedelta64(5, 'm'))  # Delete where timestep < 5 minutes
     speed = barents.traj.speed()
-    speed = speed.where(speed<10).where(speed>0.01)
+    speed = speed.where(speed>0.01)  # Mask where drifter is on land
     
-    assert_almost_equal(speed.max(), 1.284, 3)
+    assert_almost_equal(speed.max(), 1.287, 3)
     assert_almost_equal(speed.mean(), 0.461, 3)
 
+    # Gridding to hourly
     bh = barents.traj.gridtime('1h')
-    # TODO: should grid to 30 min and see if differences are smaller
-    assert_almost_equal(bh.traj.speed().max(), 1.170, 3)  # Note slightly smaller max after gridding
-    assert_almost_equal(bh.traj.speed().mean(), 0.384, 3) # Note significantly smaller mean
+    speed_bh = bh.traj.speed()
+    speed_bh = speed_bh.where(speed_bh>0.01)
+
+    assert_almost_equal(speed_bh.max(), 1.261, 3)  # Slightly different after gridding
+    assert_almost_equal(speed_bh.mean(), 0.459, 3)
 
     if plot:
-        plt.hist(speed.values[~np.isnan(speed.values)], 100)
+        plt.hist(speed.values[~np.isnan(speed.values)], 100, color='r', label='Original')
+        plt.hist(speed_bh.values[~np.isnan(speed_bh.values)], 100, color='b', label='Hourly gridded')
+        plt.legend()
+        plt.xlabel('Drifter speed  [m/s]')
+        plt.ylabel('Number')
         plt.show()
 
 def test_insert_nan_where(barents, plot):
