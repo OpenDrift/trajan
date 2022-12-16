@@ -37,21 +37,10 @@ plt.title('First 10 elements, and every 4th time steps')
 plt.show()
 
 #%%
-# Plotting a "mean" trajectory on top
+# Plotting a "mean" trajectory on top, with a sub period in yellow
 ds.traj.plot(color='red', alpha=0.01, land='fast')  # Plotting trajectories in red, and with landmask as land.
 dmean = ds.mean('trajectory', skipna=True)
 dmean.traj.plot.lines(color='black', linewidth=5)  # Plotting mean trajectory in black
-plt.show()
-
-#%%
-# Calling set_up_map explicitly
-ds.traj.plot.set_up_map(margin=0)
-ds.traj.plot(color='red', alpha=0.01)  # Plotting trajectories in red
-dmean.traj.plot(color='black', alpha=1, linewidth=5)  # Plotting mean trajectory in black
-
-#%%
-# Plotting the mean trajectory for a sub period in yellow
-dmean17nov = ds.sel(time=slice('2015-11-17', '2015-11-17 12')).mean('trajectory', skipna=True)
-dmean17nov.traj.plot(color='yellow', alpha=1, linewidth=5)
+dmean.sel(time=slice('2015-11-17', '2015-11-17 12')).traj.plot(color='yellow', alpha=1, linewidth=5)
 plt.tight_layout()
 plt.show()
