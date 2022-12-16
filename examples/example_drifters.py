@@ -17,6 +17,7 @@ with lzma.open('barents.nc.xz') as barents:
 
 #%%
 # This follows the CF convention for trajectories
+# https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html#_multidimensional_array_representation_of_trajectories
 print(ds)
 
 #%%
@@ -26,7 +27,8 @@ plt.show()
 
 #%%
 # The figure can be customized, combining functionality from Trajan, Xarray and Matplotlib
-ds.isel(trajectory=1).traj.plot(color='b', label=ds.drifter_names[1].values, land='mask', margin=2)
+ds.isel(trajectory=1).traj.plot(color='b', label=ds.drifter_names[1].values,
+                                land='mask', margin=3)
 ds.isel(trajectory=0).traj.plot(color='r', label=ds.drifter_names[0].values)
 plt.legend()
 plt.title('Two drifters in the Barents Sea')
@@ -35,14 +37,12 @@ plt.show()
 #%%
 # Trajan includes methods to e.g. calculate the speed of the drifters
 speed = ds.traj.speed()
-
-#%%
-# We see that the max speed > 1000 m/s, which is a numerical error
-# due to some cases with GPS positions reported with very small time intervel
 print(f'Max speed {speed.max().values} m/s')
 
 #%%
-# By removing all positions where time interval < 5 min, we avoid this problem
+# We see that the max speed > 1000 m/s, which is a numerical error
+# due to some cases with GPS positions reported with very small time interval.
+# By removing all positions where time interval < 5 min, we avoid this problem.
 ds = ds.traj.drop_where(ds.traj.time_to_next() < np.timedelta64(5, 'm'))
 speed = ds.traj.speed()
 print(f'Max speed {speed.max().values} m/s')
@@ -70,6 +70,7 @@ plt.xlabel('Drifter speed  [m/s]')
 plt.ylabel('Number')
 plt.show()
 
+#%%
 # The peak at speed=0m/s is from the period where one of the drifters are on land (Hopen island).
 # This can be removed simply:
 speed = speed.where(speed>0.01)
@@ -100,5 +101,5 @@ plt.show()
 
 #%%
 # The original dataset had two dimensions `(trajectory, obs)` (see top of page), and time is a 2D variable.
-# For the gridded dataset (as with datasets imported from some trajectory models), dimensions are `(trajectory, time)` time is the same for all drifters, and is represented as a 1D Xarray dimension coordinate
+# For the gridded dataset (as with datasets imported from some trajectory models), dimensions are `(trajectory, time)` and time is a 1D Xarray dimension coordinate
 print(dh)
