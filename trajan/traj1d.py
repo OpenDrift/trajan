@@ -19,23 +19,25 @@ class Traj1d(Traj):
 
     def velocity_spectrum(self):
 
+        if self.ds.dims['trajectory'] > 1:
+            raise ValueError('Spectrum can only be calculated for a single trajectory')
+
         u, v = self.velocity_components()
         u = u.squeeze()
         v = v.squeeze()
-
-        th = (self.ds.time - self.ds.time[0]) / np.timedelta64(1, 'h')  # hours since start
-        th = th[np.isfinite(u)]
-        timestep_h = (th[1] - th[0]).values
         u = u[np.isfinite(u)]
         v = v[np.isfinite(v)]
 
-        sp = np.abs(np.fft.rfft(np.abs(u + 1j*v)))
-        freq = np.fft.rfftfreq(n=u.size, d=timestep_h)
+        timestep_h = (self.ds.time[1] - self.ds.time[0]) / np.timedelta64(1, 'h')  # hours since start
+
+        ps = np.abs(np.fft.rfft(np.abs(u + 1j*v)))
+        freq = np.fft.rfftfreq(n=u.size, d=timestep_h.values)
+        freq[0] = np.nan
 
         da = xr.DataArray(
-            data=sp, name='velocity spectrum',
+            data=ps, name='velocity spectrum',
             dims=['period'],
-            coords={'period': (['period'], 1/freq, {'units': 'cycles per hour'})},
+            coords={'period': (['period'], 1/freq, {'units': 'hours'})},
             attrs={'units': 'power'}
             )
 
