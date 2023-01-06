@@ -103,3 +103,9 @@ plt.show()
 # The original dataset had two dimensions `(trajectory, obs)` (see top of page), and time is a 2D variable.
 # For the gridded dataset (as with datasets imported from some trajectory models), dimensions are `(trajectory, time)` and time is a 1D Xarray dimension coordinate
 print(dh)
+
+#%%
+# Plotting the velocity spectrum for one drifter
+dh.isel(trajectory=1).traj.velocity_spectrum().plot()
+plt.xlim([0, 30])
+plt.show()
