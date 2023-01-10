@@ -8,7 +8,7 @@ import xarray as xr
 from . import trajectory_accessor as _
 from . import skill as _
 
-def trajectory_dict_to_dataset(trajectory_dict, variable_attributes={}, global_attributes={}):
+def trajectory_dict_to_dataset(trajectory_dict, variable_attributes=None, global_attributes=None):
     """Create a CF-compatible trajectory file from dictionary of drifter positions
 
     Trajectory_dict shall have the following structure:
@@ -20,6 +20,12 @@ def trajectory_dict_to_dataset(trajectory_dict, variable_attributes={}, global_a
         {'buoy2_name': {
             ...
     """
+
+    if variable_attributes is None:
+        variable_attributes = dict()
+
+    if global_attributes is None:
+        global_attributes = dict()
 
     drifter_names = list(trajectory_dict)
     num_drifters = len(drifter_names)
