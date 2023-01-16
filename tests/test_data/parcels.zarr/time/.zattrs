@@ -1,0 +1,11 @@
+{
+    "_ARRAY_DIMENSIONS": [
+        "trajectory",
+        "obs"
+    ],
+    "axis": "T",
+    "calendar": "standard",
+    "long_name": "",
+    "standard_name": "time",
+    "units": "seconds since 2022-10-12T18:00:00.000000000"
+}

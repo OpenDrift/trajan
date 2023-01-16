@@ -42,3 +42,23 @@ class Traj1d(Traj):
             )
 
         return da
+
+    def rotary_spectrum(self):
+        ### TODO unfinished method
+
+        from .tools import rotary_spectra
+        if self.ds.dims['trajectory'] > 1:
+            raise ValueError('Spectrum can only be calculated for a single trajectory')
+
+        u, v = self.velocity_components()
+        u = u.squeeze()
+        v = v.squeeze()
+        u = u[np.isfinite(u)]
+        v = v[np.isfinite(v)]
+
+        puv, quv, cw, ccw, F = rotary_spectra(u, v)
+        print(puv)
+        import matplotlib.pyplot as plt
+        plt.plot(1/F, cw)
+        plt.xlim([0, 30])
+        plt.show()

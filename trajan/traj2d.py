@@ -43,7 +43,7 @@ class Traj2d(Traj):
                        attrs=self.ds.attrs)
 
         for varname, var in self.ds.variables.items():
-            if varname == 'time':
+            if varname in ('time', 'obs'):
                 continue
             if 'obs' not in var.dims:
                 d[varname] = var
