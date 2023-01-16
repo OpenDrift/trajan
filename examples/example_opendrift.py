@@ -1,6 +1,6 @@
 """
-Analysing output from a trajectory model
-=========================================
+Analysing output from OpenDrift
+===============================
 """
 import lzma
 import matplotlib.pyplot as plt

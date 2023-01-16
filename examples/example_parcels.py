@@ -1,3 +1,8 @@
+"""
+Analysing output from Parcels (Zarr format)
+===========================================
+"""
+
 import matplotlib.pyplot as plt
 import xarray as xr
 import trajan as ta
