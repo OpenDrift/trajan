@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - xarray[complete]
+  - zarr
   - numpy
   - scipy
   - netcdf4
