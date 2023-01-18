@@ -8,7 +8,7 @@ Installation
 
 .. code-block:: console
 
-   (.venv) $ pip install trajan
+   $ conda -c conda-forge install trajan
 
 
 

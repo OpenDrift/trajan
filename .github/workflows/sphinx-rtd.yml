@@ -40,7 +40,7 @@ jobs:
       - name: Install documentation dependencies
         run: |
           conda activate test
-          mamba install sphinx sphinx-rtd-theme sphinx-gallery sphinx-autoapi
+          mamba install sphinx sphinx-rtd-theme sphinx-gallery sphinx-autoapi sphinx-autosummary-accessors
 
       - name: Build docs with sphinx
         run: |

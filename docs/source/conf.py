@@ -1,5 +1,7 @@
 import os, sys
 sys.path.insert(0, os.path.abspath('../..'))
+
+import sphinx_autosummary_accessors
 # Configuration file for the Sphinx documentation builder.
 
 # -- Project information
@@ -41,6 +43,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'autoapi.extension',
     'sphinx.ext.autosummary',
+    'sphinx_autosummary_accessors',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
@@ -54,7 +57,7 @@ intersphinx_mapping = {
 }
 intersphinx_disabled_domains = ['std']
 
-templates_path = ['_templates']
+templates_path = ["_templates", sphinx_autosummary_accessors.templates_path]
 
 # -- Options for HTML output
 
