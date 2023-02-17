@@ -83,3 +83,31 @@ class Traj:
         v = speed*np.sin(azimuth)
 
         return u, v
+
+    def get_area_convex_hull(self):
+        """Returns the area of the convex hull spanned by all particles, per timestep"""
+
+        from scipy.spatial import ConvexHull
+        from pyproj import Geod
+
+        area = []
+        lons = self.ds.lon.where(self.ds.status==0)
+        lats = self.ds.lat.where(self.ds.status==0)
+        for i in range(self.ds.dims['time']):
+            lat = lats.isel(time=i)
+            lon = lons.isel(time=i)
+            fin = np.isfinite(lat+lon)
+            if np.sum(fin) <= 3:
+                area.append(0)
+                continue
+            lat = lat[fin]
+            lon = lon[fin]
+            aea = pyproj.Proj(f'+proj=aea +lat_0={lat.mean().values} +lat_1={lat.min().values} +lat_2={lat.max().values} +lon_0={lon.mean().values} +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs')
+
+            x, y = aea(lat, lon, inverse=False)
+            fin = np.isfinite(x+y)
+            points = np.vstack((y.T, x.T)).T
+            hull = ConvexHull(points)
+            area.append(hull.volume)  # volume=area for 2D as here
+
+        return np.array(area)
