@@ -119,7 +119,8 @@ class Plot:
         gl = ax.gridlines(self.gcrs, draw_labels=True)
         gl.top_labels = None
 
-        add_land(ax, lonmin, latmin, lonmax, latmax,
+        if land is not None:
+            add_land(ax, lonmin, latmin, lonmax, latmax,
                  fast=(land == 'mask' or land == 'fast'), lscale=land, globe=crs.globe)
 
         return ax
