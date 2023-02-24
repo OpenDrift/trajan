@@ -109,3 +109,9 @@ print(dh)
 dh.isel(trajectory=1).traj.velocity_spectrum().plot()
 plt.xlim([0, 30])
 plt.show()
+
+#%%
+# Do a basic animation of the drift of the drifters
+ds.traj.animate()
+plt.show()
+
