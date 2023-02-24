@@ -92,7 +92,7 @@ class Plot:
             logger.debug('Creating new figure and axes..')
             meanlat = (latmin + latmax) / 2
             aspect_ratio = float(latmax - latmin) / (float(lonmax - lonmin))
-            aspect_ratio = aspect_ratio / np.cos(np.radians(meanlat))
+            aspect_ratio = np.abs(aspect_ratio / np.cos(np.radians(meanlat)))
 
             if aspect_ratio > 1:
                 fig = plt.figure(figsize=(figsize / aspect_ratio, figsize))
