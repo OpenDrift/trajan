@@ -1,7 +1,6 @@
 import logging
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-import cartopy.feature as cfeature
 import numpy as np
 import xarray as xr
 

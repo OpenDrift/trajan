@@ -12,6 +12,7 @@ import pyproj
 import logging
 
 from .plot import Plot
+from .animation import Animation
 from .traj import Traj
 from .traj1d import Traj1d
 from .traj2d import Traj2d
@@ -23,11 +24,13 @@ logger = logging.getLogger(__name__)
 class TrajAccessor:
     _ds: xr.Dataset
     __plot__: Plot
+    __animate__: Animation
     inner: Traj
 
     def __init__(self, xarray_obj):
         self._ds = xarray_obj
         self.__plot__ = None
+        self.__animate__ = None
 
         if 'traj' in self.ds.dims:
             logger.info(
@@ -53,6 +56,14 @@ class TrajAccessor:
             self.__plot__ = Plot(self.ds)
 
         return self.__plot__
+
+    @property
+    def animate(self):
+        if self.__animate__ is None:
+            logger.debug(f'Setting up new animation object.')
+            self.__animate__ = Animation(self.ds)
+
+        return self.__animate__
 
     @property
     def ds(self):
