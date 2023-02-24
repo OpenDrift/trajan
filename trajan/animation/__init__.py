@@ -1,3 +1,4 @@
+from functools import partial
 import logging
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -28,3 +29,22 @@ class Animation:
     def animate(self, *args, **kwargs):
         logger.debug(f'Animating trajectories..')
         ax = self.ds.traj.plot.set_up_map(kwargs)
+        fig = ax.get_figure()
+
+        ds = self.ds.traj.gridtime(times='1H')
+        frames = ds.time.shape[0]
+
+        logger.debug(f'Running animation.. frames: {frames}')
+        self.__animation__ = FuncAnimation(fig, partial(self.plot_frame, ax, ds), frames=ds.time.shape[0], interval=20)
+
+        return self.__animation__
+
+    def plot_frame(self, ax, ds, frame):
+        logger.debug(f'Plotting frame: {frame}')
+        ds = ds.isel(time=frame)
+        x = ds.lon.values.T
+        y = ds.lat.values.T
+        paths = ax.scatter(x, y, transform=self.gcrs)
+        return paths
+
+

@@ -40,7 +40,7 @@ class TrajAccessor:
         if 'trajectory' not in self.ds.dims:  # Add empty trajectory dimension, if single trajectory
             self._ds = self._ds.expand_dims({'trajectory': 1})
 
-        if len(self.ds['time'].shape) == 1:
+        if len(self.ds['time'].shape) <= 1:
             logger.debug('Detected structured (1D) trajectory dataset')
             self.inner = Traj1d(self._ds)
         elif len(self.ds['time'].shape) == 2:
