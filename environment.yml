@@ -20,5 +20,6 @@ dependencies:
   - toml
   - click
   - roaring-landmask
+  - cf_xarray
   - parcels
   - opendrift
