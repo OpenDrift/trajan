@@ -23,6 +23,7 @@ class Traj:
         else:
             raise ValueError('No time or obs dimension')
 
+    @property
     def tx(self):
         """
         Trajectory x coordinates (usually longitude).
@@ -31,8 +32,18 @@ class Traj:
 
             `ref:tlat`
         """
-        return self.ds.lon # TODO: lon may be in 'x'
+        if 'lon' in self.ds:
+            return self.ds.lon
+        elif 'longitude' in self.ds:
+            return self.ds.longitude
+        elif 'x' in self.ds:
+            return self.ds.x
+        elif 'X' in self.ds:
+            return self.ds.X
+        else:
+            raise ValueError("Could not determine x / lon variable")
 
+    @property
     def ty(self):
         """
         Trajectory y coordinates (usually latitude).
@@ -41,7 +52,16 @@ class Traj:
 
             `ref:tlon`
         """
-        return self.ds.lat # TODO: lat may be in 'y'
+        if 'lat' in self.ds:
+            return self.ds.lat
+        elif 'latitude' in self.ds:
+            return self.ds.latitude
+        elif 'y' in self.ds:
+            return self.ds.y
+        elif 'Y' in self.ds:
+            return self.ds.Y
+        else:
+            raise ValueError("Could not determine y / lat variable")
 
     @property
     @cache
@@ -50,13 +70,14 @@ class Traj:
         Retrieve the trajectories in geographic coordinates (longitudes).
         """
         if self.crs.is_geographic:
-            return self.tx()
+            return self.tx
         else:
             if self.crs is None:
-                return self.tx()
+                return self.tx
             else:
-                x, _ = self.transform(self.__gcrs__, self.tx(), self.ty())
-                X = self.tx().copy(deep=False, data=x) # TODO: remove grid-mapping.
+                x, _ = self.transform(self.__gcrs__, self.tx, self.ty)
+                X = self.tx.copy(deep=False,
+                                   data=x)  # TODO: remove grid-mapping.
                 return X
 
     @property
@@ -66,13 +87,14 @@ class Traj:
         Retrieve the trajectories in geographic coordinates (latitudes).
         """
         if self.crs.is_geographic:
-            return self.ty()
+            return self.ty
         else:
             if self.crs is None:
-                return self.ty()
+                return self.ty
             else:
-                _, y = self.transform(self.__gcrs__, self.tx(), self.ty())
-                Y = self.ty().copy(deep=False, data=y) # TODO: remove grid-mapping.
+                _, y = self.transform(self.__gcrs__, self.tx, self.ty)
+                Y = self.ty.copy(deep=False,
+                                   data=y)  # TODO: remove grid-mapping.
                 return Y
 
     def transform(self, to_crs, x, y):
@@ -119,7 +141,7 @@ class Traj:
             logger.debug(
                 f'No grid-mapping specified, checking if coordinates are lon/lat..'
             )
-            if self.tx().name == 'lon' or self.tx().name == 'longitude':
+            if self.tx.name == 'lon' or self.tx.name == 'longitude':
                 # assume this is in latlon projection
                 return self.__gcrs__
             else:
@@ -140,14 +162,38 @@ class Traj:
 
         # TODO: Ideally this would be handled by cf-xarray or rio-xarray.
 
-        gm = crs.to_cf()
+        if crs is None:
+            logger.info(
+                'Removing CRS information and defining trajactories as Cartesian / unprojected data.'
+            )
 
-        # Create grid mapping variable
-        v = xr.DataArray(name=gm['grid_mapping_name'])
-        v.attrs = gm
-        self.ds[v.name] = v
-        self.tx().attrs['grid_mapping'] = v.name
-        self.ty().attrs['grid_mapping'] = v.name
+            if 'grid_mapping' in self.ds.cf:
+                gm = self.ds.cf['grid_mapping']
+                del self.ds[gm.name]
+
+            for var in self.ds:
+                if 'grid_mapping' in self.ds[var].attrs:
+                    del self.ds[var].attrs['grid_mapping']
+
+            if self.tx.name == 'lon' or self.tx.name == 'longitude':
+                logger.warning(
+                    f'Renaming geographic {self.tx.name, self.ty.name} coordinates to x, y..'
+                )
+                self.ds['x'] = self.tx.rename('x')
+                self.ds['y'] = self.ty.rename('y')
+                assert self.ds['x'].name == 'x'
+                del self.ds[self.tx.name]
+                del self.ds[self.ty.name]
+
+        else:
+            gm = crs.to_cf()
+
+            # Create grid mapping variable
+            v = xr.DataArray(name=gm['grid_mapping_name'])
+            v.attrs = gm
+            self.ds[v.name] = v
+            self.tx.attrs['grid_mapping'] = v.name
+            self.ty.attrs['grid_mapping'] = v.name
 
     def index_of_last(self):
         """Find index of last valid position along each trajectory"""

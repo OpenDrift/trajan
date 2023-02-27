@@ -30,3 +30,13 @@ def test_barents_tlat_tlon(barents, plot):
 
     np.testing.assert_array_equal(barents.lon, barents.traj.tlon)
     np.testing.assert_array_equal(barents.lat, barents.traj.tlat)
+
+def test_barents_remove_crs(barents):
+    assert 'lon' in barents
+    barents.traj.set_crs(None)
+    print(barents.traj.crs)
+    print(barents)
+
+    assert 'lon' not in barents
+
+    assert barents.traj.crs is None
