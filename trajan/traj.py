@@ -56,7 +56,8 @@ class Traj:
                 return self.tx()
             else:
                 x, _ = self.transform(self.__gcrs__, self.tx(), self.ty())
-                return x
+                X = self.tx().copy(deep=False, data=x) # TODO: remove grid-mapping.
+                return X
 
     @property
     @cache
@@ -71,7 +72,8 @@ class Traj:
                 return self.ty()
             else:
                 _, y = self.transform(self.__gcrs__, self.tx(), self.ty())
-                return y # TODO: should return dataarray
+                Y = self.ty().copy(deep=False, data=y) # TODO: remove grid-mapping.
+                return Y
 
     def transform(self, to_crs, x, y):
         """
