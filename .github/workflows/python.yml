@@ -12,9 +12,6 @@ jobs:
   tests:
     name: pytests (${{ matrix.os }} - ${{ matrix.python-version }}, Mambaforge)
     runs-on: ${{ matrix.os }}-latest
-    defaults:
-      run:
-        shell: bash -l {0}
     strategy:
       matrix:
         os: ["ubuntu", "macos", "windows"]
