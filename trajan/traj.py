@@ -3,15 +3,18 @@ import numpy as np
 import xarray as xr
 import cf_xarray as _
 import logging
+from functools import cache
 
 logger = logging.getLogger(__name__)
 
 
 class Traj:
     ds: xr.Dataset
+    __gcrs__: pyproj.CRS
 
     def __init__(self, ds):
         self.ds = ds
+        self.__gcrs__ = pyproj.CRS.from_epsg(4326)
 
         if 'obs' in self.ds.dims:
             self.obsdim = 'obs'
@@ -22,25 +25,91 @@ class Traj:
 
     def tx(self):
         """
-        Trajectory x coordinates (e.g. longitude).
+        Trajectory x coordinates (usually longitude).
+
+        .. see-also:
+
+            `ref:tlat`
         """
-        return self.ds.lon
+        return self.ds.lon # TODO: lon may be in 'x'
 
     def ty(self):
         """
-        Trajectory y coordinates (e.g. latitude).
+        Trajectory y coordinates (usually latitude).
+
+        .. see-also:
+
+            `ref:tlon`
         """
-        return self.ds.lat
+        return self.ds.lat # TODO: lat may be in 'y'
 
     @property
-    def cartopy_crs(self):
+    @cache
+    def tlon(self):
         """
-        Retrieve the Cartopy CRS projection from the CF-defined grid-mapping in the dataset.
+        Retrieve the trajectories in geographic coordinates (longitudes).
         """
-        raise NotImplemented()
+        if self.crs.is_geographic:
+            return self.tx()
+        else:
+            if self.crs is None:
+                return self.tx()
+            else:
+                x, _ = self.transform(self.__gcrs__, self.tx(), self.ty())
+                return x
 
     @property
-    def crs(self):
+    @cache
+    def tlat(self):
+        """
+        Retrieve the trajectories in geographic coordinates (latitudes).
+        """
+        if self.crs.is_geographic:
+            return self.ty()
+        else:
+            if self.crs is None:
+                return self.ty()
+            else:
+                _, y = self.transform(self.__gcrs__, self.tx(), self.ty())
+                return y # TODO: should return dataarray
+
+    def transform(self, to_crs, x, y):
+        """
+        Transform coordinates in this datasets coordinate system to `to_crs` coordinate system.
+
+        Args:
+
+            to_crs: `pyproj.CRS`.
+
+            x, y: Coordinates in `self` CRS.
+
+        Returns:
+
+            xn, yn: Coordinates in `to_crs`.
+        """
+        t = pyproj.Transformer.from_crs(self.crs, to_crs, always_xy=True)
+        return t.transform(x, y)
+
+    def itransform(self, from_crs, x, y):
+        """
+        Transform coordinates in `from_crs` coordinate system to this datasets coordinate system.
+
+        Args:
+
+            from_crs: `pyproj.CRS`.
+
+            x, y: Coordinates in `from_crs` CRS.
+
+        Returns:
+
+            xn, yn: Coordinates in this datasets CRS.
+        """
+        t = pyproj.Transformer.from_crs(from_crs, self.crs, always_xy=True)
+        return t.transform(x, y)
+
+    @property
+    @cache
+    def crs(self) -> pyproj.CRS:
         """
         Retrieve the Proj.4 CRS from the CF-defined grid-mapping in the dataset.
         """
@@ -50,7 +119,7 @@ class Traj:
             )
             if self.tx().name == 'lon' or self.tx().name == 'longitude':
                 # assume this is in latlon projection
-                return pyproj.CRS.from_epsg(4326)
+                return self.__gcrs__
             else:
                 # un-projected, assume coordinates are in xy-Cartesian coordinates.
                 logger.debug(

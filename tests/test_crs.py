@@ -1,3 +1,4 @@
+import numpy as np
 import trajan as ta
 import xarray as xr
 import cf_xarray as _
@@ -19,3 +20,13 @@ def test_barents_set_crs(barents, plot):
     assert 'latitude_longitude' in barents
     assert len(barents.cf.grid_mapping_names) > 0
     assert barents.traj.crs == crs
+
+def test_barents_tlat_tlon(barents, plot):
+    np.testing.assert_array_equal(barents.lon, barents.traj.tlon)
+    np.testing.assert_array_equal(barents.lat, barents.traj.tlat)
+
+    crs = barents.traj.crs
+    barents.traj.set_crs(crs)
+
+    np.testing.assert_array_equal(barents.lon, barents.traj.tlon)
+    np.testing.assert_array_equal(barents.lat, barents.traj.tlat)
