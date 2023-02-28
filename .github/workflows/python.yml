@@ -12,10 +12,13 @@ jobs:
   tests:
     name: pytests (${{ matrix.os }} - ${{ matrix.python-version }}, Mambaforge)
     runs-on: ${{ matrix.os }}-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     strategy:
       matrix:
         os: ["ubuntu", "macos", "windows"]
-        python-version: [ '3.8', '3.9', '3.10' ]
+        python-version: [ '3.9', '3.10', '3.11' ]
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
@@ -24,14 +27,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
           miniforge-variant: Mambaforge
-          activate-environment: test
       - name: Run tests
-        shell: bash -el {0}
         run: |
+          conda activate test
           pytest -vs --log-cli-level=debug
 
       - name: Build wheels
         run: |
+          conda activate test
           mamba install -c conda-forge poetry
           poetry build
 
