@@ -26,7 +26,6 @@ jobs:
           environment-file: environment.yml
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
-          miniforge-variant: Mambaforge
       - name: Run tests
         run: |
           conda activate test
