@@ -23,6 +23,10 @@ class Plot:
         self.ds = ds
         self.gcrs = ccrs.PlateCarree()
 
+    @property
+    def __cartesian__(self):
+        return self.ds.traj.crs is None
+
     def set_up_map(
         self,
         kwargs_d=None,
@@ -53,6 +57,10 @@ class Plot:
             An matplotlib axes with a Cartopy projection.
 
         """
+        if self.__cartesian__:
+            ax = plt.axes()
+            return ax
+
         # By popping the args from kwargs they are not passed onto matplotlib later.
         if kwargs_d is None:
             kwargs_d = kwargs
@@ -153,8 +161,12 @@ class Plot:
             if num>100:  # If many trajectories, make more transparent
                 kwargs['alpha'] = np.maximum(.1, 100/np.float64(num))
 
-        x = self.ds.lon.values.T
-        y = self.ds.lat.values.T
+        if self.__cartesian__:
+            x = self.ds.traj.tx.values.T
+            y = self.ds.traj.ty.values.T
+        else:
+            x = self.ds.traj.tlon.values.T
+            y = self.ds.traj.tlat.values.T
 
         if hasattr(kwargs['color'], 'shape'):
             from matplotlib.collections import LineCollection
@@ -170,12 +182,19 @@ class Plot:
                 logger.debug(f'Plotting trajectory {i} of {x.shape[1]} with color')
                 points = np.array([x[:,i].T, y[:,i].T]).T.reshape(-1, 1, 2)
                 segments = np.concatenate([points[:-1], points[1:]], axis=1)
-                lc = LineCollection(segments, cmap='jet', norm=norm, transform=self.gcrs,
-                                    *args, **kwargs)
+                if self.__cartesian__:
+                    lc = LineCollection(segments, cmap='jet', norm=norm,
+                                        *args, **kwargs)
+                else:
+                    lc = LineCollection(segments, cmap='jet', norm=norm, transform=self.gcrs,
+                                        *args, **kwargs)
                 # Set the values used for colormapping
                 lc.set_array(c[:,i])
                 paths = ax.add_collection(lc)
         else:
-            paths = ax.plot(x, y, transform=self.gcrs, *args, **kwargs)
+            if self.__cartesian__:
+                paths = ax.plot(x, y, *args, **kwargs)
+            else:
+                paths = ax.plot(x, y, transform=self.gcrs, *args, **kwargs)
 
         return paths

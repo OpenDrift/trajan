@@ -7,7 +7,7 @@ from pathlib import Path
 def plot(pytestconfig):
     return pytestconfig.getoption('plot')
 
-@pytest.fixture(scope='session')
+@pytest.fixture
 def opendrift_sim():
     oil = Path(__file__).parent.parent / 'examples' / 'openoil.nc.xz'
     with lzma.open(oil) as oil:
@@ -15,7 +15,7 @@ def opendrift_sim():
         ds.load()
         return ds
 
-@pytest.fixture(scope='session')
+@pytest.fixture
 def barents():
     fn = Path(__file__).parent.parent / 'examples' / 'barents.nc.xz'
     with lzma.open(fn) as b:
