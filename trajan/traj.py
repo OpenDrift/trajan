@@ -157,10 +157,12 @@ class Traj:
 
     def set_crs(self, crs):
         """
-        Set and modify the CF-supported grid-mapping / projection in the dataset.
+        Returns a new dataset with the CF-supported grid-mapping / projection set to `crs`.
         """
 
         # TODO: Ideally this would be handled by cf-xarray or rio-xarray.
+
+        ds = self.ds.copy()
 
         if crs is None:
             logger.info(
@@ -169,21 +171,21 @@ class Traj:
 
             if 'grid_mapping' in self.ds.cf:
                 gm = self.ds.cf['grid_mapping']
-                del self.ds[gm.name]
+                ds = ds.drop(gm.name)
 
             for var in self.ds:
                 if 'grid_mapping' in self.ds[var].attrs:
-                    del self.ds[var].attrs['grid_mapping']
+                    del ds[var].attrs['grid_mapping']
 
             if self.tx.name == 'lon' or self.tx.name == 'longitude':
                 logger.warning(
                     f'Renaming geographic {self.tx.name, self.ty.name} coordinates to x, y..'
                 )
-                self.ds['x'] = self.tx.rename('x')
-                self.ds['y'] = self.ty.rename('y')
-                assert self.ds['x'].name == 'x'
-                del self.ds[self.tx.name]
-                del self.ds[self.ty.name]
+                ds['x'] = ds[self.tx.name].copy().rename('x')
+                ds['y'] = ds[self.ty.name].copy().rename('y')
+                assert ds['x'].name == 'x'
+
+                ds = ds.drop_vars([self.tx.name, self.ty.name])
 
         else:
             gm = crs.to_cf()
@@ -191,9 +193,11 @@ class Traj:
             # Create grid mapping variable
             v = xr.DataArray(name=gm['grid_mapping_name'])
             v.attrs = gm
-            self.ds[v.name] = v
-            self.tx.attrs['grid_mapping'] = v.name
-            self.ty.attrs['grid_mapping'] = v.name
+            ds[v.name] = v
+            ds[self.tx.name].attrs['grid_mapping'] = v.name
+            ds[self.ty.name].attrs['grid_mapping'] = v.name
+
+        return ds
 
     def index_of_last(self):
         """Find index of last valid position along each trajectory"""

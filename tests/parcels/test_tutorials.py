@@ -13,7 +13,7 @@ def test_moving_eddies_xy(plot, tmpdir, moving_eddies_fieldset):
     pset.execute(AdvectionRK4, runtime=timedelta(days=6), dt=timedelta(minutes=5), output_file=output_file)
 
     ds = xr.open_dataset(tmpdir / 'EddyParticles.zarr', engine='zarr')
-    ds.traj.set_crs(None)
+    ds = ds.traj.set_crs(None)
     print(ds)
     ds.traj.plot()
 

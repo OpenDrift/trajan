@@ -15,7 +15,7 @@ def test_barents_detect_lonlat(barents, plot):
 
 def test_barents_set_crs(barents, plot):
     crs = barents.traj.crs
-    barents.traj.set_crs(crs)
+    barents = barents.traj.set_crs(crs)
 
     assert 'latitude_longitude' in barents
     assert len(barents.cf.grid_mapping_names) > 0
@@ -26,14 +26,14 @@ def test_barents_tlat_tlon(barents, plot):
     np.testing.assert_array_equal(barents.lat, barents.traj.tlat)
 
     crs = barents.traj.crs
-    barents.traj.set_crs(crs)
+    barents = barents.traj.set_crs(crs)
 
     np.testing.assert_array_equal(barents.lon, barents.traj.tlon)
     np.testing.assert_array_equal(barents.lat, barents.traj.tlat)
 
 def test_barents_remove_crs(barents):
     assert 'lon' in barents
-    barents.traj.set_crs(None)
+    barents = barents.traj.set_crs(None)
     print(barents.traj.crs)
     print(barents)
 
