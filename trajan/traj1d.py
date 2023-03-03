@@ -1,5 +1,4 @@
 import numpy as np
-import scipy as sp
 import xarray as xr
 from .traj import Traj
 
@@ -12,6 +11,11 @@ class Traj1d(Traj):
     def __init__(self, ds):
         super().__init__(ds)
 
+    def timestep(self):
+        """
+        Time step between observations in seconds.
+        """
+        return ((self.ds.time[1] - self.ds.time[0]) / np.timedelta64(1, 's')).values
 
     def time_to_next(self):
         time_step = self.ds.time[1] - self.ds.time[0]

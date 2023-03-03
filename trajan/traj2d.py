@@ -69,6 +69,14 @@ class Traj2d(Traj):
 
         return d
 
+    def timestep(self, average=np.nanmedian):
+        """
+        Return median time step between observations in seconds.
+        """
+        td = np.diff(self.ds.time, axis=1) / np.timedelta64(1, 's')
+        td = average(td)
+        return td
+
     def time_to_next(self):
         """Returns time from one position to the next
 
