@@ -22,3 +22,8 @@ def barents():
         ds = xr.open_dataset(b)
         ds.load()
         return ds
+
+@pytest.fixture
+def parcels_flat():
+    fn = Path(__file__).parent / 'test_data' / 'parcels.zarr'
+    return xr.open_dataset(fn)

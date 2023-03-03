@@ -3,13 +3,11 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import pytest
 
-def test_parcels_gridtime(parcels_flat):
-    print(parcels_flat)
-    ds = parcels_flat.traj.gridtime('1H')
 
 @pytest.mark.parametrize('animate', [False, True])
-def test_parcels_flatmesh(parcels_flat, animate, plot):
-    ds = parcels_flat.traj.set_crs(None)
+def test_parcels_flatmesh(animate, plot):
+    ds = xr.open_dataset('tests/test_data/parcels.zarr', engine='zarr')
+    ds = ds.traj.set_crs(None)
     print(ds)
     if animate:
         ds.traj.animate()
