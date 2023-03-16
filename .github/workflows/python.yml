@@ -24,6 +24,7 @@ jobs:
       - uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: environment.yml
+          channels: conda-forge
           extra-specs: python=${{ matrix.python-version }}
       - name: Run tests
         run: |
@@ -31,7 +32,7 @@ jobs:
 
       - name: Build wheels
         run: |
-          micromamba install -c conda-forge poetry
+          micromamba install poetry
           poetry build
 
       - name: Upload wheels

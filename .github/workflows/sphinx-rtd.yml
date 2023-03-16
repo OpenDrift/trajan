@@ -30,21 +30,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: environment.yml
-          python-version: '3.11'
-          miniforge-version: latest
-          miniforge-variant: Mambaforge
+          channels: conda-forge
+          extra-specs: python=3.10
 
       - name: Install documentation dependencies
         run: |
-          conda activate test
-          mamba install sphinx sphinx-rtd-theme sphinx-gallery sphinx-autoapi sphinx-autosummary-accessors
+          micromamba install sphinx sphinx-rtd-theme sphinx-gallery sphinx-autoapi sphinx-autosummary-accessors
 
       - name: Build docs with sphinx
         run: |
-          conda activate test
           cd docs
           make html
 
