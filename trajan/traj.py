@@ -3,7 +3,6 @@ import numpy as np
 import xarray as xr
 import cf_xarray as _
 import logging
-from functools import cache
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +63,6 @@ class Traj:
             raise ValueError("Could not determine y / lat variable")
 
     @property
-    @cache
     def tlon(self):
         """
         Retrieve the trajectories in geographic coordinates (longitudes).
@@ -81,7 +79,6 @@ class Traj:
                 return X
 
     @property
-    @cache
     def tlat(self):
         """
         Retrieve the trajectories in geographic coordinates (latitudes).
@@ -132,7 +129,6 @@ class Traj:
         return t.transform(x, y)
 
     @property
-    @cache
     def crs(self) -> pyproj.CRS:
         """
         Retrieve the Proj.4 CRS from the CF-defined grid-mapping in the dataset.
