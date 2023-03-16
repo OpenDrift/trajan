@@ -31,7 +31,7 @@ jobs:
 
       - name: Build wheels
         run: |
-          mamba install -c conda-forge poetry
+          micromamba install -c conda-forge poetry
           poetry build
 
       - name: Upload wheels
@@ -62,4 +62,3 @@ jobs:
         run: |
           pip install --upgrade twine
           twine upload --skip-existing *
-
