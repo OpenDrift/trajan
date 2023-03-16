@@ -27,7 +27,7 @@ jobs:
           extra-specs: python=${{ matrix.python-version }}
       - name: Run tests
         run: |
-          conda remove --force binutils_linux-64
+          conda remove --force binutils_linux-64 gcc_linux-64
           pytest -vs --log-cli-level=debug
 
       - name: Build wheels
