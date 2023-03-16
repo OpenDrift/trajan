@@ -20,17 +20,11 @@ jobs:
         os: ["ubuntu", "macos", "windows"]
         python-version: [ '3.9', '3.10', '3.11' ]
     steps:
-      - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: actions/checkout@v3
+      - uses: mamba-org/provision-with-micromamba@main
         with:
-          auto-update-conda: true
           environment-file: environment.yml
-          python-version: ${{ matrix.python-version }}
-          miniforge-version: latest
-          miniforge-variant: Mambaforge
-          activate-environment: test
-          auto-activate-base: false
-          use-mamba: true
+          extra-specs: python=${{ matrix.python-version }}
       - name: Run tests
         run: |
           ls
