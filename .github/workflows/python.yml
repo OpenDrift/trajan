@@ -14,25 +14,26 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     defaults:
       run:
-        shell: bash -el {0}
+        shell: bash -l {0}
     strategy:
       matrix:
         os: ["ubuntu", "macos", "windows"]
         python-version: [ '3.9', '3.10', '3.11' ]
     steps:
       - uses: actions/checkout@v3
-      - uses: mamba-org/provision-with-micromamba@main
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           environment-file: environment.yml
-          extra-specs: python=${{ matrix.python-version }}
+          python-version: ${{ matrix.python-version }}
+          miniforge-version: latest
+          miniforge-variant: Mambaforge
+          activate-environment: test
       - name: Run tests
         run: |
-          conda remove --force binutils_linux-64 gcc_linux-64
           pytest -vs --log-cli-level=debug
 
       - name: Build wheels
         run: |
-          conda activate test
           mamba install -c conda-forge poetry
           poetry build
 
