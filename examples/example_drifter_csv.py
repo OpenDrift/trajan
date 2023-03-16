@@ -1,3 +1,7 @@
+"""
+Read a position log from a CSV file and convert it to a CF-compatible dataset
+=============================================================================
+"""
 import pandas as pd
 import xarray as xr
 import trajan as _
