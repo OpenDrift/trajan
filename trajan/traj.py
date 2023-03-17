@@ -285,6 +285,9 @@ class Traj:
             if np.sum(fin) <= 3:
                 area.append(0)
                 continue
+            if len(np.unique(lat)) == 1 and len(np.unique(lon)) == 1:
+                area.append(0)
+                continue
             lat = lat[fin]
             lon = lon[fin]
             aea = pyproj.Proj(
