@@ -48,6 +48,15 @@ Methods applicable to both type so datasets can be found in: :mod:`trajan.traj`,
 
 On both types generic plotting (:meth:`trajan.trajectory_accessor.TrajAccessor.plot`) and animation (:meth:`trajan.trajectory_accessor.TrajAccessor.animate`) is available.
 
+Contents
+--------
+
+.. toctree::
+   :maxdepth: 2
+
+   gallery/index
+   autoapi/index
+
 Indices and tables
 ==================
 
