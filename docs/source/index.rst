@@ -27,12 +27,14 @@ _TrajAn_ is an `Xarry extension <https://docs.xarray.dev/en/stable/>`_. On drift
 
 .. code-block:: python
 
+   import matplotlib.pyplot as plt
    import xarray as xr
    import trajan as _
 
    ds = xr.open_dataset('drifter_dataset.nc')
 
    ds.traj.plot()
+   plt.show()
 
    speed = ds.traj.speed()
    print(f'Max speed {speed.max().values} m/s')
@@ -44,9 +46,15 @@ Generally, TrajAn supports two types of data layout: 1) trajectories sampled at 
 
 While the first type (_2D_) is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a _2D_ dataset to _1D_ by using :meth:`trajan.traj2d.Traj2d.gridtime`.
 
-Methods applicable to both type so datasets can be found in: :mod:`trajan.traj`, methods for _1D_ datasets: :mod:`trajan.traj.traj1d`, and _2D_: :mod:`trajan.traj.traj2d`.
+Methods applicable to both types of datasets can be found in: :mod:`trajan.traj`, methods for _1D_ datasets: :mod:`trajan.traj.traj1d`, and _2D_: :mod:`trajan.traj.traj2d`. All methods are forwarded to the accessor, so you call the methods on `Dataset.traj`:
 
-On both types generic plotting (:meth:`trajan.trajectory_accessor.TrajAccessor.plot`) and animation (:meth:`trajan.trajectory_accessor.TrajAccessor.animate`) is available.
+.. code-block:: python
+
+   ds = ds.traj.gridtime('1H')   # grid dataset to every hour (a 2D method)
+   ds.traj.plot()                # plot dataset
+
+
+Generic plotting is available in the standard `Xarray` way, and strives to stay as close to `matplotlib` as possible: (:meth:`trajan.trajectory_accessor.TrajAccessor.plot`) and animation (:meth:`trajan.trajectory_accessor.TrajAccessor.animate`).
 
 Contents
 --------
@@ -54,6 +62,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   index
    gallery/index
    autoapi/index
 
