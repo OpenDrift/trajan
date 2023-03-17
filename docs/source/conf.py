@@ -6,12 +6,12 @@ import sphinx_autosummary_accessors
 
 # -- Project information
 
-project = 'Trajan'
-copyright = '2022, G. Hope and K. F. Dagestad'
+project = 'TrajAn'
+copyright = '2022-2023, G. Hope and K. F. Dagestad'
 author = 'G. Hope and K. F. Dagestad'
 
-release = '0.1'
-version = '0.1.0'
+release = 'latest (git / main)'
+version = 'latest (git / main)'
 
 # -- General configuration
 
