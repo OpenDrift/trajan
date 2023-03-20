@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class Traj:
     ds: xr.Dataset
     __gcrs__: pyproj.CRS
+    obsdim: str
 
     def __init__(self, ds):
         self.ds = ds
