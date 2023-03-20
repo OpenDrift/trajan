@@ -14,8 +14,9 @@ def test_barents_self(barents):
 
 def test_barents_trajs(barents):
     barents = barents.traj.gridtime('1H')
-    b0 = barents.isel(trajectory=0)
-    b1 = barents.isel(trajectory=1)
+    b0 = barents.isel(trajectory=0).dropna('time')
+    b1 = barents.isel(trajectory=1).sel(time=slice(b0.time[0], b0.time[-1]))
     b1 = b1.traj.gridtime(b0.time)
-    skill = b0.skill(b1)
+    skill = b0.traj.skill(b1, tolerance_threshold=100)
     print(skill)
+    np.testing.assert_allclose(skill.values, 0.)

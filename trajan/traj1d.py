@@ -75,13 +75,17 @@ class Traj1d(Traj):
         plt.xlim([0, 30])
         plt.show()
 
-    def skill(self, other, method='liu-weissberg'):
+    def skill(self, other, method='liu-weissberg', **kwargs):
         """
         Compare the skill score between this trajectory and `other`.
 
         Args:
 
             other: Another trajectory dataset.
+
+            method: skill-score method, currently only liu-weissberg. See :mod:`trajan.skill`.
+
+            **kwargs: passed on to the skill-score method.
 
         Returns:
 
@@ -127,7 +131,7 @@ class Traj1d(Traj):
 
         for ti in range(0, len(s)):
             if method == 'liu-weissberg':
-                s[ti] = skill.liu_weissberg(lon0, lat0, lon1, lat1)
+                s[ti] = skill.liu_weissberg(lon0, lat0, lon1, lat1, **kwargs)
             else:
                 raise ValueError(f"Unknown skill-score method: {method}.")
 
