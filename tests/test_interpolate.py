@@ -28,6 +28,29 @@ def test_interpolate_barents(barents, plot):
         plt.legend()
         plt.show()
 
+def test_interpolate_1d_barents(barents):
+    times = pd.date_range("2022-10-01", "2022-11-01", freq='6H')
+
+    barents_gridded = barents.traj.gridtime(times)
+
+    # Try gridding the gridded
+    b2 = barents_gridded.traj.gridtime(times)
+
+    np.testing.assert_array_equal(barents_gridded.time, b2.time)
+
+    # Try gridding the gridded
+    b3 = barents_gridded.traj.gridtime(b2.time)
+
+    np.testing.assert_array_equal(barents_gridded.time, b3.time)
+
+def test_interpolate_barents_between_trajs(barents):
+    barents = barents.traj.gridtime('1h')
+    b0 = barents.isel(trajectory=0)
+    b1 = barents.isel(trajectory=1)
+
+    b0 = b0.traj.gridtime(b1.time)
+    np.testing.assert_array_equal(b0.time, b1.time)
+
 
 def test_speed(barents, plot):
     """Implicitly also testing distance_to_next and time_to_next"""
@@ -43,7 +66,7 @@ def test_speed(barents, plot):
     assert_almost_equal(speed.mean(), 0.461, 3)
 
     # Gridding to hourly
-    bh = barents.traj.gridtime('1h')
+    bh = barents.traj.gridtime('1H')
     speed_bh = bh.traj.speed()
     speed_bh = speed_bh.where(speed_bh > 0.01)
 
