@@ -98,26 +98,32 @@ class Traj1d(Traj):
         The datasets must have the same number of trajectories. If you wish to compare a single trajectory to many others, duplicate it along the trajectory dimension to match the trajectory dimension of the other.
 
 
-        .. testsetup::
+        .. testcode::
 
             import xarray as xr
             import trajan as _
             import lzma
 
-            with lzma.open('examples/barents.nc.xz') as b:
-                ds = xr.open_dataset(b)
-                ds.load()
+            b = lzma.open('examples/barents.nc.xz')
+            ds = xr.open_dataset(b)
 
             other = ds.copy()
 
-        .. testcode::
+            ds = ds.traj.gridtime('1H')
 
-            >>> ds = ds.traj.gridtime('1H')
-            >>>
-            >>> other = other.traj.gridtime(ds.time)
-            >>> skill = ds.traj.skill(other)
-            >>>
-            >>> print(skill)
+            other = other.traj.gridtime(ds.time)
+            skill = ds.traj.skill(other)
+
+            print(skill)
+
+        .. testoutput::
+
+            <xarray.DataArray 'Skill-score' (trajectory: 2)>
+            array([1., 1.], dtype=float32)
+            Coordinates:
+              * trajectory  (trajectory) int64 0 1
+            Attributes:
+                method:   liu-weissberg
         """
 
         if self.ds.dims['trajectory'] != other.dims['trajectory']:
