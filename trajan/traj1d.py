@@ -93,9 +93,14 @@ class Traj1d(Traj):
 
         Observations only consisting of `NaN`s will be dropped using `xarray.Dataset.dropna` before comparison.
 
-        The datasets must be sampled (or have observations) at approximately the same timesteps. Consider using :meth:`trajan.traj2d.gridtime` to interpolate one of the datasets to the other.
+        .. note::
 
-        The datasets must have the same number of trajectories. If you wish to compare a single trajectory to many others, duplicate it along the trajectory dimension to match the trajectory dimension of the other.
+            The datasets must be sampled (or have observations) at approximately the same timesteps. Consider using :meth:`trajan.traj2d.gridtime` to interpolate one of the datasets to the other.
+
+
+        .. note::
+
+            The datasets must have the same number of trajectories. If you wish to compare a single trajectory to many others, duplicate it along the trajectory dimension to match the trajectory dimension of the other. See further down for an example.
 
 
         .. testcode::
@@ -124,6 +129,29 @@ class Traj1d(Traj):
               * trajectory  (trajectory) int64 0 1
             Attributes:
                 method:   liu-weissberg
+
+
+        If you need to broadcast a dataset with a single drifter to one with many you can use `xarray.broadcast`:
+
+        .. testcode::
+
+            b0 = ds.isel(trajectory=0) # `b0` now only has a single drifter (no trajectory dimension)
+
+            (b0, _) = xr.broadcast(b0, ds)
+            b0 = b0.transpose('trajectory', ...)
+            skill = b0.traj.skill(ds)
+
+            print(skill)
+
+        .. testoutput::
+
+            <xarray.DataArray 'Skill-score' (trajectory: 2)>
+            array([1.        , 0.61196226], dtype=float32)
+            Coordinates:
+              * trajectory  (trajectory) int64 0 1
+            Attributes:
+                method:   liu-weissberg
+
         """
 
         if self.ds.dims['trajectory'] != other.dims['trajectory']:
@@ -143,8 +171,10 @@ class Traj1d(Traj):
 
         s = np.zeros((self.ds.dims['trajectory']), dtype=np.float32)
 
-        ds = self.ds.dropna(dim=self.obsdim)
-        other = other.dropna(dim=other.traj.obsdim)
+        # ds = self.ds.dropna(dim=self.obsdim)
+        # other = other.dropna(dim=other.traj.obsdim)
+
+        ds = self.ds
 
         lon0 = ds.traj.tlon
         lat0 = ds.traj.tlat
@@ -153,7 +183,7 @@ class Traj1d(Traj):
 
         for ti in range(0, len(s)):
             if method == 'liu-weissberg':
-                s[ti] = skill.liu_weissberg(lon0, lat0, lon1, lat1, **kwargs)
+                s[ti] = skill.liu_weissberg(lon0.isel(trajectory=ti), lat0.isel(trajectory=ti), lon1.isel(trajectory=ti), lat1.isel(trajectory=ti), **kwargs)
             else:
                 raise ValueError(f"Unknown skill-score method: {method}.")
 

@@ -33,7 +33,7 @@ def liu_weissberg(lon_obs, lat_obs, lon_model, lat_model, tolerance_threshold=1)
     lat_model = np.array(lat_model)
     d = distance_between_trajectories(lon_obs, lat_obs, lon_model, lat_model)
     l = distance_along_trajectory(lon_obs, lat_obs)
-    s = d.sum() / l.cumsum().sum()
+    s = np.nansum(d) / np.nansum(np.nancumsum(l))
     if tolerance_threshold==0:
         skillscore = 0
     else:

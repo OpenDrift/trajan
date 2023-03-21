@@ -37,7 +37,10 @@ def from_dataframe(df: pd.DataFrame,
     else:
         df['drifter_names'] = 'Drifter 1'
 
-    df.time = df['time'].dt.tz_convert(None)
+    # Convert to UTC and remove tz-info. Xarray does not support tz-aware
+    # datetimes.
+    if df['time'].dt.tz is not None:
+        df['time'] = df['time'].dt.tz_convert(None)
 
     # Classify trajectories based on drifter_names.
     df['trajectory'] = df.groupby('drifter_names').ngroup()
