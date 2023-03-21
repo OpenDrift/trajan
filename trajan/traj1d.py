@@ -91,8 +91,6 @@ class Traj1d(Traj):
 
             skill: The skill-score in the same dimensions as this dataset.
 
-        Observations only consisting of `NaN`s will be dropped using `xarray.Dataset.dropna` before comparison.
-
         .. note::
 
             The datasets must be sampled (or have observations) at approximately the same timesteps. Consider using :meth:`trajan.traj2d.gridtime` to interpolate one of the datasets to the other.
