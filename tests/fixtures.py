@@ -22,3 +22,8 @@ def barents():
         ds = xr.open_dataset(b)
         ds.load()
         return ds
+
+@pytest.fixture
+def drifter_csv():
+    fn = Path(__file__).parent.parent / 'examples' / 'bug05_pos.csv.xz'
+    return fn
