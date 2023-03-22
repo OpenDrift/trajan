@@ -133,9 +133,7 @@ def test_opendrift(plot, tmpdir):
     print(ods)
     print(dds)
 
-    (dds, _) = xr.broadcast(dds.isel(trajectory=0), ods)
-    print(dds)
-    dds = dds.transpose('trajectory', ...)
+    dds = dds.isel(trajectory=0).broadcast_like(ods)
     tskill = dds.traj.skill(ods)
     print(tskill)
 

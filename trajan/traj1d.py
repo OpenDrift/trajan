@@ -129,14 +129,17 @@ class Traj1d(Traj):
                 method:   liu-weissberg
 
 
-        If you need to broadcast a dataset with a single drifter to one with many you can use `xarray.broadcast`:
+        If you need to broadcast a dataset with a single drifter to one with many you can use `xarray.broadcast` or `xarray.Dataset.broadcast_like`:
+
+        .. note::
+
+            If the other dataset has any other dimensions, on any other variables, you need to exclude those when broadcasting.
 
         .. testcode::
 
             b0 = ds.isel(trajectory=0) # `b0` now only has a single drifter (no trajectory dimension)
 
-            (b0, _) = xr.broadcast(b0, ds)
-            b0 = b0.transpose('trajectory', ...)
+            b0 = b0.broadcast_like(ds)
             skill = b0.traj.skill(ds)
 
             print(skill)
@@ -158,9 +161,9 @@ class Traj1d(Traj):
             )
 
         diff = np.max(
-            np.abs(
-                (self.ds[self.obsdim] -
-                 other[other.traj.obsdim]).astype('timedelta64[s]').astype(np.float64)))
+            np.abs((self.ds[self.obsdim] -
+                    other[other.traj.obsdim]).astype('timedelta64[s]').astype(
+                        np.float64)))
 
         if not np.isclose(diff, 0):
             raise ValueError(
@@ -182,7 +185,10 @@ class Traj1d(Traj):
 
         for ti in range(0, len(s)):
             if method == 'liu-weissberg':
-                s[ti] = skill.liu_weissberg(lon0.isel(trajectory=ti), lat0.isel(trajectory=ti), lon1.isel(trajectory=ti), lat1.isel(trajectory=ti), **kwargs)
+                s[ti] = skill.liu_weissberg(lon0.isel(trajectory=ti),
+                                            lat0.isel(trajectory=ti),
+                                            lon1.isel(trajectory=ti),
+                                            lat1.isel(trajectory=ti), **kwargs)
             else:
                 raise ValueError(f"Unknown skill-score method: {method}.")
 
