@@ -159,8 +159,8 @@ class Traj1d(Traj):
 
         diff = np.max(
             np.abs(
-                (self.ds['time'] -
-                 other['time']).astype('timedelta64[s]').astype(np.float64)))
+                (self.ds[self.obsdim] -
+                 other[other.traj.obsdim]).astype('timedelta64[s]').astype(np.float64)))
 
         if not np.isclose(diff, 0):
             raise ValueError(
@@ -172,7 +172,8 @@ class Traj1d(Traj):
         # ds = self.ds.dropna(dim=self.obsdim)
         # other = other.dropna(dim=other.traj.obsdim)
 
-        ds = self.ds
+        ds = self.ds.transpose('trajectory', self.obsdim, ...)
+        other = other.transpose('trajectory', other.traj.obsdim, ...)
 
         lon0 = ds.traj.tlon
         lat0 = ds.traj.tlat
