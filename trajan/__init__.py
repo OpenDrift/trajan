@@ -19,12 +19,84 @@ def read_csv(f, **kwargs):
 
 
 def from_dataframe(df: pd.DataFrame,
-                   lon='Longitude',
-                   lat='Latitude',
-                   time='Time',
+                   lon='lon',
+                   lat='lat',
+                   time='time',
                    name=None):
     """
     Construct a CF-compliant trajectory dataset from a `pd.DataFrame` of positions.
+
+    Args:
+
+        `lon`: name of column containing longitudes.
+
+        `lat`: name of column containing latitudes.
+
+        `time`: name of column containing timestamps (parsable by pandas).
+
+        `name`: name of column to be used for drifter names.
+
+    Returns:
+
+        `ds`: a CF-compliant trajaectory `xarray.Dataset`.
+
+
+    Constructing a dataset from arrays of postions and time:
+    --------------------------------------------------------
+
+    .. testcode::
+
+        import pandas as pd
+        import trajan as ta
+
+        # Construct some synthetic data
+        lon = np.linspace(5, 10, 50)
+        lat = np.linspace(60, 70, 50)
+        temp = np.linspace(10, 15, 50)
+        time = pd.date_range('2023-01-01', '2023-01-14', periods=50)
+
+        # Construct a pandas.DataFrame
+        ds = pd.DataFrame({'lon': lon, 'lat': lat, 'time': time, 'temp': temp, 'name': 'My drifter'})
+        ds = ta.from_dataframe(ds, name='name')
+        print(ds)
+
+    .. testoutput::
+
+        <xarray.Dataset>
+        Dimensions:        (trajectory: 1, obs: 50)
+        Coordinates:
+          * trajectory     (trajectory) int64 0
+          * obs            (obs) int64 0 1 2 3 4 5 6 7 8 ... 41 42 43 44 45 46 47 48 49
+        Data variables:
+            lon            (trajectory, obs) float64 5.0 5.102 5.204 ... 9.898 10.0
+            lat            (trajectory, obs) float64 60.0 60.2 60.41 ... 69.59 69.8 70.0
+            time           (trajectory, obs) datetime64[ns] 2023-01-01 ... 2023-01-14
+            temp           (trajectory, obs) float64 10.0 10.1 10.2 ... 14.8 14.9 15.0
+            drifter_names  (trajectory) object 'My drifter'
+
+    Often you might want to add some attributes:
+
+    .. testcode::
+
+        ds = ds.assign_attrs({'Author': 'Albus Dumbledore'})
+        print(ds)
+
+    .. testoutput::
+
+        <xarray.Dataset>
+        Dimensions:        (trajectory: 1, obs: 50)
+        Coordinates:
+          * trajectory     (trajectory) int64 0
+          * obs            (obs) int64 0 1 2 3 4 5 6 7 8 ... 41 42 43 44 45 46 47 48 49
+        Data variables:
+            lon            (trajectory, obs) float64 5.0 5.102 5.204 ... 9.898 10.0
+            lat            (trajectory, obs) float64 60.0 60.2 60.41 ... 69.59 69.8 70.0
+            time           (trajectory, obs) datetime64[ns] 2023-01-01 ... 2023-01-14
+            temp           (trajectory, obs) float64 10.0 10.1 10.2 ... 14.8 14.9 15.0
+            drifter_names  (trajectory) object 'My drifter'
+        Attributes:
+            Author:   Albus Dumbledore
+
     """
     df = df.copy()
     df.index.names = ['obs']
@@ -47,11 +119,13 @@ def from_dataframe(df: pd.DataFrame,
     df = df.set_index(['trajectory', df.index])
     df = df.to_xarray()
 
-
     # Simplify the drifter_names variable: It is only dependent on the trajectory dimension.
     df['drifter_names'] = df.drifter_names.isel(obs=0)
 
+    # df = df.dropna(dim='obs', how='all')
+
     return df
+
 
 def trajectory_dict_to_dataset(trajectory_dict,
                                variable_attributes=None,

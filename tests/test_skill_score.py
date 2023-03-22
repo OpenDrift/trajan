@@ -76,7 +76,7 @@ def test_opendrift(plot, tmpdir):
         'label': 'Synthetic drifter'
     }
 
-    dds = ta.from_dataframe(pd.DataFrame(drifter), lon='lon', lat='lat', time='time', name='label')
+    dds = ta.from_dataframe(pd.DataFrame(drifter), name='label')
     dds = dds.drop_vars(['linewidth', 'color'])
     dds = dds.traj.gridtime(dds.time.isel(trajectory=0).values) # convert to 1d dataset
     print(dds)
