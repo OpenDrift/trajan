@@ -70,7 +70,7 @@ def test_speed(barents, plot):
     speed_bh = bh.traj.speed()
     speed_bh = speed_bh.where(speed_bh > 0.01)
 
-    assert_almost_equal(speed_bh.max(), 1.261,
+    assert_almost_equal(speed_bh.max(), 1.263,
                         3)  # Slightly different after gridding
     assert_almost_equal(speed_bh.mean(), 0.459, 3)
 

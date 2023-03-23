@@ -147,7 +147,7 @@ class Traj1d(Traj):
         .. testoutput::
 
             <xarray.DataArray 'Skill-score' (trajectory: 2)>
-            array([1.        , 0.61196226], dtype=float32)
+            array([1.       , 0.6181735], dtype=float32)
             Coordinates:
               * trajectory  (trajectory) int64 0 1
             Attributes:

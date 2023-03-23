@@ -319,10 +319,10 @@ class Traj:
         if isinstance(times, str):  # Make time series with given interval
             freq = times
             start_time = np.nanmin(np.asarray(self.ds.time))
-            start_time = pd.to_datetime(start_time).strftime('%Y-%m-%d')
+            # start_time = pd.to_datetime(start_time).strftime('%Y-%m-%d')
             end_time = np.nanmax(np.asarray(self.ds.time)) + \
                             np.timedelta64(23, 'h') + np.timedelta64(59, 'm')
-            end_time = pd.to_datetime(end_time).strftime('%Y-%m-%d')
+            # end_time = pd.to_datetime(end_time).strftime('%Y-%m-%d')
             times = pd.date_range(start_time, end_time, freq=freq)
 
         # Why not..
