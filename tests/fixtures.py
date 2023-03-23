@@ -27,3 +27,8 @@ def barents():
 def drifter_csv():
     fn = Path(__file__).parent.parent / 'examples' / 'bug05_pos.csv.xz'
     return fn
+
+@pytest.fixture
+def test_data():
+    fn = Path(__file__).parent / 'test_data'
+    return fn
