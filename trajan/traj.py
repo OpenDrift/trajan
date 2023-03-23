@@ -320,10 +320,9 @@ class Traj:
             freq = times
             start_time = np.nanmin(np.asarray(self.ds.time))
             # start_time = pd.to_datetime(start_time).strftime('%Y-%m-%d')
-            end_time = np.nanmax(np.asarray(self.ds.time)) + \
-                            np.timedelta64(23, 'h') + np.timedelta64(59, 'm')
+            end_time = np.nanmax(np.asarray(self.ds.time))
             # end_time = pd.to_datetime(end_time).strftime('%Y-%m-%d')
-            times = pd.date_range(start_time, end_time, freq=freq)
+            times = pd.date_range(start_time, end_time, freq=freq, inclusive='both')
 
         # Why not..
         if not isinstance(times, np.ndarray):
