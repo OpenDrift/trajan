@@ -43,6 +43,11 @@ def test_interpolate_1d_barents(barents):
 
     np.testing.assert_array_equal(barents_gridded.time, b3.time)
 
+    times = pd.date_range("2022-10-12", "2022-11-01", freq='6H')
+    b4 = barents_gridded.traj.gridtime(times)
+
+    np.testing.assert_array_equal(times, b4.time)
+
 def test_interpolate_barents_between_trajs(barents):
     barents = barents.traj.gridtime('1h')
     b0 = barents.isel(trajectory=0)
