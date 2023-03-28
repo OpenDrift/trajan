@@ -5,10 +5,7 @@ Presently supporting Cf convention H.4.1
 https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html#_multidimensional_array_representation_of_trajectories.
 """
 
-import numpy as np
-import pandas as pd
 import xarray as xr
-import pyproj
 import logging
 
 from .plot import Plot

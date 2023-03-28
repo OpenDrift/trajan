@@ -196,3 +196,20 @@ class Traj1d(Traj):
                             name='Skill-score',
                             coords={'trajectory': self.ds.trajectory},
                             attrs={'method': method})
+
+    def gridtime(self, times):
+        if isinstance(times, str):  # Make time series with given interval
+            import pandas as pd
+            start_time = np.nanmin(np.asarray(self.ds.time))
+            end_time = np.nanmax(np.asarray(self.ds.time))
+            times = pd.date_range(start_time,
+                                  end_time,
+                                  freq=times,
+                                  inclusive='both')
+
+        if not isinstance(times, np.ndarray):
+            times = times.to_numpy()
+
+        return self.ds.interp({
+            self.obsdim: times
+        }).rename({self.obsdim: 'time'})
