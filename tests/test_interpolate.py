@@ -9,11 +9,14 @@ import matplotlib.pyplot as plt
 def test_interpolate_barents(barents, plot):
     """Interpolate subset of drifter time series to 6-hourly means"""
 
+    print(barents)
     times = pd.date_range("2022-10-01", "2022-11-01", freq='6H')
 
     barents_gridded = barents.traj.gridtime(times)
     assert_almost_equal(
         barents_gridded.isel(trajectory=1).isel(time=100).lon, 19.94633948)
+
+    print(barents_gridded)
 
     if plot:
         drifter_names = barents['drifter_names'].data
@@ -47,6 +50,11 @@ def test_interpolate_1d_barents(barents):
     b4 = barents_gridded.traj.gridtime(times)
 
     np.testing.assert_array_equal(times, b4.time)
+
+def test_interpolate_non_floats(drifter_csv):
+    dc = ta.read_csv(drifter_csv, name='Device', time='Time', lon='Longitude', lat='Latitude')
+    dcg = dc.traj.gridtime('1h')
+    print(dc, dcg)
 
 def test_interpolate_barents_between_trajs(barents):
     barents = barents.traj.gridtime('1h')
