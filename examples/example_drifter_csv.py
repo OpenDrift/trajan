@@ -6,11 +6,13 @@ import pandas as pd
 import trajan as ta
 import matplotlib.pyplot as plt
 
-#%% Alternative 1: Use the built in `read_csv` method:
+#%%
+# Alternative 1: Use the built in `read_csv` method:
 ds = ta.read_csv('bug05_pos.csv.xz', lon='Longitude', lat='Latitude', time='Time', name='Device')
 print(ds)
 
-#%% Alternative 2: Manually construct the dataset:
+#%%
+# Alternative 2: Manually construct the dataset:
 
 #%%
 # Read a CSV file with positions using Pandas.
