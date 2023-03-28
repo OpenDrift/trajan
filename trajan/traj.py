@@ -311,11 +311,15 @@ class Traj:
 
     @abstractmethod
     def gridtime(self, times):
-        """Interpolate dataset to regular time interval
+        """Interpolate dataset to a regular time interval or a different grid.
 
-        times:
-            - an array of times, or
-            - a string "freq" specifying a Pandas daterange (e.g. 'h', '6h, 'D'...)
+        Args:
 
-        Note that the resulting DataSet will have "time" as a dimension coordinate.
+            `times`: Target time interval, can be either:
+                - an array of times, or
+                - a string "freq" specifying a Pandas daterange (e.g. 'h', '6h, 'D'...) suitable for `pd.date_range`.
+
+        Returns:
+
+            A new dataset interpolated to the target times. The dataset will be 1D (i.e. gridded) and the time dimension will be named `time`.
         """
