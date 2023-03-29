@@ -145,5 +145,7 @@ class Traj2d(Traj):
             else:
                 d = xr.concat((d, dt), "trajectory")
 
+        d = d.assign_coords({'trajectory' : self.ds['trajectory']})
+
         return d
 
