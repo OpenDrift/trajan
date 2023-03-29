@@ -36,6 +36,8 @@ times = nk.sel(time=slice('2022-05-10', '2022-05-20')).time.values
 ds = ds.traj.gridtime(times)
 ds = ds.dropna('time', how='all')
 
+print(ds)
+
 #%%
 # Transform the drifter dataset to the CRS of the model
 tx, ty = ds.traj.transform(nk_crs, ds.traj.tx, ds.traj.ty)

@@ -54,6 +54,10 @@ def test_interpolate_1d_barents(barents):
 def test_interpolate_non_floats(drifter_csv):
     dc = ta.read_csv(drifter_csv, name='Device', time='Time', lon='Longitude', lat='Latitude')
     dcg = dc.traj.gridtime('1h')
+
+    assert 'time' in dcg.dims
+    assert 'trajectory' in dcg.dims
+
     print(dc, dcg)
 
 def test_interpolate_barents_between_trajs(barents):

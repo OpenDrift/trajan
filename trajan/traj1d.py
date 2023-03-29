@@ -210,6 +210,12 @@ class Traj1d(Traj):
         if not isinstance(times, np.ndarray):
             times = times.to_numpy()
 
-        return self.ds.interp({ self.obsdim: times }) \
-                      .rename({ self.obsdim: 'time' }) \
-                      .set_index({'time': 'time'})
+        ds = self.ds.interp({self.obsdim: times})
+
+        if self.obsdim != 'time':
+            ds = ds.rename({self.obsdim: 'time'}).set_index({'time': 'time'})
+
+        if not 'trajectory' in ds.dims:
+            ds = ds.expand_dims('trajectory')
+
+        return ds

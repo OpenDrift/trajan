@@ -141,7 +141,7 @@ class Traj2d(Traj):
             dt = dt.interp({'time': times})
 
             if d is None:
-                d = dt
+                d = dt.expand_dims('trajectory')
             else:
                 d = xr.concat((d, dt), "trajectory")
 
