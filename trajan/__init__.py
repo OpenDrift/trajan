@@ -134,6 +134,7 @@ def from_dataframe(df: pd.DataFrame,
 
     # Simplify the drifter_names variable: It is only dependent on the trajectory dimension.
     df['drifter_names'] = df.drifter_names.isel(obs=0)
+    df['trajectory'] = df['trajectory'].astype(int)
 
     # df = df.dropna(dim='obs', how='all')
 
