@@ -133,7 +133,6 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
     frequencies_waves_imu = _BD_YWAVE_NBR_BINS
 
     list_instruments = sorted(list(dict_entries.keys()))
-    print(list_instruments)
 
     int64_fill = -(2**63 - 0)
 
@@ -192,7 +191,8 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    # logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.ERROR)
 
     print("start main")
 
