@@ -1,4 +1,5 @@
-"""The OMB data decoder; slightly curated from:
+"""
+The OMB data decoder; slightly curated from:
 
 https://github.com/jerabaul29/OpenMetBuoy-v2021a/tree/main/legacy_firmware/decoder
 
@@ -10,18 +11,10 @@ https://github.com/jerabaul29/OpenMetBuoy-v2021a/issues
 import binascii
 import struct
 import datetime
-import time
-import os
 from dataclasses import dataclass
 import math
 import numpy as np
 import scipy.signal as signal
-
-#--------------------------------------------------------------------------------
-# make sure we are all UTC
-
-os.environ["TZ"] = "UTC"
-time.tzset()
 
 #--------------------------------------------------------------------------------
 # a few module constants

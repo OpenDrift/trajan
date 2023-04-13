@@ -6,22 +6,12 @@ from tqdm import tqdm
 from dataclasses import dataclass
 import numpy as np
 import datetime
-import os
-import time
 
 from .omb_decoder import decode_message
 from typing import Union
 from .omb_decoder import GNSS_Metadata, Waves_Metadata, Thermistors_Metadata, GNSS_Packet, Waves_Packet, Thermistors_Packet, _BD_YWAVE_NBR_BINS
 
-#--------------------------------------------------------------------------------
-# make sure we are all UTC
-
-os.environ["TZ"] = "UTC"
-time.tzset()
-#--------------------------------------------------------------------------------
-
 logger = logging.getLogger(__name__)
-
 
 @dataclass
 class ParsedIridiumMessage:
