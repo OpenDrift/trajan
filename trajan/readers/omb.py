@@ -10,9 +10,9 @@ import datetime
 import os
 import time
 
-from omb_decoder import decode_message
+from .omb_decoder import decode_message
 from typing import Union
-from omb_decoder import GNSS_Metadata, Waves_Metadata, Thermistors_Metadata, GNSS_Packet, Waves_Packet, Thermistors_Packet, _BD_YWAVE_NBR_BINS
+from .omb_decoder import GNSS_Metadata, Waves_Metadata, Thermistors_Metadata, GNSS_Packet, Waves_Packet, Thermistors_Packet, _BD_YWAVE_NBR_BINS
 
 #--------------------------------------------------------------------------------
 # make sure we are all UTC
@@ -32,11 +32,39 @@ class ParsedIridiumMessage:
     data: Union[GNSS_Packet, Waves_Packet, Thermistors_Packet]
 
 
+def sliding_filter_nsigma(np_array_in, nsigma=5.0, side_half_width=2):
+    """Perform a sliding filter, on points of indexes
+    [idx-side_half_width; idx+side_half_width], to remove outliers. I.e.,
+    the [idx] point gets removed if it is more than nsigma deviations away
+    from the mean of the whole segment.
+
+    np_array_in should have a shape (nbr_of_entries,)"""
+
+    np_array = np.copy(np_array_in)
+    array_len = np_array.shape[0]
+
+    middle_point_index_start = side_half_width
+    middle_point_index_end = array_len - side_half_width - 1
+
+    for crrt_middle_index in range(middle_point_index_start, middle_point_index_end+1, 1):
+        crrt_left_included = crrt_middle_index - side_half_width
+        crrt_right_included = crrt_middle_index + side_half_width
+        crrt_array_data = np.concatenate([ np_array_in[crrt_left_included:crrt_middle_index], np_array_in[crrt_middle_index+1:crrt_right_included+1] ])
+        mean = np.mean(crrt_array_data)
+        std = np.std(crrt_array_data)
+        if np.abs(np_array[crrt_middle_index] - mean) > nsigma * std:
+            logger.debug("found outlier in sliding_filter_nsigma")
+            np_array[crrt_middle_index] = np.nan
+
+    return np_array
+
+
 def append_dict_with_entry(dict_in: dict, parsed_entry: ParsedIridiumMessage):
     if parsed_entry.device_from not in dict_in:
         dict_in[parsed_entry.device_from] = {}
         dict_in[parsed_entry.device_from]["G"] = []
         dict_in[parsed_entry.device_from]["Y"] = []
+        dict_in[parsed_entry.device_from]["T"] = []
     dict_in[parsed_entry.device_from][parsed_entry.kind].append(parsed_entry)
 
 
@@ -206,6 +234,17 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
             #
             # imu waves vars
             #
+            'time_waves_imu': xr.DataArray(
+                dims=["trajectory", "obs_waves_imu"],
+                data=int64_fill*np.ones((trajectory, obs_waves_imu), dtype=np.int64),
+                attrs={
+                    "_FillValue": str(int64_fill),
+                    "standard_name": "time",
+                    "unit": "seconds since 1970-01-01T00:00:00+00:00",
+                    "time_calendar": "proleptic_gregorian",
+                }
+            ),
+            #
             'accel_energy_spectrum': xr.DataArray(
                 dims=["trajectory", "obs_waves_imu", "frequencies_waves_imu"],
                 data=np.nan*np.ones((trajectory, obs_waves_imu, frequencies_waves_imu)),
@@ -312,20 +351,38 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
         # gnss position data
 
         list_time = [int(crrt_packet.data.datetime_fix.timestamp()) for crrt_packet in dict_entries[crrt_instrument]["G"]]
-        xr_result["time"][crrt_instrument_idx, 0:len(list_time)] = list_time
-
         list_lat = [crrt_packet.data.latitude for crrt_packet in dict_entries[crrt_instrument]["G"]]
-        xr_result["lat"][crrt_instrument_idx, 0:len(list_lat)] = list_lat
-
         list_lon = [crrt_packet.data.longitude for crrt_packet in dict_entries[crrt_instrument]["G"]]
-        xr_result["lon"][crrt_instrument_idx, 0:len(list_lon)] = list_lon
+
+        # sort in time
+        argsort_time_idx = list(np.argsort(np.array(list_time)))
+        list_time = [list_time[i] for i in argsort_time_idx]
+        list_lat = [list_lat[i] for i in argsort_time_idx]
+        list_lon = [list_lon[i] for i in argsort_time_idx]
+
+        # reject outliers
+        logger.debug("start applying sliding_filter_nsigma")
+        np_latitude = sliding_filter_nsigma(np.array(list_lat))
+        np_longitude = sliding_filter_nsigma(np.array(list_lon))
+        logger.debug("done applying sliding_filter_nsigma")
+
+        xr_result["time"][crrt_instrument_idx, 0:len(list_time)] = list_time
+        xr_result["lat"][crrt_instrument_idx, 0:len(list_lat)] = np_latitude
+        xr_result["lon"][crrt_instrument_idx, 0:len(list_lon)] = np_longitude
 
         ####################
         # wave data
 
         list_parsed_gnss_messages = dict_entries[crrt_instrument]["Y"]
 
+        crrt_list_times_waves = [crrt_wave_data.data.datetime_fix for crrt_wave_data in list_parsed_gnss_messages]
+        argsort_time_idx = list(np.argsort(np.array(crrt_list_times_waves)))
+        list_parsed_gnss_messages = [list_parsed_gnss_messages[i] for i in argsort_time_idx]
+
         for crrt_wave_idx, crrt_wave_data in enumerate(list_parsed_gnss_messages):
+            xr_result["time_waves_imu"][crrt_instrument_idx, crrt_wave_idx] = \
+                crrt_wave_data.data.datetime_fix
+
             xr_result["pcutoff"][crrt_instrument_idx, crrt_wave_idx] = \
                 crrt_wave_data.data.low_frequency_index_cutoff
 
@@ -381,18 +438,3 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
     )
 
     return xr_result
-
-
-if __name__ == "__main__":
-    # logging.basicConfig(level=logging.DEBUG)
-    logging.basicConfig(level=logging.ERROR)
-
-    print("start main")
-
-    path_to_test_data = Path.cwd().parent.parent / "tests" / "test_data" / "csv" / "omb1.csv"
-    xr_result = read_omb_csv(path_to_test_data)
-
-    print(xr_result)
-    xr_result.to_netcdf("test.nc")
-
-    print("done main")
