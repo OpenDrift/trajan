@@ -139,6 +139,7 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
     # create and fill the xarray dataset
     xr_result = xr.Dataset(
         {
+            # meta vars
             #
             'drifter_names': xr.DataArray(
                 data=list_instruments,
@@ -149,13 +150,15 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
                 }
             ).astype(str),
             #
-            'frequencies': xr.DataArray(
+            'frequencies_waves_imu': xr.DataArray(
                 data=frequencies,
-                dims=["frequencies"],
+                dims=["frequencies_waves_imu"],
                 attrs={
                     "_FillValue": "NaN",
                 }
             ),
+            #
+            # gnss position vars
             #
             'time': xr.DataArray(
                 dims=["trajectory", "obs"],
@@ -187,6 +190,40 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
                     "unit": "degree_east",
                 }
             ),
+            #
+            # imu waves vars
+            #
+            'accel_energy_spectrum': xr.DataArray(
+                dims=["trajectory", "obs_waves_imu", "frequencies_waves_imu"],
+                data=np.nan*np.ones((trajectory, obs_waves_imu, frequencies_waves_imu)),
+                attrs={
+                    "_FillValue": "NaN",
+                }
+            ),
+            #
+            'elevation_energy_spectrum': xr.DataArray(
+                dims=["trajectory", "obs_waves_imu", "frequencies_waves_imu"],
+                data=np.nan*np.ones((trajectory, obs_waves_imu, frequencies_waves_imu)),
+                attrs={
+                    "_FillValue": "NaN",
+                }
+            ),
+            #
+            'processed_elevation_energy_spectrum': xr.DataArray(
+                dims=["trajectory", "obs_waves_imu", "frequencies_waves_imu"],
+                data=np.nan*np.ones((trajectory, obs_waves_imu, frequencies_waves_imu)),
+                attrs={
+                    "_FillValue": "NaN",
+                }
+            ),
+            #
+            'pcutoff': xr.DataArray(
+                dims=["trajectory", "obs_waves_imu"],
+                data=np.nan*np.ones((trajectory, obs_waves_imu)),
+                attrs={
+                    "_FillValue": "NaN",
+                }
+            ),
         },
         attrs={
             "Conventions": "CF-1.10",
@@ -196,7 +233,18 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
 
     # actually fill the data
     for crrt_instrumnent_idx, crrt_instrument in enumerate(list_instruments):
-        pass
+        # gnss position data
+        #
+        list_time = [int(crrt_packet.data.datetime_fix.timestamp()) for crrt_packet in dict_entries[crrt_instrument]["G"]]
+        xr_result["time"][crrt_instrumnent_idx, 0:len(list_time)] = list_time
+        #
+        list_lat = [crrt_packet.data.latitude for crrt_packet in dict_entries[crrt_instrument]["G"]]
+        xr_result["lat"][crrt_instrumnent_idx, 0:len(list_lat)] = list_lat
+        #
+        list_lon = [crrt_packet.data.longitude for crrt_packet in dict_entries[crrt_instrument]["G"]]
+        xr_result["lon"][crrt_instrumnent_idx, 0:len(list_lon)] = list_lon
+
+        # wave data
 
     return xr_result
 
