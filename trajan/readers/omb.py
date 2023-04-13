@@ -162,6 +162,9 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
                 data=int64_fill*np.ones((trajectory, obs_gnss), dtype=np.int64),
                 attrs={
                     "_FillValue": str(int64_fill),
+                    "standard_name": "time",
+                    "unit": "seconds since 1970-01-01T00:00:00+00:00",
+                    "time_calendar": "proleptic_gregorian",
                 }
             ),
             #
@@ -170,6 +173,8 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
                 data=np.nan*np.ones((trajectory, obs_gnss)),
                 attrs={
                     "_FillValue": "NaN",
+                    "standard_name": "latitude",
+                    "unit": "degree_north",
                 }
             ),
             #
@@ -178,6 +183,8 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
                 data=np.nan*np.ones((trajectory, obs_gnss)),
                 attrs={
                     "_FillValue": "NaN",
+                    "standard_name": "longitude",
+                    "unit": "degree_east",
                 }
             ),
         },
@@ -186,6 +193,10 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
             "featureType": "trajectory",
         }
     )
+
+    # actually fill the data
+    for crrt_instrumnent_idx, crrt_instrument in enumerate(list_instruments):
+        pass
 
     return xr_result
 
