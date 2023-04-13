@@ -5,6 +5,7 @@ import logging
 import pandas as pd
 from tqdm import tqdm
 from dataclasses import dataclass
+import numpy as np
 
 from omb_decoder import decode_message
 from typing import Union
@@ -62,6 +63,9 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
     number_valid_entries = 0
     number_pd_entries = len(omb_dataframe)
 
+    frequencies = _BD_YWAVE_NBR_BINS * [np.nan]
+    frequencies_set = False
+
     # decode each entry;
     # only consider messages from the buoy to owner
     # only consider non empty messages
@@ -96,11 +100,15 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
 
             # other packets contain a single entry: add as is
             else:
+                if crrt_kind == "Y" and not frequencies_set:
+                    frequencies_set = True
+                    frequencies = crrt_list_packets[0].list_frequencies
+
                 crrt_parsed = ParsedIridiumMessage(
                     device_from = crrt_data.Device,
                     kind = crrt_kind,
                     meta = crrt_meta,
-                    data = crrt_list_packets,
+                    data = crrt_list_packets[0],
                 )
 
                 append_dict_with_entry(dict_entries, crrt_parsed)
@@ -118,16 +126,69 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
     # determine the size for trajectory, obs, imu_obs, frequencies
     trajectory = len(dict_entries)
 
-    obs = max([len(dict_entries[crrt_instr]["G"]) for crrt_instr in dict_entries])
+    obs_gnss = max([len(dict_entries[crrt_instr]["G"]) for crrt_instr in dict_entries])
 
-    imu_obs = max([len(dict_entries[crrt_instr]["Y"]) for crrt_instr in dict_entries])
+    obs_waves_imu = max([len(dict_entries[crrt_instr]["Y"]) for crrt_instr in dict_entries])
 
-    frequencies = _BD_YWAVE_NBR_BINS
+    frequencies_waves_imu = _BD_YWAVE_NBR_BINS
 
-    # create the xarray dataset
+    list_instruments = sorted(list(dict_entries.keys()))
+    print(list_instruments)
 
-    # fill the xarray dataset
+    int64_fill = -(2**63 - 0)
 
+    # create and fill the xarray dataset
+    xr_result = xr.Dataset(
+        {
+            #
+            'drifter_names': xr.DataArray(
+                data=list_instruments,
+                dims=['trajectory'],
+                attrs={
+                    "cf_role": "trajectory_id",
+                    "standard_name": "platform_id",
+                }
+            ).astype(str),
+            #
+            'frequencies': xr.DataArray(
+                data=frequencies,
+                dims=["frequencies"],
+                attrs={
+                    "_FillValue": "NaN",
+                }
+            ),
+            #
+            'time': xr.DataArray(
+                dims=["trajectory", "obs"],
+                data=int64_fill*np.ones((trajectory, obs_gnss), dtype=np.int64),
+                attrs={
+                    "_FillValue": str(int64_fill),
+                }
+            ),
+            #
+            'lat': xr.DataArray(
+                dims=["trajectory", "obs"],
+                data=np.nan*np.ones((trajectory, obs_gnss)),
+                attrs={
+                    "_FillValue": "NaN",
+                }
+            ),
+            #
+            'lon': xr.DataArray(
+                dims=["trajectory", "obs"],
+                data=np.nan*np.ones((trajectory, obs_gnss)),
+                attrs={
+                    "_FillValue": "NaN",
+                }
+            ),
+        },
+        attrs={
+            "Conventions": "CF-1.10",
+            "featureType": "trajectory",
+        }
+    )
+
+    return xr_result
 
 
 if __name__ == "__main__":
@@ -136,6 +197,9 @@ if __name__ == "__main__":
     print("start main")
 
     path_to_test_data = Path.cwd().parent.parent / "tests" / "test_data" / "csv" / "omb1.csv"
-    read_omb_csv(path_to_test_data)
+    xr_result = read_omb_csv(path_to_test_data)
+
+    print(xr_result)
+    xr_result.to_netcdf("test.nc")
 
     print("done main")
