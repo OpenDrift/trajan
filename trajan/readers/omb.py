@@ -82,40 +82,41 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
             continue
 
         # we should only have valid dataframes at this point; attempt to decode
+        # hard to catch exceptions in a fine grain way, so cath all, but only on the decoding itself
         try:
             crrt_kind, crrt_meta, crrt_list_packets = decode_message(crrt_data.Payload, print_decoded=False)
-            number_valid_entries += 1
+        except Exception as e:
+            logger.warning(f"attempt to decode entry at index {pd_index}, Payload equal to: {crrt_data.Payload} failed with exception:\n{e}")
+            continue
 
-            # a GNSS packet may contain several data entries; split it here for simplicity
-            if crrt_kind == "G":
-                for crrt_fix in crrt_list_packets:
-                    crrt_parsed = ParsedIridiumMessage(
-                        device_from = crrt_data.Device,
-                        kind = crrt_kind,
-                        meta = crrt_meta,
-                        data = crrt_fix,
-                    )
+        number_valid_entries += 1
 
-                    append_dict_with_entry(dict_entries, crrt_parsed)
-
-            # other packets contain a single entry: add as is
-            else:
-                if crrt_kind == "Y" and not frequencies_set:
-                    frequencies_set = True
-                    frequencies = crrt_list_packets[0].list_frequencies
-
+        # a GNSS packet may contain several data entries; split it here for simplicity
+        if crrt_kind == "G":
+            for crrt_fix in crrt_list_packets:
                 crrt_parsed = ParsedIridiumMessage(
                     device_from = crrt_data.Device,
                     kind = crrt_kind,
                     meta = crrt_meta,
-                    data = crrt_list_packets[0],
+                    data = crrt_fix,
                 )
 
                 append_dict_with_entry(dict_entries, crrt_parsed)
 
-        except Exception as e:
-            logger.warning(f"attempt to decode entry at index {pd_index}, Payload equal to: {crrt_data.Payload} failed with exception:\n{e}")
-            continue
+        # other packets contain a single entry: add as is
+        else:
+            if crrt_kind == "Y" and not frequencies_set:
+                frequencies_set = True
+                frequencies = crrt_list_packets[0].list_frequencies
+
+            crrt_parsed = ParsedIridiumMessage(
+                device_from = crrt_data.Device,
+                kind = crrt_kind,
+                meta = crrt_meta,
+                data = crrt_list_packets[0],
+            )
+
+            append_dict_with_entry(dict_entries, crrt_parsed)
 
     if number_valid_entries == 0:
         logger.warning("got no valid decoded payload in the whole csv file; are you sure this is an OMB csv iridium file?")
