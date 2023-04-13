@@ -2,10 +2,8 @@ from pathlib import Path
 import xarray as xr
 import logging
 import pandas as pd
-from tqdm import tqdm
 from dataclasses import dataclass
 import numpy as np
-import datetime
 
 from .omb_decoder import decode_message
 from typing import Union
@@ -105,8 +103,7 @@ def read_omb_csv(path_in: Path,
     # only consider messages from the buoy to owner
     # only consider non empty messages
     # be verbose about messages that cannot be decoded: something is seriously wrong then!
-    for pd_index, crrt_data in tqdm(omb_dataframe.iterrows(),
-                                    total=number_pd_entries):
+    for pd_index, crrt_data in omb_dataframe.iterrows():
         # only use data from the buoy
         if crrt_data.Direction != "MO":
             logger.debug(
