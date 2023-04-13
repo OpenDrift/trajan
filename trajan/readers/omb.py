@@ -83,12 +83,14 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
 
         # we should only have valid dataframes at this point; attempt to decode
         # hard to catch exceptions in a fine grain way, so cath all, but only on the decoding itself
-        try:
-            crrt_kind, crrt_meta, crrt_list_packets = decode_message(crrt_data.Payload, print_decoded=False)
-        except Exception as e:
-            logger.warning(f"attempt to decode entry at index {pd_index}, Payload equal to: {crrt_data.Payload} failed with exception:\n{e}")
-            continue
+        # however, in practice, all messages should be decodable, and if not this is a serious issue; don t be silent
+        # try:
+        #     crrt_kind, crrt_meta, crrt_list_packets = decode_message(crrt_data.Payload, print_decoded=False)
+        # except Exception as e:
+        #     logger.warning(f"attempt to decode entry at index {pd_index}, Payload equal to: {crrt_data.Payload} failed with exception:\n{e}")
+        #     continue
 
+        crrt_kind, crrt_meta, crrt_list_packets = decode_message(crrt_data.Payload, print_decoded=False)
         number_valid_entries += 1
 
         # a GNSS packet may contain several data entries; split it here for simplicity
@@ -233,19 +235,28 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
     )
 
     # actually fill the data
-    for crrt_instrumnent_idx, crrt_instrument in enumerate(list_instruments):
+    for crrt_instrument_idx, crrt_instrument in enumerate(list_instruments):
+        ####################
         # gnss position data
-        #
-        list_time = [int(crrt_packet.data.datetime_fix.timestamp()) for crrt_packet in dict_entries[crrt_instrument]["G"]]
-        xr_result["time"][crrt_instrumnent_idx, 0:len(list_time)] = list_time
-        #
-        list_lat = [crrt_packet.data.latitude for crrt_packet in dict_entries[crrt_instrument]["G"]]
-        xr_result["lat"][crrt_instrumnent_idx, 0:len(list_lat)] = list_lat
-        #
-        list_lon = [crrt_packet.data.longitude for crrt_packet in dict_entries[crrt_instrument]["G"]]
-        xr_result["lon"][crrt_instrumnent_idx, 0:len(list_lon)] = list_lon
 
+        list_time = [int(crrt_packet.data.datetime_fix.timestamp()) for crrt_packet in dict_entries[crrt_instrument]["G"]]
+        xr_result["time"][crrt_instrument_idx, 0:len(list_time)] = list_time
+
+        list_lat = [crrt_packet.data.latitude for crrt_packet in dict_entries[crrt_instrument]["G"]]
+        xr_result["lat"][crrt_instrument_idx, 0:len(list_lat)] = list_lat
+
+        list_lon = [crrt_packet.data.longitude for crrt_packet in dict_entries[crrt_instrument]["G"]]
+        xr_result["lon"][crrt_instrument_idx, 0:len(list_lon)] = list_lon
+
+        ####################
         # wave data
+
+        list_parsed_gnss_messages = dict_entries[crrt_instrument]["Y"]
+
+        for crrt_wave_idx, crrt_wave_data in enumerate(list_parsed_gnss_messages):
+            xr_result["pcutoff"][crrt_instrument_idx, crrt_wave_idx] = crrt_wave_data.data.low_frequency_index_cutoff
+
+        
 
     return xr_result
 
