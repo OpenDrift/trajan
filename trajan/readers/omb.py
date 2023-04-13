@@ -68,8 +68,14 @@ def append_dict_with_entry(dict_in: dict, parsed_entry: ParsedIridiumMessage):
     dict_in[parsed_entry.device_from][parsed_entry.kind].append(parsed_entry)
 
 
-def read_omb_csv(path_in: Path) -> xr.Dataset:
+def read_omb_csv(path_in: Path, modified_wave_packet_properties: dict=None) -> xr.Dataset:
     logger.debug("read path to pandas")
+
+    if modified_wave_packet_properties is None:
+        nbr_bins_waves = _BD_YWAVE_NBR_BINS
+    else:
+        nbr_bins_waves = modified_wave_packet_properties["_BD_YWAVE_PACKET_MAX_BIN"] - modified_wave_packet_properties["_BD_YWAVE_PACKET_MIN_BIN"]
+        
 
     ########################################
     # generic pandas read to be able to open from a variety of files
@@ -101,7 +107,7 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
     number_valid_entries = 0
     number_pd_entries = len(omb_dataframe)
 
-    frequencies = _BD_YWAVE_NBR_BINS * [np.nan]
+    frequencies = nbr_bins_waves * [np.nan]
     frequencies_set = False
 
     # decode each entry;
@@ -128,7 +134,7 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
         #     logger.warning(f"attempt to decode entry at index {pd_index}, Payload equal to: {crrt_data.Payload} failed with exception:\n{e}")
         #     continue
 
-        crrt_kind, crrt_meta, crrt_list_packets = decode_message(crrt_data.Payload, print_decoded=False)
+        crrt_kind, crrt_meta, crrt_list_packets = decode_message(crrt_data.Payload, print_decoded=False, dict_wave_packet_params=modified_wave_packet_properties)
         number_valid_entries += 1
 
         # a GNSS packet may contain several data entries; split it here for simplicity
@@ -171,7 +177,7 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
 
     obs_waves_imu = max([len(dict_entries[crrt_instr]["Y"]) for crrt_instr in dict_entries])
 
-    frequencies_waves_imu = _BD_YWAVE_NBR_BINS
+    frequencies_waves_imu = nbr_bins_waves
 
     list_instruments = sorted(list(dict_entries.keys()))
 

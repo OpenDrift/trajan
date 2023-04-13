@@ -615,7 +615,34 @@ def decode_thermistors_message(bin_msg, print_decoded=False, print_debug_informa
     return message_metadata, list_decoded_packets
 
 
-def decode_message(hex_string_message, print_decoded=True, print_debug_information=False):
+def decode_message(hex_string_message, print_decoded=True, print_debug_information=False, dict_wave_packet_params=None):
+    # NOTE: this is pushing the decoder further than it was initially thought...
+    # some users change the default size of the transmitted spectra; as the logics of the packets formats were initially done
+    # as global variables, this implies doing some hacking for allowing to change this on the fly
+    # the on the fly globals editing below is dangerous and bad; that would need refactor in the future
+    # this decoder has outgrown itself :)
+    if dict_wave_packet_params is not None:
+        global _BD_YWAVE_PACKET_MIN_BIN
+        global _BD_YWAVE_PACKET_MAX_BIN
+        global _BD_YWAVE_NBR_BINS
+        global _BD_YWAVE_PACKET_LENGTH
+        global LENGTH_FROM_SERIAL_OUTPUT
+
+        old_BD_YWAVE_PACKET_MIN_BIN  = _BD_YWAVE_PACKET_MIN_BIN
+        old_BD_YWAVE_PACKET_MAX_BIN  = _BD_YWAVE_PACKET_MAX_BIN
+        old_BD_YWAVE_NBR_BINS        = _BD_YWAVE_NBR_BINS
+        old_BD_YWAVE_PACKET_LENGTH   = _BD_YWAVE_PACKET_LENGTH
+        oldLENGTH_FROM_SERIAL_OUTPUT = LENGTH_FROM_SERIAL_OUTPUT
+
+        _BD_YWAVE_PACKET_MIN_BIN = dict_wave_packet_params["_BD_YWAVE_PACKET_MIN_BIN"]
+        _BD_YWAVE_PACKET_MAX_BIN = dict_wave_packet_params["_BD_YWAVE_PACKET_MAX_BIN"]
+        _BD_YWAVE_NBR_BINS = _BD_YWAVE_PACKET_MAX_BIN - _BD_YWAVE_PACKET_MIN_BIN
+        _BD_YWAVE_PACKET_LENGTH = \
+            1 + 4 + 4 + 4*4 + _BD_YWAVE_NBR_BINS * 2 + 2 + 1
+        LENGTH_FROM_SERIAL_OUTPUT= dict_wave_packet_params["LENGTH_FROM_SERIAL_OUTPUT"]
+
+        assert _BD_YWAVE_PACKET_LENGTH == LENGTH_FROM_SERIAL_OUTPUT, "the arduino printout indicates that wave packets have length {}".format(LENGTH_FROM_SERIAL_OUTPUT)
+
     bin_msg = hex_to_bin_message(hex_string_message)
 
     kind = message_kind(bin_msg)
@@ -628,5 +655,12 @@ def decode_message(hex_string_message, print_decoded=True, print_debug_informati
         message_metadata, list_decoded_packets = decode_thermistors_message(bin_msg, print_decoded=print_decoded, print_debug_information=print_debug_information)
     else:
         raise RuntimeError("Unknown message kind: {}".format(kind))
+
+    if dict_wave_packet_params is not None:
+        _BD_YWAVE_PACKET_MIN_BIN  = old_BD_YWAVE_PACKET_MIN_BIN
+        _BD_YWAVE_PACKET_MAX_BIN  = old_BD_YWAVE_PACKET_MAX_BIN
+        _BD_YWAVE_NBR_BINS        = old_BD_YWAVE_NBR_BINS
+        _BD_YWAVE_PACKET_LENGTH   = old_BD_YWAVE_PACKET_LENGTH
+        LENGTH_FROM_SERIAL_OUTPUT = oldLENGTH_FROM_SERIAL_OUTPUT
 
     return (kind, message_metadata, list_decoded_packets)
