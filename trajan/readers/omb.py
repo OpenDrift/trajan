@@ -6,10 +6,20 @@ import pandas as pd
 from tqdm import tqdm
 from dataclasses import dataclass
 import numpy as np
+import datetime
+import os
+import time
 
 from omb_decoder import decode_message
 from typing import Union
 from omb_decoder import GNSS_Metadata, Waves_Metadata, Thermistors_Metadata, GNSS_Packet, Waves_Packet, Thermistors_Packet, _BD_YWAVE_NBR_BINS
+
+#--------------------------------------------------------------------------------
+# make sure we are all UTC
+
+os.environ["TZ"] = "UTC"
+time.tzset()
+#--------------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
 
@@ -227,10 +237,72 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
                     "_FillValue": "NaN",
                 }
             ),
+            #
+            'pHs0': xr.DataArray(
+                dims=["trajectory", "obs_waves_imu"],
+                data=np.nan*np.ones((trajectory, obs_waves_imu)),
+                attrs={
+                    "_FillValue": "NaN",
+                    "definition": "4 * math.sqrt(m0) of low freq cutoff elevation spectrum"
+                }
+            ),
+            #
+            'pT02': xr.DataArray(
+                dims=["trajectory", "obs_waves_imu"],
+                data=np.nan*np.ones((trajectory, obs_waves_imu)),
+                attrs={
+                    "_FillValue": "NaN",
+                    "definition": "math.sqrt(m0 / m2) of low freq cutoff elevation spectrum"
+                }
+            ),
+            #
+            'pT24': xr.DataArray(
+                dims=["trajectory", "obs_waves_imu"],
+                data=np.nan*np.ones((trajectory, obs_waves_imu)),
+                attrs={
+                    "_FillValue": "NaN",
+                    "definition": "math.sqrt(m2 / m4) of low freq cutoff elevation spectrum"
+                }
+            ),
+            #
+            'Hs0': xr.DataArray(
+                dims=["trajectory", "obs_waves_imu"],
+                data=np.nan*np.ones((trajectory, obs_waves_imu)),
+                attrs={
+                    "_FillValue": "NaN",
+                    "definition": "4 * math.sqrt(m0) of full elevation spectrum"
+                }
+            ),
+            #
+            'T02': xr.DataArray(
+                dims=["trajectory", "obs_waves_imu"],
+                data=np.nan*np.ones((trajectory, obs_waves_imu)),
+                attrs={
+                    "_FillValue": "NaN",
+                    "definition": "math.sqrt(m0 / m2) of full elevation spectrum"
+                }
+            ),
+            #
+            'T24': xr.DataArray(
+                dims=["trajectory", "obs_waves_imu"],
+                data=np.nan*np.ones((trajectory, obs_waves_imu)),
+                attrs={
+                    "_FillValue": "NaN",
+                    "definition": "math.sqrt(m2 / m4) of full elevation spectrum"
+                }
+            ),
         },
+        #
         attrs={
             "Conventions": "CF-1.10",
             "featureType": "trajectory",
+            #
+            "history": "created with trajan.reader.omb from a Rock7 Iridium CSV file of OMB transmissions",
+            #
+            "creator_name": "XX:TODO",
+            "creator_email": "XX:TODO",
+            "title": "XX:TODO",
+            "summary": "XX:TODO",
         }
     )
 
@@ -254,9 +326,59 @@ def read_omb_csv(path_in: Path) -> xr.Dataset:
         list_parsed_gnss_messages = dict_entries[crrt_instrument]["Y"]
 
         for crrt_wave_idx, crrt_wave_data in enumerate(list_parsed_gnss_messages):
-            xr_result["pcutoff"][crrt_instrument_idx, crrt_wave_idx] = crrt_wave_data.data.low_frequency_index_cutoff
+            xr_result["pcutoff"][crrt_instrument_idx, crrt_wave_idx] = \
+                crrt_wave_data.data.low_frequency_index_cutoff
 
-        
+            xr_result["accel_energy_spectrum"][crrt_instrument_idx, crrt_wave_idx] = \
+                crrt_wave_data.data.list_acceleration_energies
+
+            xr_result["elevation_energy_spectrum"][crrt_instrument_idx, crrt_wave_idx] = \
+                crrt_wave_data.data.list_elevation_energies
+
+            xr_result["processed_elevation_energy_spectrum"][crrt_instrument_idx, crrt_wave_idx] = \
+                crrt_wave_data.data.processed_list_elevation_energies
+
+            xr_result["pHs0"][crrt_instrument_idx, crrt_wave_idx] = \
+                crrt_wave_data.data.processed_Hs
+
+            xr_result["pT02"][crrt_instrument_idx, crrt_wave_idx] = \
+                crrt_wave_data.data.processed_Tz
+
+            xr_result["pT24"][crrt_instrument_idx, crrt_wave_idx] = \
+                crrt_wave_data.data.processed_Tc
+
+            xr_result["Hs0"][crrt_instrument_idx, crrt_wave_idx] = \
+                crrt_wave_data.data.Hs
+
+            xr_result["T02"][crrt_instrument_idx, crrt_wave_idx] = \
+                crrt_wave_data.data.Tz
+
+            xr_result["T24"][crrt_instrument_idx, crrt_wave_idx] = \
+                crrt_wave_data.data.Tc
+
+    # other general attributes based on the data
+    min_lat = np.nanmin(xr_result["lat"][:, :].data.flatten())
+    max_lat = np.nanmax(xr_result["lat"][:, :].data.flatten())
+    #
+    min_lon = np.nanmin(xr_result["lon"][:, :].data.flatten())
+    max_lon = np.nanmax(xr_result["lon"][:, :].data.flatten())
+    #
+    array_times = xr_result["time"][:, :].data.flatten()
+    valid_times_idx = (array_times != int64_fill )
+    array_valid_times = array_times[valid_times_idx]
+    timestamp_min = datetime.datetime.fromtimestamp(np.min(array_valid_times))
+    timestamp_max = datetime.datetime.fromtimestamp(np.max(array_valid_times))
+
+    xr_result = xr_result.assign_attrs(
+        {
+            "geospatial_lat_min": min_lat,
+            "geospatial_lat_max": max_lat,
+            "geospatial_lon_min": min_lon,
+            "geospatial_lon_max": max_lon,
+            "time_coverage_start": timestamp_min.replace(tzinfo=datetime.timezone.utc).replace(microsecond=0).isoformat(),
+            "time_coverage_end": timestamp_max.replace(tzinfo=datetime.timezone.utc).replace(microsecond=0).isoformat(),
+        }
+    )
 
     return xr_result
 
