@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import xarray as xr
 import logging
@@ -46,10 +45,14 @@ def sliding_filter_nsigma(np_array_in, nsigma=5.0, side_half_width=2):
     middle_point_index_start = side_half_width
     middle_point_index_end = array_len - side_half_width - 1
 
-    for crrt_middle_index in range(middle_point_index_start, middle_point_index_end+1, 1):
+    for crrt_middle_index in range(middle_point_index_start,
+                                   middle_point_index_end + 1, 1):
         crrt_left_included = crrt_middle_index - side_half_width
         crrt_right_included = crrt_middle_index + side_half_width
-        crrt_array_data = np.concatenate([ np_array_in[crrt_left_included:crrt_middle_index], np_array_in[crrt_middle_index+1:crrt_right_included+1] ])
+        crrt_array_data = np.concatenate([
+            np_array_in[crrt_left_included:crrt_middle_index],
+            np_array_in[crrt_middle_index + 1:crrt_right_included + 1]
+        ])
         mean = np.mean(crrt_array_data)
         std = np.std(crrt_array_data)
         if np.abs(np_array[crrt_middle_index] - mean) > nsigma * std:
@@ -68,14 +71,16 @@ def append_dict_with_entry(dict_in: dict, parsed_entry: ParsedIridiumMessage):
     dict_in[parsed_entry.device_from][parsed_entry.kind].append(parsed_entry)
 
 
-def read_omb_csv(path_in: Path, modified_wave_packet_properties: dict=None) -> xr.Dataset:
+def read_omb_csv(path_in: Path,
+                 modified_wave_packet_properties: dict = None) -> xr.Dataset:
     logger.debug("read path to pandas")
 
     if modified_wave_packet_properties is None:
         nbr_bins_waves = _BD_YWAVE_NBR_BINS
     else:
-        nbr_bins_waves = modified_wave_packet_properties["_BD_YWAVE_PACKET_MAX_BIN"] - modified_wave_packet_properties["_BD_YWAVE_PACKET_MIN_BIN"]
-        
+        nbr_bins_waves = modified_wave_packet_properties[
+            "_BD_YWAVE_PACKET_MAX_BIN"] - modified_wave_packet_properties[
+                "_BD_YWAVE_PACKET_MIN_BIN"]
 
     ########################################
     # generic pandas read to be able to open from a variety of files
@@ -87,18 +92,14 @@ def read_omb_csv(path_in: Path, modified_wave_packet_properties: dict=None) -> x
 
     columns = omb_dataframe.columns.to_list()
     expected_columns = [
-        'Date Time (UTC)',
-        'Device',
-        'Direction',
-        'Payload',
-        'Approx Lat/Lng',
-        'Payload (Text)',
-        'Length (Bytes)',
-        'Credits'
+        'Date Time (UTC)', 'Device', 'Direction', 'Payload', 'Approx Lat/Lng',
+        'Payload (Text)', 'Length (Bytes)', 'Credits'
     ]
 
     if columns != expected_columns:
-        raise RuntimeError(f"does not look like a Rock7 file; got colmns {columns}, expected {expected_columns}")
+        raise RuntimeError(
+            f"does not look like a Rock7 file; got colmns {columns}, expected {expected_columns}"
+        )
 
     ########################################
     # decode
@@ -114,15 +115,20 @@ def read_omb_csv(path_in: Path, modified_wave_packet_properties: dict=None) -> x
     # only consider messages from the buoy to owner
     # only consider non empty messages
     # be verbose about messages that cannot be decoded: something is seriously wrong then!
-    for pd_index, crrt_data in tqdm(omb_dataframe.iterrows(), total=number_pd_entries):
+    for pd_index, crrt_data in tqdm(omb_dataframe.iterrows(),
+                                    total=number_pd_entries):
         # only use data from the buoy
         if crrt_data.Direction != "MO":
-            logger.debug(f"omb_dataframe at index {pd_index} is:\n{crrt_data}\nthis is not a from buoy (Direction: MO) message, drop")
+            logger.debug(
+                f"omb_dataframe at index {pd_index} is:\n{crrt_data}\nthis is not a from buoy (Direction: MO) message, drop"
+            )
             continue
 
         # only use non empty data frames
         if getattr(crrt_data, "Length (Bytes)") == 0:
-            logger.debug(f"omb_dataframe at index {pd_index} is:\n{crrt_data}\nthis is empty (Length (Bytes) is 0), drop")
+            logger.debug(
+                f"omb_dataframe at index {pd_index} is:\n{crrt_data}\nthis is empty (Length (Bytes) is 0), drop"
+            )
             continue
 
         # we should only have valid dataframes at this point; attempt to decode
@@ -134,17 +140,20 @@ def read_omb_csv(path_in: Path, modified_wave_packet_properties: dict=None) -> x
         #     logger.warning(f"attempt to decode entry at index {pd_index}, Payload equal to: {crrt_data.Payload} failed with exception:\n{e}")
         #     continue
 
-        crrt_kind, crrt_meta, crrt_list_packets = decode_message(crrt_data.Payload, print_decoded=False, dict_wave_packet_params=modified_wave_packet_properties)
+        crrt_kind, crrt_meta, crrt_list_packets = decode_message(
+            crrt_data.Payload,
+            print_decoded=False,
+            dict_wave_packet_params=modified_wave_packet_properties)
         number_valid_entries += 1
 
         # a GNSS packet may contain several data entries; split it here for simplicity
         if crrt_kind == "G":
             for crrt_fix in crrt_list_packets:
                 crrt_parsed = ParsedIridiumMessage(
-                    device_from = crrt_data.Device,
-                    kind = crrt_kind,
-                    meta = crrt_meta,
-                    data = crrt_fix,
+                    device_from=crrt_data.Device,
+                    kind=crrt_kind,
+                    meta=crrt_meta,
+                    data=crrt_fix,
                 )
 
                 append_dict_with_entry(dict_entries, crrt_parsed)
@@ -156,16 +165,18 @@ def read_omb_csv(path_in: Path, modified_wave_packet_properties: dict=None) -> x
                 frequencies = crrt_list_packets[0].list_frequencies
 
             crrt_parsed = ParsedIridiumMessage(
-                device_from = crrt_data.Device,
-                kind = crrt_kind,
-                meta = crrt_meta,
-                data = crrt_list_packets[0],
+                device_from=crrt_data.Device,
+                kind=crrt_kind,
+                meta=crrt_meta,
+                data=crrt_list_packets[0],
             )
 
             append_dict_with_entry(dict_entries, crrt_parsed)
 
     if number_valid_entries == 0:
-        logger.warning("got no valid decoded payload in the whole csv file; are you sure this is an OMB csv iridium file?")
+        logger.warning(
+            "got no valid decoded payload in the whole csv file; are you sure this is an OMB csv iridium file?"
+        )
 
     ########################################
     # turn into a trajan compatible format
@@ -173,9 +184,11 @@ def read_omb_csv(path_in: Path, modified_wave_packet_properties: dict=None) -> x
     # determine the size for trajectory, obs, imu_obs, frequencies
     trajectory = len(dict_entries)
 
-    obs_gnss = max([len(dict_entries[crrt_instr]["G"]) for crrt_instr in dict_entries])
+    obs_gnss = max(
+        [len(dict_entries[crrt_instr]["G"]) for crrt_instr in dict_entries])
 
-    obs_waves_imu = max([len(dict_entries[crrt_instr]["Y"]) for crrt_instr in dict_entries])
+    obs_waves_imu = max(
+        [len(dict_entries[crrt_instr]["Y"]) for crrt_instr in dict_entries])
 
     frequencies_waves_imu = nbr_bins_waves
 
@@ -188,177 +201,193 @@ def read_omb_csv(path_in: Path, modified_wave_packet_properties: dict=None) -> x
         {
             # meta vars
             #
-            'drifter_names': xr.DataArray(
-                data=list_instruments,
-                dims=['trajectory'],
-                attrs={
-                    "cf_role": "trajectory_id",
-                    "standard_name": "platform_id",
-                }
-            ).astype(str),
+            'drifter_names':
+            xr.DataArray(data=list_instruments,
+                         dims=['trajectory'],
+                         attrs={
+                             "cf_role": "trajectory_id",
+                             "standard_name": "platform_id",
+                         }).astype(str),
             #
-            'frequencies_waves_imu': xr.DataArray(
-                data=frequencies,
-                dims=["frequencies_waves_imu"],
-                attrs={
-                    "_FillValue": "NaN",
-                }
-            ),
+            'frequencies_waves_imu':
+            xr.DataArray(data=frequencies,
+                         dims=["frequencies_waves_imu"],
+                         attrs={
+                             "_FillValue": "NaN",
+                         }),
             #
             # gnss position vars
             #
-            'time': xr.DataArray(
-                dims=["trajectory", "obs"],
-                data=int64_fill*np.ones((trajectory, obs_gnss), dtype=np.int64),
-                attrs={
-                    "_FillValue": str(int64_fill),
-                    "standard_name": "time",
-                    "unit": "seconds since 1970-01-01T00:00:00+00:00",
-                    "time_calendar": "proleptic_gregorian",
-                }
-            ),
+            'time':
+            xr.DataArray(dims=["trajectory", "obs"],
+                         data=int64_fill * np.ones(
+                             (trajectory, obs_gnss), dtype=np.int64),
+                         attrs={
+                             "_FillValue": str(int64_fill),
+                             "standard_name": "time",
+                             "unit": "seconds since 1970-01-01T00:00:00+00:00",
+                             "time_calendar": "proleptic_gregorian",
+                         }),
             #
-            'lat': xr.DataArray(
-                dims=["trajectory", "obs"],
-                data=np.nan*np.ones((trajectory, obs_gnss)),
-                attrs={
-                    "_FillValue": "NaN",
-                    "standard_name": "latitude",
-                    "unit": "degree_north",
-                }
-            ),
+            'lat':
+            xr.DataArray(dims=["trajectory", "obs"],
+                         data=np.nan * np.ones((trajectory, obs_gnss)),
+                         attrs={
+                             "_FillValue": "NaN",
+                             "standard_name": "latitude",
+                             "unit": "degree_north",
+                         }),
             #
-            'lon': xr.DataArray(
-                dims=["trajectory", "obs"],
-                data=np.nan*np.ones((trajectory, obs_gnss)),
-                attrs={
-                    "_FillValue": "NaN",
-                    "standard_name": "longitude",
-                    "unit": "degree_east",
-                }
-            ),
+            'lon':
+            xr.DataArray(dims=["trajectory", "obs"],
+                         data=np.nan * np.ones((trajectory, obs_gnss)),
+                         attrs={
+                             "_FillValue": "NaN",
+                             "standard_name": "longitude",
+                             "unit": "degree_east",
+                         }),
             #
             # imu waves vars
             #
-            'time_waves_imu': xr.DataArray(
-                dims=["trajectory", "obs_waves_imu"],
-                data=int64_fill*np.ones((trajectory, obs_waves_imu), dtype=np.int64),
-                attrs={
-                    "_FillValue": str(int64_fill),
-                    "standard_name": "time",
-                    "unit": "seconds since 1970-01-01T00:00:00+00:00",
-                    "time_calendar": "proleptic_gregorian",
-                }
-            ),
+            'time_waves_imu':
+            xr.DataArray(dims=["trajectory", "obs_waves_imu"],
+                         data=int64_fill * np.ones(
+                             (trajectory, obs_waves_imu), dtype=np.int64),
+                         attrs={
+                             "_FillValue": str(int64_fill),
+                             "standard_name": "time",
+                             "unit": "seconds since 1970-01-01T00:00:00+00:00",
+                             "time_calendar": "proleptic_gregorian",
+                         }),
             #
-            'accel_energy_spectrum': xr.DataArray(
+            'accel_energy_spectrum':
+            xr.DataArray(
                 dims=["trajectory", "obs_waves_imu", "frequencies_waves_imu"],
-                data=np.nan*np.ones((trajectory, obs_waves_imu, frequencies_waves_imu)),
+                data=np.nan * np.ones(
+                    (trajectory, obs_waves_imu, frequencies_waves_imu)),
                 attrs={
                     "_FillValue": "NaN",
-                }
-            ),
+                }),
             #
-            'elevation_energy_spectrum': xr.DataArray(
+            'elevation_energy_spectrum':
+            xr.DataArray(
                 dims=["trajectory", "obs_waves_imu", "frequencies_waves_imu"],
-                data=np.nan*np.ones((trajectory, obs_waves_imu, frequencies_waves_imu)),
+                data=np.nan * np.ones(
+                    (trajectory, obs_waves_imu, frequencies_waves_imu)),
                 attrs={
                     "_FillValue": "NaN",
-                }
-            ),
+                }),
             #
-            'processed_elevation_energy_spectrum': xr.DataArray(
+            'processed_elevation_energy_spectrum':
+            xr.DataArray(
                 dims=["trajectory", "obs_waves_imu", "frequencies_waves_imu"],
-                data=np.nan*np.ones((trajectory, obs_waves_imu, frequencies_waves_imu)),
+                data=np.nan * np.ones(
+                    (trajectory, obs_waves_imu, frequencies_waves_imu)),
                 attrs={
                     "_FillValue": "NaN",
-                }
-            ),
+                }),
             #
-            'pcutoff': xr.DataArray(
-                dims=["trajectory", "obs_waves_imu"],
-                data=np.nan*np.ones((trajectory, obs_waves_imu)),
-                attrs={
-                    "_FillValue": "NaN",
-                }
-            ),
+            'pcutoff':
+            xr.DataArray(dims=["trajectory", "obs_waves_imu"],
+                         data=np.nan * np.ones((trajectory, obs_waves_imu)),
+                         attrs={
+                             "_FillValue": "NaN",
+                         }),
             #
-            'pHs0': xr.DataArray(
+            'pHs0':
+            xr.DataArray(
                 dims=["trajectory", "obs_waves_imu"],
-                data=np.nan*np.ones((trajectory, obs_waves_imu)),
+                data=np.nan * np.ones((trajectory, obs_waves_imu)),
                 attrs={
-                    "_FillValue": "NaN",
-                    "definition": "4 * math.sqrt(m0) of low freq cutoff elevation spectrum"
-                }
-            ),
+                    "_FillValue":
+                    "NaN",
+                    "definition":
+                    "4 * math.sqrt(m0) of low freq cutoff elevation spectrum"
+                }),
             #
-            'pT02': xr.DataArray(
+            'pT02':
+            xr.DataArray(
                 dims=["trajectory", "obs_waves_imu"],
-                data=np.nan*np.ones((trajectory, obs_waves_imu)),
+                data=np.nan * np.ones((trajectory, obs_waves_imu)),
                 attrs={
-                    "_FillValue": "NaN",
-                    "definition": "math.sqrt(m0 / m2) of low freq cutoff elevation spectrum"
-                }
-            ),
+                    "_FillValue":
+                    "NaN",
+                    "definition":
+                    "math.sqrt(m0 / m2) of low freq cutoff elevation spectrum"
+                }),
             #
-            'pT24': xr.DataArray(
+            'pT24':
+            xr.DataArray(
                 dims=["trajectory", "obs_waves_imu"],
-                data=np.nan*np.ones((trajectory, obs_waves_imu)),
+                data=np.nan * np.ones((trajectory, obs_waves_imu)),
                 attrs={
-                    "_FillValue": "NaN",
-                    "definition": "math.sqrt(m2 / m4) of low freq cutoff elevation spectrum"
-                }
-            ),
+                    "_FillValue":
+                    "NaN",
+                    "definition":
+                    "math.sqrt(m2 / m4) of low freq cutoff elevation spectrum"
+                }),
             #
-            'Hs0': xr.DataArray(
-                dims=["trajectory", "obs_waves_imu"],
-                data=np.nan*np.ones((trajectory, obs_waves_imu)),
-                attrs={
-                    "_FillValue": "NaN",
-                    "definition": "4 * math.sqrt(m0) of full elevation spectrum"
-                }
-            ),
+            'Hs0':
+            xr.DataArray(dims=["trajectory", "obs_waves_imu"],
+                         data=np.nan * np.ones((trajectory, obs_waves_imu)),
+                         attrs={
+                             "_FillValue":
+                             "NaN",
+                             "definition":
+                             "4 * math.sqrt(m0) of full elevation spectrum"
+                         }),
             #
-            'T02': xr.DataArray(
-                dims=["trajectory", "obs_waves_imu"],
-                data=np.nan*np.ones((trajectory, obs_waves_imu)),
-                attrs={
-                    "_FillValue": "NaN",
-                    "definition": "math.sqrt(m0 / m2) of full elevation spectrum"
-                }
-            ),
+            'T02':
+            xr.DataArray(dims=["trajectory", "obs_waves_imu"],
+                         data=np.nan * np.ones((trajectory, obs_waves_imu)),
+                         attrs={
+                             "_FillValue":
+                             "NaN",
+                             "definition":
+                             "math.sqrt(m0 / m2) of full elevation spectrum"
+                         }),
             #
-            'T24': xr.DataArray(
-                dims=["trajectory", "obs_waves_imu"],
-                data=np.nan*np.ones((trajectory, obs_waves_imu)),
-                attrs={
-                    "_FillValue": "NaN",
-                    "definition": "math.sqrt(m2 / m4) of full elevation spectrum"
-                }
-            ),
+            'T24':
+            xr.DataArray(dims=["trajectory", "obs_waves_imu"],
+                         data=np.nan * np.ones((trajectory, obs_waves_imu)),
+                         attrs={
+                             "_FillValue":
+                             "NaN",
+                             "definition":
+                             "math.sqrt(m2 / m4) of full elevation spectrum"
+                         }),
         },
         #
         attrs={
             "Conventions": "CF-1.10",
             "featureType": "trajectory",
             #
-            "history": "created with trajan.reader.omb from a Rock7 Iridium CSV file of OMB transmissions",
+            "history":
+            "created with trajan.reader.omb from a Rock7 Iridium CSV file of OMB transmissions",
             #
             "creator_name": "XX:TODO",
             "creator_email": "XX:TODO",
             "title": "XX:TODO",
             "summary": "XX:TODO",
-        }
-    )
+        })
 
     # actually fill the data
     for crrt_instrument_idx, crrt_instrument in enumerate(list_instruments):
         ####################
         # gnss position data
 
-        list_time = [int(crrt_packet.data.datetime_fix.timestamp()) for crrt_packet in dict_entries[crrt_instrument]["G"]]
-        list_lat = [crrt_packet.data.latitude for crrt_packet in dict_entries[crrt_instrument]["G"]]
-        list_lon = [crrt_packet.data.longitude for crrt_packet in dict_entries[crrt_instrument]["G"]]
+        list_time = [
+            int(crrt_packet.data.datetime_fix.timestamp())
+            for crrt_packet in dict_entries[crrt_instrument]["G"]
+        ]
+        list_lat = [
+            crrt_packet.data.latitude
+            for crrt_packet in dict_entries[crrt_instrument]["G"]
+        ]
+        list_lon = [
+            crrt_packet.data.longitude
+            for crrt_packet in dict_entries[crrt_instrument]["G"]
+        ]
 
         # sort in time
         argsort_time_idx = list(np.argsort(np.array(list_time)))
@@ -381,11 +410,17 @@ def read_omb_csv(path_in: Path, modified_wave_packet_properties: dict=None) -> x
 
         list_parsed_gnss_messages = dict_entries[crrt_instrument]["Y"]
 
-        crrt_list_times_waves = [crrt_wave_data.data.datetime_fix for crrt_wave_data in list_parsed_gnss_messages]
+        crrt_list_times_waves = [
+            crrt_wave_data.data.datetime_fix
+            for crrt_wave_data in list_parsed_gnss_messages
+        ]
         argsort_time_idx = list(np.argsort(np.array(crrt_list_times_waves)))
-        list_parsed_gnss_messages = [list_parsed_gnss_messages[i] for i in argsort_time_idx]
+        list_parsed_gnss_messages = [
+            list_parsed_gnss_messages[i] for i in argsort_time_idx
+        ]
 
-        for crrt_wave_idx, crrt_wave_data in enumerate(list_parsed_gnss_messages):
+        for crrt_wave_idx, crrt_wave_data in enumerate(
+                list_parsed_gnss_messages):
             xr_result["time_waves_imu"][crrt_instrument_idx, crrt_wave_idx] = \
                 crrt_wave_data.data.datetime_fix
 
@@ -427,20 +462,26 @@ def read_omb_csv(path_in: Path, modified_wave_packet_properties: dict=None) -> x
     max_lon = np.nanmax(xr_result["lon"][:, :].data.flatten())
     #
     array_times = xr_result["time"][:, :].data.flatten()
-    valid_times_idx = (array_times != int64_fill )
+    valid_times_idx = (array_times != int64_fill)
     array_valid_times = array_times[valid_times_idx]
     timestamp_min = datetime.datetime.fromtimestamp(np.min(array_valid_times))
     timestamp_max = datetime.datetime.fromtimestamp(np.max(array_valid_times))
 
-    xr_result = xr_result.assign_attrs(
-        {
-            "geospatial_lat_min": min_lat,
-            "geospatial_lat_max": max_lat,
-            "geospatial_lon_min": min_lon,
-            "geospatial_lon_max": max_lon,
-            "time_coverage_start": timestamp_min.replace(tzinfo=datetime.timezone.utc).replace(microsecond=0).isoformat(),
-            "time_coverage_end": timestamp_max.replace(tzinfo=datetime.timezone.utc).replace(microsecond=0).isoformat(),
-        }
-    )
+    xr_result = xr_result.assign_attrs({
+        "geospatial_lat_min":
+        min_lat,
+        "geospatial_lat_max":
+        max_lat,
+        "geospatial_lon_min":
+        min_lon,
+        "geospatial_lon_max":
+        max_lon,
+        "time_coverage_start":
+        timestamp_min.replace(tzinfo=datetime.timezone.utc).replace(
+            microsecond=0).isoformat(),
+        "time_coverage_end":
+        timestamp_max.replace(tzinfo=datetime.timezone.utc).replace(
+            microsecond=0).isoformat(),
+    })
 
     return xr_result
