@@ -454,8 +454,8 @@ def read_omb_csv(path_in: Path,
     array_times = xr_result["time"][:, :].data.flatten()
     valid_times_idx = (array_times != int64_fill)
     array_valid_times = array_times[valid_times_idx]
-    timestamp_min = datetime.datetime.fromtimestamp(np.min(array_valid_times))
-    timestamp_max = datetime.datetime.fromtimestamp(np.max(array_valid_times))
+    timestamp_min = datetime.datetime.fromtimestamp(np.min(array_valid_times), datetime.timezone.utc)
+    timestamp_max = datetime.datetime.fromtimestamp(np.max(array_valid_times), datetime.timezone.utc)
 
     xr_result = xr_result.assign_attrs({
         "geospatial_lat_min":
@@ -467,11 +467,9 @@ def read_omb_csv(path_in: Path,
         "geospatial_lon_max":
         max_lon,
         "time_coverage_start":
-        timestamp_min.replace(tzinfo=datetime.timezone.utc).replace(
-            microsecond=0).isoformat(),
+        timestamp_min.isoformat(),
         "time_coverage_end":
-        timestamp_max.replace(tzinfo=datetime.timezone.utc).replace(
-            microsecond=0).isoformat(),
+        timestamp_max.replace(microsecond=0).isoformat(),
     })
 
     return xr_result
