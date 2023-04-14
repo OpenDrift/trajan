@@ -128,7 +128,7 @@ def read_omb_csv(path_in: Path,
                 print_decoded=False,
                 dict_wave_packet_params=modified_wave_packet_properties)
 
-        except Exception as e:
+        except AssertionError as e:
             logger.warning(f"attempt to decode entry at index {pd_index}, Payload equal to: {crrt_data.Payload} failed with exception:\n{e}")
             continue
 
