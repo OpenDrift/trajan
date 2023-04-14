@@ -6,6 +6,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+def test_interpolate_barents_hourly(barents):
+    b = barents.traj.gridtime('1h')
+    print(b)
+
 def test_interpolate_barents(barents, plot):
     """Interpolate subset of drifter time series to 6-hourly means"""
 
