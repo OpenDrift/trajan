@@ -467,7 +467,7 @@ def read_omb_csv(path_in: Path,
         "geospatial_lon_max":
         max_lon,
         "time_coverage_start":
-        timestamp_min.isoformat(),
+        timestamp_min.replace(microsecond=0).isoformat(),
         "time_coverage_end":
         timestamp_max.replace(microsecond=0).isoformat(),
     })
