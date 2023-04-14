@@ -271,6 +271,7 @@ def decode_gnss_packet(bin_packet,
         char_first_byte)
 
     posix_timestamp_fix = four_bytes_to_long(bin_packet[1:5])
+    # print(posix_timestamp_fix)
     datetime_fix = datetime.datetime.utcfromtimestamp(posix_timestamp_fix)
 
     latitude_long = four_bytes_to_long(bin_packet[5:9])

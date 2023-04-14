@@ -7,8 +7,8 @@ def test_read_csv_omb_default_waves(test_data):
     ds = read_omb_csv(path_to_test_data)
 
     # 1668207637
-    assert ds.attrs['time_coverage_start'] == '2022-11-11T23:00:37'
-    assert ds.attrs['time_coverage_end'] == '2022-11-12T01:30:27'
+    assert ds.attrs['time_coverage_start'] == '2022-11-12T00:00:37+00:00'
+    assert ds.attrs['time_coverage_end'] == '2022-11-12T02:30:27+00:00'
 
 
 def test_read_csv_omb_modified_waves(test_data):
