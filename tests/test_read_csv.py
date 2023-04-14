@@ -56,3 +56,12 @@ def test_lungard(test_data):
     assert (np.isnan(ds.isel(trajectory=0).lon) == np.isnan(ds.isel(trajectory=0).lat)).all()
 
 
+def test_seals(test_data, tmpdir):
+    s = test_data / 'csv/seals.csv.xz'
+    ds = ta.read_csv(s, lat='Lat', lon='Lon', time='Timestamp', name='Instrument')
+    print(ds)
+
+    assert ds.dims['trajectory'] == 5
+    assert (ds['drifter_names'].values == ['T1', 'T2', 'T3', 'T4', 'T5']).all()
+
+    ds.to_netcdf(tmpdir / 'test.nc')

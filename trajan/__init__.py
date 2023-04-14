@@ -38,7 +38,7 @@ def from_dataframe(df: pd.DataFrame,
 
     Returns:
 
-        `ds`: a CF-compliant trajaectory `xarray.Dataset`.
+        `ds`: a CF-compliant trajectory `xarray.Dataset`.
 
 
     Constructing a dataset from arrays of postions and time:
@@ -72,7 +72,7 @@ def from_dataframe(df: pd.DataFrame,
             lat            (trajectory, obs) float64 60.0 60.2 60.41 ... 69.59 69.8 70.0
             time           (trajectory, obs) datetime64[ns] 2023-01-01 ... 2023-01-14
             temp           (trajectory, obs) float64 10.0 10.1 10.2 ... 14.8 14.9 15.0
-            drifter_names  (trajectory) object 'My drifter'
+            drifter_names  (trajectory) <U10 'My drifter'
         Attributes:
             Conventions:         CF-1.10
             featureType:         trajectory
@@ -100,7 +100,7 @@ def from_dataframe(df: pd.DataFrame,
             lat            (trajectory, obs) float64 60.0 60.2 60.41 ... 69.59 69.8 70.0
             time           (trajectory, obs) datetime64[ns] 2023-01-01 ... 2023-01-14
             temp           (trajectory, obs) float64 10.0 10.1 10.2 ... 14.8 14.9 15.0
-            drifter_names  (trajectory) object 'My drifter'
+            drifter_names  (trajectory) <U10 'My drifter'
         Attributes:
             Conventions:         CF-1.10
             featureType:         trajectory
@@ -131,10 +131,14 @@ def from_dataframe(df: pd.DataFrame,
     df['trajectory'] = pd.to_numeric(df.groupby('drifter_names').ngroup(), downcast='integer')
     df = df.set_index(['trajectory', df.index])
     df = df.to_xarray()
+    df['trajectory'] = df['trajectory'].astype(int)
 
     # Simplify the drifter_names variable: It is only dependent on the trajectory dimension.
-    df['drifter_names'] = df.drifter_names.isel(obs=0)
-    df['trajectory'] = df['trajectory'].astype(int)
+    isstr = np.vectorize(lambda v: isinstance(v, str))
+    names = np.argmax(isstr(df['drifter_names'].values), axis=1)
+    names = np.take(df['drifter_names'].values, names, axis=1).diagonal()
+    df['drifter_names'] = df['drifter_names'].isel(obs=0)
+    df['drifter_names'].values = names.astype(str)
 
     # df = df.dropna(dim='obs', how='all')
 
