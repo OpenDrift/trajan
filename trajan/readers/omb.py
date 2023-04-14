@@ -201,6 +201,7 @@ def read_omb_csv(path_in: Path,
                          dims=["frequencies_waves_imu"],
                          attrs={
                              "_FillValue": "NaN",
+                             "unit": "Hz",
                          }),
             #
             # gnss position vars
