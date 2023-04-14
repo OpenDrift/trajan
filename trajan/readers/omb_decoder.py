@@ -15,6 +15,9 @@ from dataclasses import dataclass
 import math
 import numpy as np
 import scipy.signal as signal
+import logging
+
+logger = logging.getLogger(__name__)
 
 #--------------------------------------------------------------------------------
 # a few module constants
@@ -409,9 +412,7 @@ def decode_ywave_packet(bin_packet,
         is_valid = True
     else:
         is_valid = False
-        print(
-            "WARNING: is_valid is False; that probably indicates an IMU misfunction"
-        )
+        logger.warning(f"got a wave spectrum with corresponding Hs<1e-5; this likely indicates an instrument that landed onshore or an IMU malfunction; setting corresponding spectrum is_valid to False")
 
     list_frequencies = []
     list_acceleration_energies = []
