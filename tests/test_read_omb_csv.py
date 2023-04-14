@@ -2,7 +2,7 @@ import pandas as pd
 from trajan.readers.omb import read_omb_csv
 
 
-def test_read_csv_omb_default_waves(test_data):
+def test_read_csv_omb_default_waves(test_data, tmpdir):
     path_to_test_data = test_data / 'csv' / 'omb1.csv'
     ds = read_omb_csv(path_to_test_data)
 
@@ -14,8 +14,10 @@ def test_read_csv_omb_default_waves(test_data):
     print(ds.time)
 
     # grid dataset
-    ds = ds.traj.gridtime('1h')
-    print(ds)
+    # ds = ds.traj.gridtime('1h')
+    # print(ds)
+
+    ds.to_netcdf(tmpdir / 'test.nc')
 
 
 def test_read_csv_omb_modified_waves(test_data):

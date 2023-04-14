@@ -181,23 +181,8 @@ def read_omb_csv(path_in: Path,
 
     list_instruments = sorted(list(dict_entries.keys()))
 
-    # NOTE start
-    # it looks like I have to provide an initialized datetime64 data array
-    # to xarray otherwise it complains, but I do not know a better way to generate
-    # an array initialized to datetime64('nat') than filling by hand... ugly,
-    # but works, if you know better please pull request :) .
-
-    empty_time = np.empty((trajectory, obs_gnss), dtype='datetime64[s]')
-    for i in range(trajectory):
-        for j in range(obs_gnss):
-            empty_time[i, j] = np.datetime64('nat')
-
-    empty_time_waves_imu = np.empty((trajectory, obs_waves_imu), dtype='datetime64[s]')
-    for i in range(trajectory):
-        for j in range(obs_waves_imu):
-            empty_time_waves_imu[i, j] = np.datetime64('nat')
-
-    # NOTE end
+    empty_time = np.full((trajectory, obs_gnss), np.datetime64('nat'), dtype='datetime64[s]')
+    empty_time_waves_imu = np.full((trajectory, obs_waves_imu), np.datetime64('nat'), dtype='datetime64[s]')
 
     # create and fill the xarray dataset
     xr_result = xr.Dataset(
@@ -226,7 +211,6 @@ def read_omb_csv(path_in: Path,
             xr.DataArray(dims=["trajectory", "obs"],
                          data=empty_time,
                          attrs={
-                             "_FillValue": np.datetime64('nat'),
                              "standard_name": "time",
                          }),
             #
@@ -254,7 +238,6 @@ def read_omb_csv(path_in: Path,
             xr.DataArray(dims=["trajectory", "obs_waves_imu"],
                          data=empty_time_waves_imu,
                          attrs={
-                             "_FillValue": np.datetime64('nat'),
                              "standard_name": "time",
                          }),
             #
