@@ -95,7 +95,6 @@ def read_omb_csv(path_in: Path,
 
     dict_entries = {}
     number_valid_entries = 0
-    number_pd_entries = len(omb_dataframe)
 
     frequencies = nbr_bins_waves * [np.nan]
     frequencies_set = False
