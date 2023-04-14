@@ -122,16 +122,16 @@ def read_omb_csv(path_in: Path,
         # we should only have valid dataframes at this point; attempt to decode
         # hard to catch exceptions in a fine grain way, so cath all, but only on the decoding itself
         # however, in practice, all messages should be decodable, and if not this is a serious issue; don t be silent
-        # try:
-        #     crrt_kind, crrt_meta, crrt_list_packets = decode_message(crrt_data.Payload, print_decoded=False)
-        # except Exception as e:
-        #     logger.warning(f"attempt to decode entry at index {pd_index}, Payload equal to: {crrt_data.Payload} failed with exception:\n{e}")
-        #     continue
+        try:
+            crrt_kind, crrt_meta, crrt_list_packets = decode_message(
+                crrt_data.Payload,
+                print_decoded=False,
+                dict_wave_packet_params=modified_wave_packet_properties)
 
-        crrt_kind, crrt_meta, crrt_list_packets = decode_message(
-            crrt_data.Payload,
-            print_decoded=False,
-            dict_wave_packet_params=modified_wave_packet_properties)
+        except Exception as e:
+            logger.warning(f"attempt to decode entry at index {pd_index}, Payload equal to: {crrt_data.Payload} failed with exception:\n{e}")
+            continue
+
         number_valid_entries += 1
 
         # a GNSS packet may contain several data entries; split it here for simplicity

@@ -50,4 +50,7 @@ dict_wave_packet_params = {
 # specify the binary wave packet specification corresponding to the modified firmware
 xr_result = read_omb_csv(path_to_test_data, modified_wave_packet_properties=dict_wave_packet_params)
 
+# look at the dataset obtained
+print(xr_result)
+
 # from there on, all is similar to above
