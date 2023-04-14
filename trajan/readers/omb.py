@@ -181,7 +181,23 @@ def read_omb_csv(path_in: Path,
 
     list_instruments = sorted(list(dict_entries.keys()))
 
-    int64_fill = -(2**63 - 0)
+    # NOTE start
+    # it looks like I have to provide an initialized datetime64 data array
+    # to xarray otherwise it complains, but I do not know a better way to generate
+    # an array initialized to datetime64('nat') than filling by hand... ugly,
+    # but works, if you know better please pull request :) .
+
+    empty_time = np.empty((trajectory, obs_gnss), dtype='datetime64[s]')
+    for i in range(trajectory):
+        for j in range(obs_gnss):
+            empty_time[i, j] = np.datetime64('nat')
+
+    empty_time_waves_imu = np.empty((trajectory, obs_waves_imu), dtype='datetime64[s]')
+    for i in range(trajectory):
+        for j in range(obs_waves_imu):
+            empty_time_waves_imu[i, j] = np.datetime64('nat')
+
+    # NOTE end
 
     # create and fill the xarray dataset
     xr_result = xr.Dataset(
@@ -208,13 +224,10 @@ def read_omb_csv(path_in: Path,
             #
             'time':
             xr.DataArray(dims=["trajectory", "obs"],
-                         data=int64_fill * np.ones(
-                             (trajectory, obs_gnss), dtype=np.int64),
+                         data=empty_time,
                          attrs={
-                             "_FillValue": str(int64_fill),
+                             "_FillValue": np.datetime64('nat'),
                              "standard_name": "time",
-                             "unit": "seconds since 1970-01-01T00:00:00+00:00",
-                             "time_calendar": "proleptic_gregorian",
                          }),
             #
             'lat':
@@ -239,13 +252,10 @@ def read_omb_csv(path_in: Path,
             #
             'time_waves_imu':
             xr.DataArray(dims=["trajectory", "obs_waves_imu"],
-                         data=int64_fill * np.ones(
-                             (trajectory, obs_waves_imu), dtype=np.int64),
+                         data=empty_time_waves_imu,
                          attrs={
-                             "_FillValue": str(int64_fill),
+                             "_FillValue": np.datetime64('nat'),
                              "standard_name": "time",
-                             "unit": "seconds since 1970-01-01T00:00:00+00:00",
-                             "time_calendar": "proleptic_gregorian",
                          }),
             #
             'accel_energy_spectrum':
@@ -389,7 +399,7 @@ def read_omb_csv(path_in: Path,
         np_longitude = sliding_filter_nsigma(np.array(list_lon))
         logger.debug("done applying sliding_filter_nsigma")
 
-        xr_result["time"][crrt_instrument_idx, 0:len(list_time)] = list_time
+        xr_result["time"][crrt_instrument_idx, 0:len(list_time)] = pd.to_datetime(list_time, utc=True, unit='s')
         xr_result["lat"][crrt_instrument_idx, 0:len(list_lat)] = np_latitude
         xr_result["lon"][crrt_instrument_idx, 0:len(list_lon)] = np_longitude
 
@@ -410,7 +420,7 @@ def read_omb_csv(path_in: Path,
         for crrt_wave_idx, crrt_wave_data in enumerate(
                 list_parsed_waves_messages):
             xr_result["time_waves_imu"][crrt_instrument_idx, crrt_wave_idx] = \
-                crrt_wave_data.data.datetime_posix
+                pd.to_datetime(crrt_wave_data.data.datetime_posix, utc=True, unit='s')
 
             xr_result["pcutoff"][crrt_instrument_idx, crrt_wave_idx] = \
                 crrt_wave_data.data.low_frequency_index_cutoff
@@ -450,12 +460,10 @@ def read_omb_csv(path_in: Path,
     max_lon = np.nanmax(xr_result["lon"][:, :].data.flatten())
     #
     array_times = xr_result["time"][:, :].data.flatten()
-    valid_times_idx = (array_times != int64_fill)
+    valid_times_idx = (array_times != None)
     array_valid_times = array_times[valid_times_idx]
-    timestamp_min = datetime.datetime.fromtimestamp(
-        np.min(array_valid_times), datetime.timezone.utc)
-    timestamp_max = datetime.datetime.fromtimestamp(
-        np.max(array_valid_times), datetime.timezone.utc)
+    timestamp_min = np.nanmin(array_valid_times)
+    timestamp_max = np.nanmax(array_valid_times)
 
     xr_result = xr_result.assign_attrs({
         "geospatial_lat_min":
@@ -467,9 +475,9 @@ def read_omb_csv(path_in: Path,
         "geospatial_lon_max":
         max_lon,
         "time_coverage_start":
-        timestamp_min.replace(microsecond=0).isoformat(),
+        pd.to_datetime(timestamp_min, utc=True).isoformat(),
         "time_coverage_end":
-        timestamp_max.replace(microsecond=0).isoformat(),
+        pd.to_datetime(timestamp_max, utc=True).isoformat(),
     })
 
     return xr_result
