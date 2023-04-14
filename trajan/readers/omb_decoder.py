@@ -115,6 +115,7 @@ class Spectral_Moments:
 @dataclass
 class GNSS_Packet:
     datetime_fix: datetime.datetime
+    datetime_posix: int
     latitude: float
     longitude: float
     is_valid: bool
@@ -129,6 +130,7 @@ class GNSS_Metadata:
 class Waves_Packet:
     # the decoded part: this is just decoding / textbook operations
     datetime_fix: datetime.datetime
+    datetime_posix: int
     spectrum_number: int
     Hs: float
     Tz: float
@@ -167,6 +169,7 @@ class Thermistors_Reading:
 @dataclass
 class Thermistors_Packet:
     datetime_packet: datetime.datetime
+    datetime_posix: int
     thermistors_readings: list
     mean_pitch: float
     min_pitch: float
@@ -290,6 +293,7 @@ def decode_gnss_packet(bin_packet,
         char_next_byte)
 
     decoded_packet = GNSS_Packet(datetime_fix=datetime_fix,
+                                 datetime_posix=posix_timestamp_fix,
                                  latitude=latitude,
                                  longitude=longitude,
                                  is_valid=True)
@@ -479,6 +483,7 @@ def decode_ywave_packet(bin_packet,
 
     decoded_packet = Waves_Packet(
         datetime_packet,
+        posix_timestamp,
         spectrum_number,
         Hs,
         Tz,
@@ -623,6 +628,7 @@ def decode_thermistors_packet(bin_packet,
 
     crrt_thermistor_packet = Thermistors_Packet(
         datetime_packet=datetime_packet,
+        datetime_posix=posix_timestamp,
         thermistors_readings=list_thermistors_readings,
         mean_pitch=mean_pitch_bin / _BD_THERM_PITCH_FLOAT_TO_INT8_FACTOR,
         min_pitch=min_pitch_bin / _BD_THERM_PITCH_FLOAT_TO_INT8_FACTOR,

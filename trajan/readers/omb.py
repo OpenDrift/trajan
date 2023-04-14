@@ -364,7 +364,7 @@ def read_omb_csv(path_in: Path,
         # gnss position data
 
         list_time = [
-            int(crrt_packet.data.datetime_fix.timestamp())
+            crrt_packet.data.datetime_posix
             for crrt_packet in dict_entries[crrt_instrument]["G"]
         ]
         list_lat = [
@@ -395,21 +395,21 @@ def read_omb_csv(path_in: Path,
         ####################
         # wave data
 
-        list_parsed_gnss_messages = dict_entries[crrt_instrument]["Y"]
+        list_parsed_waves_messages = dict_entries[crrt_instrument]["Y"]
 
         crrt_list_times_waves = [
-            crrt_wave_data.data.datetime_fix
-            for crrt_wave_data in list_parsed_gnss_messages
+            crrt_wave_data.data.datetime_posix
+            for crrt_wave_data in list_parsed_waves_messages
         ]
         argsort_time_idx = list(np.argsort(np.array(crrt_list_times_waves)))
-        list_parsed_gnss_messages = [
-            list_parsed_gnss_messages[i] for i in argsort_time_idx
+        list_parsed_waves_messages = [
+            list_parsed_waves_messages[i] for i in argsort_time_idx
         ]
 
         for crrt_wave_idx, crrt_wave_data in enumerate(
-                list_parsed_gnss_messages):
+                list_parsed_waves_messages):
             xr_result["time_waves_imu"][crrt_instrument_idx, crrt_wave_idx] = \
-                crrt_wave_data.data.datetime_fix
+                crrt_wave_data.data.datetime_posix
 
             xr_result["pcutoff"][crrt_instrument_idx, crrt_wave_idx] = \
                 crrt_wave_data.data.low_frequency_index_cutoff
