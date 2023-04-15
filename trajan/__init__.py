@@ -74,12 +74,14 @@ def from_dataframe(df: pd.DataFrame,
             temp           (trajectory, obs) float64 10.0 10.1 10.2 ... 14.8 14.9 15.0
             drifter_names  (trajectory) <U10 'My drifter'
         Attributes:
-            Conventions:         CF-1.10
-            featureType:         trajectory
-            geospatial_lat_min:  60.0
-            geospatial_lat_max:  70.0
-            geospatial_lon_min:  5.0
-            geospatial_lon_max:  10.0
+            Conventions:          CF-1.10
+            featureType:          trajectory
+            geospatial_lat_min:   60.0
+            geospatial_lat_max:   70.0
+            geospatial_lon_min:   5.0
+            geospatial_lon_max:   10.0
+            time_coverage_start:  2023-01-01T00:00:00
+            time_coverage_end:    2023-01-14T00:00:00
 
     Often you might want to add some attributes:
 
@@ -102,13 +104,15 @@ def from_dataframe(df: pd.DataFrame,
             temp           (trajectory, obs) float64 10.0 10.1 10.2 ... 14.8 14.9 15.0
             drifter_names  (trajectory) <U10 'My drifter'
         Attributes:
-            Conventions:         CF-1.10
-            featureType:         trajectory
-            geospatial_lat_min:  60.0
-            geospatial_lat_max:  70.0
-            geospatial_lon_min:  5.0
-            geospatial_lon_max:  10.0
-            Author:              Albus Dumbledore
+            Conventions:          CF-1.10
+            featureType:          trajectory
+            geospatial_lat_min:   60.0
+            geospatial_lat_max:   70.0
+            geospatial_lon_min:   5.0
+            geospatial_lon_max:   10.0
+            time_coverage_start:  2023-01-01T00:00:00
+            time_coverage_end:    2023-01-14T00:00:00
+            Author:               Albus Dumbledore
 
     """
     df = df.copy()
@@ -128,7 +132,8 @@ def from_dataframe(df: pd.DataFrame,
         df['time'] = df['time'].dt.tz_convert(None)
 
     # Classify trajectories based on drifter_names.
-    df['trajectory'] = pd.to_numeric(df.groupby('drifter_names').ngroup(), downcast='integer')
+    df['trajectory'] = pd.to_numeric(df.groupby('drifter_names').ngroup(),
+                                     downcast='integer')
     df = df.set_index(['trajectory', df.index])
     df = df.to_xarray()
     df['trajectory'] = df['trajectory'].astype(int)
@@ -143,12 +148,26 @@ def from_dataframe(df: pd.DataFrame,
     # df = df.dropna(dim='obs', how='all')
 
     df = df.assign_attrs({
-        'Conventions': 'CF-1.10',
-        'featureType': 'trajectory',
-        'geospatial_lat_min': np.nanmin(df.lat),
-        'geospatial_lat_max': np.nanmax(df.lat),
-        'geospatial_lon_min': np.nanmin(df.lon),
-        'geospatial_lon_max': np.nanmax(df.lon),
+        'Conventions':
+        'CF-1.10',
+        'featureType':
+        'trajectory',
+        'geospatial_lat_min':
+        np.nanmin(df.lat),
+        'geospatial_lat_max':
+        np.nanmax(df.lat),
+        'geospatial_lon_min':
+        np.nanmin(df.lon),
+        'geospatial_lon_max':
+        np.nanmax(df.lon),
+        'time_coverage_start':
+        pd.to_datetime(
+            np.nanmin(df.time.values[
+                df.time.values != np.datetime64('NaT')])).isoformat(),
+        'time_coverage_end':
+        pd.to_datetime(
+            np.nanmax(df.time.values[
+                df.time.values != np.datetime64('NaT')])).isoformat(),
     })
 
     return df
