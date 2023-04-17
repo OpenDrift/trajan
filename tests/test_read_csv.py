@@ -62,6 +62,6 @@ def test_seals(test_data, tmpdir):
     print(ds)
 
     assert ds.dims['trajectory'] == 5
-    assert (ds['drifter_names'].values == ['T1', 'T2', 'T3', 'T4', 'T5']).all()
+    assert (ds['trajectory'].values == ['T1', 'T2', 'T3', 'T4', 'T5']).all()
 
     ds.to_netcdf(tmpdir / 'test.nc')

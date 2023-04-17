@@ -189,7 +189,7 @@ def read_omb_csv(path_in: Path,
         {
             # meta vars
             #
-            'drifter_names':
+            'trajectory':
             xr.DataArray(data=list_instruments,
                          dims=['trajectory'],
                          attrs={

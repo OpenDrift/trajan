@@ -23,11 +23,11 @@ def test_interpolate_barents(barents, plot):
     print(barents_gridded)
 
     if plot:
-        drifter_names = barents['drifter_names'].data
+        trajectory = barents['trajectory'].data
         barents.traj.plot.set_up_map(
         )  # Large enough to encompass both drifters
-        barents.isel(trajectory=1).traj.plot(color='b', label=drifter_names[1])
-        barents.isel(trajectory=0).traj.plot(color='r', label=drifter_names[0])
+        barents.isel(trajectory=1).traj.plot(color='b', label=trajectory[1])
+        barents.isel(trajectory=0).traj.plot(color='r', label=trajectory[0])
 
         barents_gridded.isel(trajectory=0).traj.plot(color='r', marker='x')
         barents_gridded.isel(trajectory=1).traj.plot(color='b', marker='x')

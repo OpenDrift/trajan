@@ -29,12 +29,11 @@ ds = pd.concat((ds, ds2))
 #%%
 # Rename the index to `obs`, and rename the other columns to the standard coordinate names.
 ds.index.names = ['obs']
-ds = ds.rename(columns={'Latitude': 'lat', 'Longitude': 'lon', 'Time': 'time', 'Device': 'drifter_names'})
+ds = ds.rename(columns={'Latitude': 'lat', 'Longitude': 'lon', 'Time': 'time', 'Device': 'trajectory'})
 ds.time = ds['time'].dt.tz_convert(None)
 
 #%%
 # Classify trajectories based on drifter_names.
-ds['trajectory'] = ds.groupby('drifter_names').ngroup()
 ds = ds.set_index(['trajectory', ds.index])
 
 #%%
@@ -45,7 +44,7 @@ ds = ds.to_xarray()
 # Simplify the drifter_names variable: It is only dependent on the trajectory dimension.
 #
 # We select the name from the first observation from each trajectory (and drop the 'obs' dimension).
-ds['drifter_names'] = ds.drifter_names.isel(obs=0)
+ds['trajectory'] = ds.drifter_names.isel(obs=0)
 
 #%%
 # Print the dataset and plot it. See the `example_drifters` example for how to continue analyzing a drifter dataset.
@@ -53,7 +52,7 @@ ds['drifter_names'] = ds.drifter_names.isel(obs=0)
 # We plot with `color=None` to use normal matplotlib color cycling and not a single color for all drifters. This may be changed to be the default in the furture.
 print(ds)
 
-ds.traj.plot(color=None, label=ds.drifter_names.values)
+ds.traj.plot(color=None, label=ds.trajectory.values)
 plt.legend()
 plt.show()
 

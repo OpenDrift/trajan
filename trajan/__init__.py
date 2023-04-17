@@ -63,16 +63,15 @@ def from_dataframe(df: pd.DataFrame,
     .. testoutput::
 
         <xarray.Dataset>
-        Dimensions:        (trajectory: 1, obs: 50)
+        Dimensions:     (trajectory: 1, obs: 50)
         Coordinates:
-          * trajectory     (trajectory) int64 0
-          * obs            (obs) int64 0 1 2 3 4 5 6 7 8 ... 41 42 43 44 45 46 47 48 49
+          * trajectory  (trajectory) <U10 'My drifter'
+          * obs         (obs) int64 0 1 2 3 4 5 6 7 8 9 ... 41 42 43 44 45 46 47 48 49
         Data variables:
-            lon            (trajectory, obs) float64 5.0 5.102 5.204 ... 9.898 10.0
-            lat            (trajectory, obs) float64 60.0 60.2 60.41 ... 69.59 69.8 70.0
-            time           (trajectory, obs) datetime64[ns] 2023-01-01 ... 2023-01-14
-            temp           (trajectory, obs) float64 10.0 10.1 10.2 ... 14.8 14.9 15.0
-            drifter_names  (trajectory) <U10 'My drifter'
+            lon         (trajectory, obs) float64 5.0 5.102 5.204 ... 9.796 9.898 10.0
+            lat         (trajectory, obs) float64 60.0 60.2 60.41 ... 69.59 69.8 70.0
+            time        (trajectory, obs) datetime64[ns] 2023-01-01 ... 2023-01-14
+            temp        (trajectory, obs) float64 10.0 10.1 10.2 ... 14.8 14.9 15.0
         Attributes:
             Conventions:          CF-1.10
             featureType:          trajectory
@@ -93,16 +92,15 @@ def from_dataframe(df: pd.DataFrame,
     .. testoutput::
 
         <xarray.Dataset>
-        Dimensions:        (trajectory: 1, obs: 50)
+        Dimensions:     (trajectory: 1, obs: 50)
         Coordinates:
-          * trajectory     (trajectory) int64 0
-          * obs            (obs) int64 0 1 2 3 4 5 6 7 8 ... 41 42 43 44 45 46 47 48 49
+          * trajectory  (trajectory) <U10 'My drifter'
+          * obs         (obs) int64 0 1 2 3 4 5 6 7 8 9 ... 41 42 43 44 45 46 47 48 49
         Data variables:
-            lon            (trajectory, obs) float64 5.0 5.102 5.204 ... 9.898 10.0
-            lat            (trajectory, obs) float64 60.0 60.2 60.41 ... 69.59 69.8 70.0
-            time           (trajectory, obs) datetime64[ns] 2023-01-01 ... 2023-01-14
-            temp           (trajectory, obs) float64 10.0 10.1 10.2 ... 14.8 14.9 15.0
-            drifter_names  (trajectory) <U10 'My drifter'
+            lon         (trajectory, obs) float64 5.0 5.102 5.204 ... 9.796 9.898 10.0
+            lat         (trajectory, obs) float64 60.0 60.2 60.41 ... 69.59 69.8 70.0
+            time        (trajectory, obs) datetime64[ns] 2023-01-01 ... 2023-01-14
+            temp        (trajectory, obs) float64 10.0 10.1 10.2 ... 14.8 14.9 15.0
         Attributes:
             Conventions:          CF-1.10
             featureType:          trajectory
@@ -122,30 +120,19 @@ def from_dataframe(df: pd.DataFrame,
     df = df.rename(columns={lat: 'lat', lon: 'lon', time: 'time'})
 
     if name is not None:
-        df = df.rename(columns={name: 'drifter_names'})
+        df = df.rename(columns={name: 'trajectory'})
     else:
-        df['drifter_names'] = 'Drifter 1'
+        df['trajectory'] = 'Drifter 1'
 
     # Convert to UTC and remove tz-info. Xarray does not support tz-aware
     # datetimes.
     if df['time'].dt.tz is not None:
         df['time'] = df['time'].dt.tz_convert(None)
 
-    # Classify trajectories based on drifter_names.
-    df['trajectory'] = pd.to_numeric(df.groupby('drifter_names').ngroup(),
-                                     downcast='integer')
+    # Classify trajectories based on drifter names.
     df = df.set_index(['trajectory', df.index])
     df = df.to_xarray()
-    df['trajectory'] = df['trajectory'].astype(int)
-
-    # Simplify the drifter_names variable: It is only dependent on the trajectory dimension.
-    isstr = np.vectorize(lambda v: isinstance(v, str))
-    names = np.argmax(isstr(df['drifter_names'].values), axis=1)
-    names = np.take(df['drifter_names'].values, names, axis=1).diagonal()
-    df['drifter_names'] = df['drifter_names'].isel(obs=0)
-    df['drifter_names'].values = names.astype(str)
-
-    # df = df.dropna(dim='obs', how='all')
+    df['trajectory'] = df['trajectory'].astype(str)
 
     df = df.assign_attrs({
         'Conventions':

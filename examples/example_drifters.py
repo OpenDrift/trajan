@@ -27,9 +27,9 @@ plt.show()
 
 #%%
 # The figure can be customized, combining functionality from Trajan, Xarray and Matplotlib
-ds.isel(trajectory=1).traj.plot(color='b', label=ds.drifter_names[1].values,
+ds.isel(trajectory=1).traj.plot(color='b', label=ds.trajectory[1].values,
                                 land='mask', margin=3)
-ds.isel(trajectory=0).traj.plot(color='r', label=ds.drifter_names[0].values)
+ds.isel(trajectory=0).traj.plot(color='r', label=ds.trajectory[0].values)
 plt.legend()
 plt.title('Two drifters in the Barents Sea')
 plt.show()
