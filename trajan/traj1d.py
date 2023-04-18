@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 import numpy as np
-from .traj import Traj
+from .traj import Traj, __require_obsdim__
 from . import skill
 
 
@@ -75,6 +75,7 @@ class Traj1d(Traj):
         plt.xlim([0, 30])
         plt.show()
 
+    @__require_obsdim__
     def skill(self, other, method='liu-weissberg', **kwargs):
         """
         Compare the skill score between this trajectory and `other`.
@@ -197,6 +198,7 @@ class Traj1d(Traj):
                             coords={'trajectory': self.ds.trajectory},
                             attrs={'method': method})
 
+    @__require_obsdim__
     def gridtime(self, times):
         if isinstance(times, str):  # Make time series with given interval
             import pandas as pd

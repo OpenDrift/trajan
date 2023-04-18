@@ -8,6 +8,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def __require_obsdim__(f):
+    """
+    This decorator is for methods of Traj that require a time or obs dimension to work.
+    """
+
+    def wrapper(*args, **kwargs):
+        if args[0].obsdim is None:
+            raise ValueError(f'{f} requires an obs or time dimension')
+        return f(*args, **kwargs)
+
+    return wrapper
+
+
 class Traj:
     ds: xr.Dataset
 
@@ -27,7 +40,8 @@ class Traj:
         elif 'time' in self.ds.dims:
             self.obsdim = 'time'
         else:
-            raise ValueError('No time or obs dimension')
+            logger.warning('No time or obs dimension detected.')
+            self.obsdim = None
 
     @property
     def tx(self):
@@ -82,7 +96,7 @@ class Traj:
             else:
                 x, _ = self.transform(self.__gcrs__, self.tx, self.ty)
                 X = self.tx.copy(deep=False,
-                                   data=x)  # TODO: remove grid-mapping.
+                                 data=x)  # TODO: remove grid-mapping.
                 return X
 
     @property
@@ -98,7 +112,7 @@ class Traj:
             else:
                 _, y = self.transform(self.__gcrs__, self.tx, self.ty)
                 Y = self.ty.copy(deep=False,
-                                   data=y)  # TODO: remove grid-mapping.
+                                 data=y)  # TODO: remove grid-mapping.
                 return Y
 
     def transform(self, to_crs, x, y):
@@ -215,6 +229,35 @@ class Traj:
 
         return distance / timedelta_seconds
 
+    def distance_to(self, other):
+        """
+        Distance between trajectories or a single point.
+        """
+
+        other = other.broadcast_like(self.ds)
+        geod = pyproj.Geod(ellps='WGS84')
+        az_fwd, a2, distance = geod.inv(self.ds.traj.tlon, self.ds.traj.tlat,
+                                        other.traj.tlon, other.traj.tlat)
+
+        ds = xr.Dataset()
+        ds['distance'] = xr.DataArray(distance,
+                                      name='distance',
+                                      coords=self.ds.traj.tlon.coords,
+                                      attrs={'unit': 'm'})
+
+        ds['az_fwd'] = xr.DataArray(az_fwd,
+                                    name='forward azimuth',
+                                    coords=self.ds.traj.tlon.coords,
+                                    attrs={'unit': 'degrees'})
+
+        ds['az_bwd'] = xr.DataArray(a2,
+                                    name='back azimuth',
+                                    coords=self.ds.traj.tlon.coords,
+                                    attrs={'unit': 'degrees'})
+
+        return ds
+
+    @__require_obsdim__
     def distance_to_next(self):
         """Returns distance in m from one position to the next
 
@@ -237,6 +280,7 @@ class Traj:
                              dim=self.obsdim)  # repeating last time step to
         return distance
 
+    @__require_obsdim__
     def azimuth_to_next(self):
         """Returns azimution travel direction in degrees from one position to the next
 
