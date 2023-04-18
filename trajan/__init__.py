@@ -133,6 +133,7 @@ def from_dataframe(df: pd.DataFrame,
     df = df.set_index(['trajectory', df.index])
     df = df.to_xarray()
     df['trajectory'] = df['trajectory'].astype(str)
+    df['trajectory'].attrs = { 'cf_role': 'trajectory_id', 'long_name' : 'trajectory name' }
 
     df = df.assign_attrs({
         'Conventions':

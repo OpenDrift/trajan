@@ -12,6 +12,9 @@ def test_read_example_csv(drifter_csv, plot):
 
     assert len(dc) == ds.dims['obs']
 
+    assert ds.trajectory.attrs['cf_role'] == 'trajectory_id'
+    assert ds.trajectory.attrs['long_name'] == 'trajectory name'
+
     ds.traj.plot()
 
     if plot:
