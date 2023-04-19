@@ -1,7 +1,7 @@
 import xarray as xr
 import numpy as np
 
-from .traj import Traj
+from .traj import Traj, __require_obsdim__
 
 
 class Traj2d(Traj):
@@ -111,6 +111,7 @@ class Traj2d(Traj):
 
         return xr.concat(trajs, dim='trajectory')
 
+    @__require_obsdim__
     def gridtime(self, times):
         if isinstance(times, str):  # Make time series with given interval
             import pandas as pd

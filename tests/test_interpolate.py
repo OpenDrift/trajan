@@ -35,6 +35,24 @@ def test_interpolate_barents(barents, plot):
         plt.legend()
         plt.show()
 
+def test_distance(barents):
+    barents = barents.traj.gridtime('1h')
+    b0 = barents.isel(trajectory=0)
+    b1 = barents.isel(trajectory=1)
+
+    d = b0.traj.distance_to(b1)
+    print(d)
+
+def test_distance_single_point(barents):
+    barents = barents.traj.gridtime('1h')
+    ds = barents.isel(time=4).isel(trajectory=0)
+    print("single:", ds)
+
+    barents = barents.dropna(dim='time', how='all')
+
+    d = barents.traj.distance_to(ds)
+    print(d)
+
 def test_interpolate_1d_barents(barents):
     times = pd.date_range("2022-10-01", "2022-11-01", freq='6H')
 
