@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - xarray[complete]
+  - pandas>=2
   - zarr
   - numpy
   - scipy

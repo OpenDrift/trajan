@@ -115,7 +115,7 @@ def from_dataframe(df: pd.DataFrame,
     """
     df = df.copy()
     df.index.names = ['obs']
-    df[time] = pd.to_datetime(df[time])
+    df[time] = pd.to_datetime(df[time], format='mixed')
 
     df = df.rename(columns={lat: 'lat', lon: 'lon', time: 'time'})
 
