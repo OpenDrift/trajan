@@ -1,4 +1,5 @@
 import pandas as pd
+import xarray as xr
 from trajan.readers.omb import read_omb_csv
 
 
@@ -18,6 +19,12 @@ def test_read_csv_omb_default_waves(test_data, tmpdir):
     # print(ds)
 
     ds.to_netcdf(tmpdir / 'test.nc')
+
+    ds2 = xr.open_dataset(tmpdir / 'test.nc')
+    assert ds2.attrs['time_coverage_start'] == '2022-11-12T00:00:37+00:00'
+    assert ds2.attrs['time_coverage_end'] == '2022-11-12T02:30:27+00:00'
+
+    assert ds2.dims['trajectory'] == 2
 
 
 def test_read_csv_omb_modified_waves(test_data):
