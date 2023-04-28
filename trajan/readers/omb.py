@@ -181,8 +181,8 @@ def read_omb_csv(path_in: Path,
 
     list_instruments = sorted(list(dict_entries.keys()))
 
-    empty_time = np.full((trajectory, obs_gnss), np.datetime64('nat'), dtype='datetime64[s]')
-    empty_time_waves_imu = np.full((trajectory, obs_waves_imu), np.datetime64('nat'), dtype='datetime64[s]')
+    empty_time = np.full((trajectory, obs_gnss), np.datetime64('nat'), dtype='datetime64[ns]')
+    empty_time_waves_imu = np.full((trajectory, obs_waves_imu), np.datetime64('nat'), dtype='datetime64[ns]')
 
     # create and fill the xarray dataset
     xr_result = xr.Dataset(

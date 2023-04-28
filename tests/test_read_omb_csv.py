@@ -26,6 +26,8 @@ def test_read_csv_omb_default_waves(test_data, tmpdir):
 
     assert ds2.dims['trajectory'] == 2
 
+    assert ds == ds2
+
 
 def test_read_csv_omb_modified_waves(test_data):
     path_to_test_data = test_data / 'csv' / 'omb2.csv'
