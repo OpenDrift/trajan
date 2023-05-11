@@ -85,9 +85,9 @@ def read_omb_csv(path_in: Path,
         'Payload (Text)', 'Length (Bytes)', 'Credits'
     ]
 
-    if columns != expected_columns:
+    if not set(expected_columns).issubset(set(columns)):
         raise RuntimeError(
-            f"does not look like a Rock7 file; got colmns {columns}, expected {expected_columns}"
+                f"does not look like a Rock7 file; got colmns {columns}, expected {expected_columns}, missing: {set(expected_columns) - set(columns)}"
         )
 
     ########################################

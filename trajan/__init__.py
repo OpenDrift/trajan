@@ -8,6 +8,7 @@ import pandas as pd
 
 from . import trajectory_accessor as _
 from . import skill as _
+from . import readers as _
 
 
 def read_csv(f, **kwargs):
