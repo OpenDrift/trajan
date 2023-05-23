@@ -133,31 +133,8 @@ def from_dataframe(df: pd.DataFrame,
     # Classify trajectories based on drifter names.
     df = df.set_index(['trajectory', df.index])
     df = df.to_xarray()
-    df['trajectory'] = df['trajectory'].astype(str)
-    df['trajectory'].attrs = { 'cf_role': 'trajectory_id', 'long_name' : 'trajectory name' }
 
-    df = df.assign_attrs({
-        'Conventions':
-        'CF-1.10',
-        'featureType':
-        'trajectory',
-        'geospatial_lat_min':
-        np.nanmin(df.lat),
-        'geospatial_lat_max':
-        np.nanmax(df.lat),
-        'geospatial_lon_min':
-        np.nanmin(df.lon),
-        'geospatial_lon_max':
-        np.nanmax(df.lon),
-        'time_coverage_start':
-        pd.to_datetime(
-            np.nanmin(df.time.values[
-                df.time.values != np.datetime64('NaT')])).isoformat(),
-        'time_coverage_end':
-        pd.to_datetime(
-            np.nanmax(df.time.values[
-                df.time.values != np.datetime64('NaT')])).isoformat(),
-    })
+    df = df.traj.assign_cf_attrs()
 
     return df
 
