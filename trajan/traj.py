@@ -3,6 +3,7 @@ import pyproj
 import numpy as np
 import xarray as xr
 import cf_xarray as _
+import pandas as pd
 import logging
 
 logger = logging.getLogger(__name__)
@@ -213,6 +214,63 @@ class Traj:
             ds[v.name] = v
             ds[self.tx.name].attrs['grid_mapping'] = v.name
             ds[self.ty.name].attrs['grid_mapping'] = v.name
+
+        return ds
+
+    def assign_cf_attrs(self,
+                        creator_name=None,
+                        creator_email=None,
+                        title=None,
+                        summary=None,
+                        **kwargs) -> xr.Dataset:
+        """
+        Return a new dataset with CF-standard and common attributes set.
+        """
+        ds = self.ds.copy(deep=True)
+
+        ds['trajectory'] = ds['trajectory'].astype(str)
+        ds['trajectory'].attrs = {
+            'cf_role': 'trajectory_id',
+            'long_name': 'trajectory name'
+        }
+
+        ds = ds.assign_attrs({
+            'Conventions':
+            'CF-1.10',
+            'featureType':
+            'trajectory',
+            'geospatial_lat_min':
+            np.nanmin(self.tlat),
+            'geospatial_lat_max':
+            np.nanmax(self.tlat),
+            'geospatial_lon_min':
+            np.nanmin(self.tlon),
+            'geospatial_lon_max':
+            np.nanmax(self.tlon),
+            'time_coverage_start':
+            pd.to_datetime(
+                np.nanmin(ds['time'].values[
+                    ds['time'].values != np.datetime64('NaT')])).isoformat(),
+            'time_coverage_end':
+            pd.to_datetime(
+                np.nanmax(ds['time'].values[
+                    ds['time'].values != np.datetime64('NaT')])).isoformat(),
+        })
+
+        if creator_name:
+            ds = ds.assign_attrs(creator_name=creator_name)
+
+        if creator_email:
+            ds = ds.assign_attrs(creator_email=creator_email)
+
+        if title:
+            ds = ds.assign_attrs(title=title)
+
+        if summary:
+            ds = ds.assign_attrs(summary=summary)
+
+        if kwargs is not None:
+            ds = ds.assign_attrs(**kwargs)
 
         return ds
 

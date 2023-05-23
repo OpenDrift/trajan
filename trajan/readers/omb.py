@@ -12,6 +12,7 @@ from .omb_decoder import GNSS_Metadata, Waves_Metadata, Thermistors_Metadata, GN
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class ParsedIridiumMessage:
     device_from: str
@@ -87,7 +88,7 @@ def read_omb_csv(path_in: Path,
 
     if not set(expected_columns).issubset(set(columns)):
         raise RuntimeError(
-                f"does not look like a Rock7 file; got colmns {columns}, expected {expected_columns}, missing: {set(expected_columns) - set(columns)}"
+            f"does not look like a Rock7 file; got colmns {columns}, expected {expected_columns}, missing: {set(expected_columns) - set(columns)}"
         )
 
     ########################################
@@ -128,7 +129,9 @@ def read_omb_csv(path_in: Path,
                 dict_wave_packet_params=modified_wave_packet_properties)
 
         except AssertionError as e:
-            logger.warning(f"attempt to decode entry at index {pd_index}, Payload equal to: {crrt_data.Payload} failed with exception:\n{e}")
+            logger.warning(
+                f"attempt to decode entry at index {pd_index}, Payload equal to: {crrt_data.Payload} failed with exception:\n{e}"
+            )
             continue
 
         number_valid_entries += 1
@@ -181,8 +184,12 @@ def read_omb_csv(path_in: Path,
 
     list_instruments = sorted(list(dict_entries.keys()))
 
-    empty_time = np.full((trajectory, obs_gnss), np.datetime64('nat'), dtype='datetime64[ns]')
-    empty_time_waves_imu = np.full((trajectory, obs_waves_imu), np.datetime64('nat'), dtype='datetime64[ns]')
+    empty_time = np.full((trajectory, obs_gnss),
+                         np.datetime64('nat'),
+                         dtype='datetime64[ns]')
+    empty_time_waves_imu = np.full((trajectory, obs_waves_imu),
+                                   np.datetime64('nat'),
+                                   dtype='datetime64[ns]')
 
     # create and fill the xarray dataset
     xr_result = xr.Dataset(
@@ -337,20 +344,7 @@ def read_omb_csv(path_in: Path,
                              "definition":
                              "math.sqrt(m2 / m4) of full elevation spectrum"
                          }),
-        },
-        #
-        attrs={
-            "Conventions": "CF-1.10",
-            "featureType": "trajectory",
-            #
-            "history":
-            "created with trajan.reader.omb from a Rock7 Iridium CSV file of OMB transmissions",
-            #
-            "creator_name": "XX:TODO",
-            "creator_email": "XX:TODO",
-            "title": "XX:TODO",
-            "summary": "XX:TODO",
-        })
+        }, )
 
     # actually fill the data
     for crrt_instrument_idx, crrt_instrument in enumerate(list_instruments):
@@ -382,7 +376,10 @@ def read_omb_csv(path_in: Path,
         np_longitude = sliding_filter_nsigma(np.array(list_lon))
         logger.debug("done applying sliding_filter_nsigma")
 
-        xr_result["time"][crrt_instrument_idx, 0:len(list_time)] = pd.to_datetime(list_time, utc=True, unit='s')
+        xr_result["time"][crrt_instrument_idx,
+                          0:len(list_time)] = pd.to_datetime(list_time,
+                                                             utc=True,
+                                                             unit='s')
         xr_result["lat"][crrt_instrument_idx, 0:len(list_lat)] = np_latitude
         xr_result["lon"][crrt_instrument_idx, 0:len(list_lon)] = np_longitude
 
@@ -435,32 +432,13 @@ def read_omb_csv(path_in: Path,
             xr_result["T24"][crrt_instrument_idx, crrt_wave_idx] = \
                 crrt_wave_data.data.Tc
 
-    # other general attributes based on the data
-    min_lat = np.nanmin(xr_result["lat"][:, :].data.flatten())
-    max_lat = np.nanmax(xr_result["lat"][:, :].data.flatten())
-    #
-    min_lon = np.nanmin(xr_result["lon"][:, :].data.flatten())
-    max_lon = np.nanmax(xr_result["lon"][:, :].data.flatten())
-    #
-    array_times = xr_result["time"][:, :].data.flatten()
-    valid_times_idx = (array_times != None)
-    array_valid_times = array_times[valid_times_idx]
-    timestamp_min = np.nanmin(array_valid_times)
-    timestamp_max = np.nanmax(array_valid_times)
-
-    xr_result = xr_result.assign_attrs({
-        "geospatial_lat_min":
-        min_lat,
-        "geospatial_lat_max":
-        max_lat,
-        "geospatial_lon_min":
-        min_lon,
-        "geospatial_lon_max":
-        max_lon,
-        "time_coverage_start":
-        pd.to_datetime(timestamp_min, utc=True).isoformat(),
-        "time_coverage_end":
-        pd.to_datetime(timestamp_max, utc=True).isoformat(),
-    })
+    xr_result = xr_result.traj.assign_cf_attrs(
+        creator_name="XX:TODO",
+        creator_email="XX:TODO",
+        title="XX:TODO",
+        summary="XX:TODO",
+        history=
+        "created with trajan.reader.omb from a Rock7 Iridium CSV file of OMB transmissions"
+    )
 
     return xr_result
