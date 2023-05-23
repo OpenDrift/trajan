@@ -1,8 +1,11 @@
 import numpy as np
 import xarray as xr
 import numpy as np
+import logging
 from .traj import Traj, __require_obsdim__
 from . import skill
+
+logger = logging.getLogger(__name__)
 
 
 class Traj1d(Traj):
@@ -212,10 +215,20 @@ class Traj1d(Traj):
         if not isinstance(times, np.ndarray):
             times = times.to_numpy()
 
-        ds = self.ds.interp({self.obsdim: times})
+
+        ds = self.ds
 
         if self.obsdim != 'time':
             ds = ds.rename({self.obsdim: 'time'}).set_index({'time': 'time'})
+
+        _, ui = np.unique(ds.time, return_index=True)
+
+        if len(ui) != len(self.ds.time):
+            logger.warning('non-unique time points, dropping time-duplicates')
+
+        ds = ds.isel(time=ui)
+
+        ds = ds.interp({'time': times})
 
         if not 'trajectory' in ds.dims:
             ds = ds.expand_dims('trajectory')

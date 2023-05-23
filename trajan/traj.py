@@ -31,18 +31,39 @@ class Traj:
     """
     Name of the dimension along which observations are taken. Usually either `obs` or `time`.
     """
+    timedim: str
 
     def __init__(self, ds):
         self.ds = ds
         self.__gcrs__ = pyproj.CRS.from_epsg(4326)
 
-        if 'obs' in self.ds.dims:
+        self.obsdim = None
+        self.timedim = None
+
+        if 'obs' in self.tx.dims:
             self.obsdim = 'obs'
-        elif 'time' in self.ds.dims:
+            self.timedim = self.__detect_time_dim__()
+
+        elif 'time' in self.tx.dims:
             self.obsdim = 'time'
+            self.timedim = 'time'
+
         else:
-            logger.warning('No time or obs dimension detected.')
-            self.obsdim = None
+            for d in self.tx.dims:
+                if 'time' in d:
+                    self.obsdim = d
+                    self.__detect_time_dim__()
+                    break
+
+            if self.obsdim is None:
+                logger.warning('No time or obs dimension detected.')
+
+    def __detect_time_dim__(self):
+        for v in self.ds.variables:
+            if self.obsdim in self.ds[v].dims and 'time' in v:
+                return v
+
+        raise ValueError("no time dimension detected")
 
     @property
     def tx(self):
@@ -51,7 +72,8 @@ class Traj:
 
         .. see-also:
 
-            `ref:tlat`
+            * `ref:tlon`
+            * `ref:ty`
         """
         if 'lon' in self.ds:
             return self.ds.lon
@@ -71,7 +93,8 @@ class Traj:
 
         .. see-also:
 
-            `ref:tlon`
+            * `ref:tlat`
+            * `ref:tx`
         """
         if 'lat' in self.ds:
             return self.ds.lat
