@@ -50,15 +50,20 @@ class Traj:
 
         else:
             for d in self.tx.dims:
-                if 'time' in d:
+                if not self.ds[d].attrs.get('cf_role', None) == 'trajectory_id' and not 'traj' in d:
+
                     self.obsdim = d
-                    self.__detect_time_dim__()
+                    self.timedim = self.__detect_time_dim__()
+
                     break
 
             if self.obsdim is None:
                 logger.warning('No time or obs dimension detected.')
 
+        logger.debug(f"Detected obs-dim: {self.obsdim}, detected time-dim: {self.timedim}.")
+
     def __detect_time_dim__(self):
+        logger.debug(f'Detecting time-dimension for "{self.obsdim}"..')
         for v in self.ds.variables:
             if self.obsdim in self.ds[v].dims and 'time' in v:
                 return v

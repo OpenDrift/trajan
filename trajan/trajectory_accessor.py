@@ -36,6 +36,7 @@ class TrajAccessor:
 
         if 'trajectory' not in self.ds.dims:  # Add empty trajectory dimension, if single trajectory
             self._ds = self._ds.expand_dims({'trajectory': 1})
+            self._ds['trajectory'].attrs['cf_role'] = 'trajectory_id'
 
         if 'time' not in self.ds.variables:
             self.inner = Traj1d(self.ds)
