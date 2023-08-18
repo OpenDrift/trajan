@@ -23,7 +23,9 @@ def from_dataframe(df: pd.DataFrame,
                    lon='lon',
                    lat='lat',
                    time='time',
-                   name=None):
+                   name=None,
+                   *,
+                   __test_condense__=False):
     """
     Construct a CF-compliant trajectory dataset from a `pd.DataFrame` of positions.
 
@@ -133,6 +135,9 @@ def from_dataframe(df: pd.DataFrame,
     # Classify trajectories based on drifter names.
     df = df.set_index(['trajectory', df.index])
     df = df.to_xarray()
+
+    if not __test_condense__:
+        df = df.traj.condense_obs()
 
     df = df.traj.assign_cf_attrs()
 

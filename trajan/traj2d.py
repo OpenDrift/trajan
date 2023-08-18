@@ -1,7 +1,11 @@
 import xarray as xr
 import numpy as np
+import pandas as pd
+import logging
 
 from .traj import Traj, __require_obsdim__
+
+logger = logging.getLogger(__name__)
 
 
 class Traj2d(Traj):
@@ -112,6 +116,79 @@ class Traj2d(Traj):
         return xr.concat(trajs, dim='trajectory')
 
     @__require_obsdim__
+    def condense_obs(self):
+        """
+        Move all observations to the first index, so that the observation
+        dimension is reduced to a minimum. When creating ragged arrays the
+        observations from consecutive trajectories start at the observation
+        index after the previous, causing a very long observation dimension.
+
+        Original:
+
+        .............. Observations --->
+        trajectory 1: | t01 | t02 | t03 | t04 | t05 | nan | nan | nan | nan |
+        trajectory 2: | nan | nan | nan | nan | nan | t11 | t12 | t13 | t14 |
+
+        After condensing:
+
+        .............. Observations --->
+        trajectory 1: | t01 | t02 | t03 | t04 | t05 |
+        trajectory 2: | t11 | t12 | t13 | t14 | nan |
+
+        Returns:
+
+            A new Dataset with observations condensed.
+        """
+
+        on = self.ds.dims[self.obsdim]
+        logger.debug(f'Condensing {on} observations.')
+
+        ds = self.ds.copy(deep=True)
+
+        # The observation coordinate will be re-written
+        ds = ds.drop([self.obsdim])
+
+        assert self.obsdim in ds[self.timedim].dims, "observation not a coordinate of time variable"
+
+        # Move all observations for each trajectory to starting row
+        maxN = 0
+        for ti in range(len(ds.trajectory)):
+            obsvars = [var for var in ds.variables if self.obsdim in ds[var].dims]
+            iv = np.full(on, False)
+            for var in obsvars:
+                ivv = ~pd.isnull(
+                    ds[self.timedim][ti, :])  # valid times in this trajectory.
+                iv = np.logical_or(iv, ivv)
+
+            N = np.count_nonzero(iv)
+            maxN = max(N, maxN)
+            # logger.debug(f'Condensing trajectory {ti=}, observations: {N}..')
+
+            if N == 0:
+                logger.error(f'No valid observations in trajectory {ti}.')
+                continue
+
+            for var in obsvars:
+                # logger.debug(f'Condensing variable {var}..')
+                n = np.count_nonzero(~pd.isnull(ds[var][ti, :]))
+                assert n <= N, f"Unexpected number of observations in trajectory for {ti=}, {var}: {n} > {N}."
+
+                ds[var][ti, :N] = ds[var][ti, iv]
+                ds[var][ti, N:] = np.nan
+
+                # assert (~np.isnan(ds[var][ti, :N])).all(
+                # ), "Varying number of valid observations within same trajectory."
+
+        logger.debug(f'Condensed observations from: {on} to {maxN}')
+        ds = ds.isel({self.obsdim: slice(0, maxN)})
+
+        # Write new observation coordinate.
+        obs = np.arange(0, maxN)
+        ds = ds.assign_coords({self.obsdim: obs})
+
+        return ds
+
+    @__require_obsdim__
     def gridtime(self, times):
         if isinstance(times, str):  # Make time series with given interval
             import pandas as pd
@@ -146,7 +223,6 @@ class Traj2d(Traj):
             else:
                 d = xr.concat((d, dt), "trajectory")
 
-        d = d.assign_coords({'trajectory' : self.ds['trajectory']})
+        d = d.assign_coords({'trajectory': self.ds['trajectory']})
 
         return d
-

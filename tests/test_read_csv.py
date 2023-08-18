@@ -68,3 +68,25 @@ def test_seals(test_data, tmpdir):
     assert (ds['trajectory'].values == ['T1', 'T2', 'T3', 'T4', 'T5']).all()
 
     ds.to_netcdf(tmpdir / 'test.nc')
+
+def test_condense_obs(test_data, tmpdir):
+    s = test_data / 'csv/seals.csv.xz'
+    ds = ta.read_csv(s, lat='Lat', lon='Lon', time='Timestamp', name='Instrument', __test_condense__=True)
+    print(ds)
+
+    assert ds.dims['trajectory'] == 5
+    assert (ds['trajectory'].values == ['T1', 'T2', 'T3', 'T4', 'T5']).all()
+
+    assert ~np.isnan(ds['time'].isel(trajectory = 0).values[0])
+    assert np.isnan(ds['time'].isel(trajectory = 1).values[0])
+
+    ds2 = ds.traj.condense_obs()
+    print(ds2)
+
+    assert ds2.dims['obs'] < ds.dims['obs']
+
+    for ti in range(ds.dims['trajectory']):
+        assert np.all(ds.isel(trajectory=ti).lon.dropna('obs') == ds2.isel(trajectory=ti).lon)
+        assert np.all(ds.isel(trajectory=ti).lat.dropna('obs') == ds2.isel(trajectory=ti).lat)
+        assert np.all(ds.isel(trajectory=ti).time.dropna('obs') == ds2.isel(trajectory=ti).time)
+

@@ -5,7 +5,6 @@ Reading an OMB Rock7 CSV file into trajan
 
 from pathlib import Path
 from trajan.readers.omb import read_omb_csv
-import trajan as ta
 import coloredlogs
 
 # adjust the level of information printed
