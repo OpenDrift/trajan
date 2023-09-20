@@ -22,5 +22,4 @@ dependencies:
   - click
   - roaring-landmask
   - cf_xarray>=0.8.0
-  - parcels
   - opendrift

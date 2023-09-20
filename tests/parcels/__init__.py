@@ -1,10 +1,17 @@
+import unittest
 import pytest
 import numpy as np
 import math
-from parcels import FieldSet
+try:
+    from parcels import FieldSet
+    has_parcels = True
+except:
+    has_parcels = False
 
 
 @pytest.fixture(scope='session')
+@unittest.skipIf(has_parcels is False,
+                 'Parcels library is not installed')
 def moving_eddies_fieldset(xdim=200, ydim=350, mesh='flat'):
     """
     From: https://oceanparcels.org/examples-data/MovingEddies_data/
