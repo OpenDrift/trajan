@@ -21,6 +21,18 @@ def __require_obsdim__(f):
 
     return wrapper
 
+def detect_tx_dim(ds):
+    if 'lon' in ds:
+        return ds.lon
+    elif 'longitude' in ds:
+        return ds.longitude
+    elif 'x' in ds:
+        return ds.x
+    elif 'X' in ds:
+        return ds.X
+    else:
+        raise ValueError("Could not determine x / lon variable")
+
 
 class Traj:
     ds: xr.Dataset
@@ -33,42 +45,11 @@ class Traj:
     """
     timedim: str
 
-    def __init__(self, ds):
+    def __init__(self, ds, obsdim, timedim):
         self.ds = ds
         self.__gcrs__ = pyproj.CRS.from_epsg(4326)
-
-        self.obsdim = None
-        self.timedim = None
-
-        if 'obs' in self.tx.dims:
-            self.obsdim = 'obs'
-            self.timedim = self.__detect_time_dim__()
-
-        elif 'time' in self.tx.dims:
-            self.obsdim = 'time'
-            self.timedim = 'time'
-
-        else:
-            for d in self.tx.dims:
-                if not self.ds[d].attrs.get('cf_role', None) == 'trajectory_id' and not 'traj' in d:
-
-                    self.obsdim = d
-                    self.timedim = self.__detect_time_dim__()
-
-                    break
-
-            if self.obsdim is None:
-                logger.warning('No time or obs dimension detected.')
-
-        logger.debug(f"Detected obs-dim: {self.obsdim}, detected time-dim: {self.timedim}.")
-
-    def __detect_time_dim__(self):
-        logger.debug(f'Detecting time-dimension for "{self.obsdim}"..')
-        for v in self.ds.variables:
-            if self.obsdim in self.ds[v].dims and 'time' in v:
-                return v
-
-        raise ValueError("no time dimension detected")
+        self.obsdim = obsdim
+        self.timedim = timedim
 
     @property
     def tx(self):
@@ -80,16 +61,7 @@ class Traj:
             * `ref:tlon`
             * `ref:ty`
         """
-        if 'lon' in self.ds:
-            return self.ds.lon
-        elif 'longitude' in self.ds:
-            return self.ds.longitude
-        elif 'x' in self.ds:
-            return self.ds.x
-        elif 'X' in self.ds:
-            return self.ds.X
-        else:
-            raise ValueError("Could not determine x / lon variable")
+        return detect_tx_dim(self.ds)
 
     @property
     def ty(self):
@@ -244,6 +216,14 @@ class Traj:
             ds[self.ty.name].attrs['grid_mapping'] = v.name
 
         return ds
+
+    @abstractmethod
+    def is_1d(self):
+        pass
+
+    @abstractmethod
+    def is_2d(self):
+        pass
 
     def assign_cf_attrs(self,
                         creator_name=None,
@@ -440,7 +420,7 @@ class Traj:
         return np.array(area)
 
     @abstractmethod
-    def gridtime(self, times):
+    def gridtime(self, times, timedim = None):
         """Interpolate dataset to a regular time interval or a different grid.
 
         Args:
@@ -448,6 +428,8 @@ class Traj:
             `times`: Target time interval, can be either:
                 - an array of times, or
                 - a string "freq" specifying a Pandas daterange (e.g. 'h', '6h, 'D'...) suitable for `pd.date_range`.
+
+            `timedime`: Name of new time dimension. The default is to use the same name as previously.
 
         Returns:
 

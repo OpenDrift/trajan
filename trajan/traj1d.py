@@ -13,8 +13,8 @@ class Traj1d(Traj):
     A structured dataset, where each trajectory is always given at the same times. Typically the output from a model or from a gridded dataset.
     """
 
-    def __init__(self, ds):
-        super().__init__(ds)
+    def __init__(self, ds, obsdim, timedim):
+        super().__init__(ds, obsdim, timedim)
 
     def timestep(self):
         """
@@ -22,6 +22,12 @@ class Traj1d(Traj):
         """
         return ((self.ds.time[1] - self.ds.time[0]) /
                 np.timedelta64(1, 's')).values
+
+    def is_1d(self):
+        return True
+
+    def is_2d(self):
+        return False
 
     def time_to_next(self):
         time_step = self.ds.time[1] - self.ds.time[0]
@@ -202,7 +208,7 @@ class Traj1d(Traj):
                             attrs={'method': method})
 
     @__require_obsdim__
-    def gridtime(self, times):
+    def gridtime(self, times, timedim = None):
         if isinstance(times, str):  # Make time series with given interval
             import pandas as pd
             start_time = np.nanmin(np.asarray(self.ds.time))
@@ -215,20 +221,21 @@ class Traj1d(Traj):
         if not isinstance(times, np.ndarray):
             times = times.to_numpy()
 
+        timedim = self.timedim if timedim is None else timedim
 
         ds = self.ds
 
-        if self.obsdim != 'time':
-            ds = ds.rename({self.obsdim: 'time'}).set_index({'time': 'time'})
+        if self.obsdim != timedim:
+            ds = ds.rename({self.obsdim: timedim}).set_index({timedim: timedim})
 
-        _, ui = np.unique(ds.time, return_index=True)
+        _, ui = np.unique(ds[timedim], return_index=True)
 
-        if len(ui) != len(self.ds.time):
+        if len(ui) != len(self.ds[timedim]):
             logger.warning('non-unique time points, dropping time-duplicates')
 
-        ds = ds.isel(time=ui)
+        ds = ds.isel({timedim : ui})
 
-        ds = ds.interp({'time': times})
+        ds = ds.interp({timedim: times})
 
         if not 'trajectory' in ds.dims:
             ds = ds.expand_dims('trajectory')

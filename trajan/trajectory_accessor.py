@@ -10,7 +10,7 @@ import logging
 
 from .plot import Plot
 from .animation import Animation
-from .traj import Traj
+from .traj import Traj, detect_tx_dim
 from .traj1d import Traj1d
 from .traj2d import Traj2d
 
@@ -38,16 +38,55 @@ class TrajAccessor:
             self._ds = self._ds.expand_dims({'trajectory': 1})
             self._ds['trajectory'].attrs['cf_role'] = 'trajectory_id'
 
-        if 'time' not in self.ds.variables:
-            self.inner = Traj1d(self.ds)
-        elif len(self.ds['time'].shape) <= 1:
-            logger.debug('Detected structured (1D) trajectory dataset')
-            self.inner = Traj1d(self._ds)
-        elif len(self.ds['time'].shape) == 2:
-            logger.debug('Detected un-structured (2D) trajectory dataset')
-            self.inner = Traj2d(self._ds)
+
+        obsdim = None
+        timedim = None
+
+        tx = detect_tx_dim(self._ds)
+
+        if 'obs' in tx.dims:
+            obsdim = 'obs'
+            timedim = self.__detect_time_dim__(obsdim)
+
+        elif 'time' in tx.dims:
+            obsdim = 'time'
+            timedim = 'time'
+
         else:
-            raise ValueError(f'Time dimension has shape greater than 2: {self.ds["time"].shape}')
+            for d in tx.dims:
+                if not self.ds[d].attrs.get('cf_role', None) == 'trajectory_id' and not 'traj' in d:
+
+                    obsdim = d
+                    timedim = self.__detect_time_dim__(obsdim)
+
+                    break
+
+            if obsdim is None:
+                logger.warning('No time or obs dimension detected.')
+
+        logger.debug(f"Detected obs-dim: {obsdim}, detected time-dim: {timedim}.")
+
+        if obsdim is None:
+            self.inner = Traj1d(self.ds, obsdim, timedim)
+
+        elif len(self._ds[timedim].shape) <= 1:
+            logger.debug('Detected structured (1D) trajectory dataset')
+            self.inner = Traj1d(self._ds, obsdim, timedim)
+
+        elif len(self._ds[timedim].shape) == 2:
+            logger.debug('Detected un-structured (2D) trajectory dataset')
+            self.inner = Traj2d(self._ds, obsdim, timedim)
+
+        else:
+            raise ValueError(f'Time dimension has shape greater than 2: {self.ds["timedim"].shape}')
+
+    def __detect_time_dim__(self, obsdim):
+        logger.debug(f'Detecting time-dimension for "{obsdim}"..')
+        for v in self._ds.variables:
+            if obsdim in self._ds[v].dims and 'time' in v:
+                return v
+
+        raise ValueError("no time dimension detected")
 
     @property
     def plot(self):

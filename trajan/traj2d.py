@@ -13,8 +13,8 @@ class Traj2d(Traj):
     A unstructured dataset, where each trajectory may have observations at different times. Typically from a collection of drifters.
     """
 
-    def __init__(self, ds):
-        super().__init__(ds)
+    def __init__(self, ds, obsdim, timedim):
+        super().__init__(ds, obsdim, timedim)
 
     def timestep(self, average=np.nanmedian):
         """
@@ -37,6 +37,12 @@ class Traj2d(Traj):
         td = xr.concat((td, td.isel(obs=-1)),
                        dim='obs')  # repeating last time step
         return td
+
+    def is_1d(self):
+        return False
+
+    def is_2d(self):
+        return True
 
     def insert_nan_where(self, condition):
         """Insert NaN-values in trajectories after given positions, shifting rest of trajectory"""
@@ -189,7 +195,7 @@ class Traj2d(Traj):
         return ds
 
     @__require_obsdim__
-    def gridtime(self, times):
+    def gridtime(self, times, timedim = None):
         if isinstance(times, str):  # Make time series with given interval
             import pandas as pd
             start_time = np.nanmin(np.asarray(self.ds.time))
@@ -202,21 +208,23 @@ class Traj2d(Traj):
         if not isinstance(times, np.ndarray):
             times = times.to_numpy()
 
+        timedim = self.timedim if timedim is None else timedim
+
         d = None
 
         for t in range(self.ds.dims['trajectory']):
             dt = self.ds.isel(trajectory=t) \
                         .dropna(self.obsdim, how='all')
 
-            dt = dt.assign_coords({self.obsdim : dt.time.values }) \
-                   .drop_vars('time') \
-                   .rename({self.obsdim : 'time'}) \
-                   .set_index({'time': 'time'})
+            dt = dt.assign_coords({self.obsdim : dt[self.timedim].values }) \
+                   .drop_vars(self.timedim) \
+                   .rename({self.obsdim : timedim}) \
+                   .set_index({timedim: timedim})
 
-            _, ui = np.unique(dt.time, return_index=True)
-            dt = dt.isel(time=ui)
+            _, ui = np.unique(dt[timedim], return_index=True)
+            dt = dt.isel({timedim:ui})
 
-            dt = dt.interp({'time': times})
+            dt = dt.interp({timedim: times})
 
             if d is None:
                 d = dt.expand_dims('trajectory')
