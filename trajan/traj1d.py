@@ -235,7 +235,7 @@ class Traj1d(Traj):
 
         ds = ds.isel({timedim : ui})
 
-        ds = ds.interp({timedim: times})
+        ds = ds.interp({timedim: times}).dropna(timedim)
 
         if not 'trajectory' in ds.dims:
             ds = ds.expand_dims('trajectory')

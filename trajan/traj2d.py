@@ -154,12 +154,15 @@ class Traj2d(Traj):
         # The observation coordinate will be re-written
         ds = ds.drop([self.obsdim])
 
-        assert self.obsdim in ds[self.timedim].dims, "observation not a coordinate of time variable"
+        assert self.obsdim in ds[
+            self.timedim].dims, "observation not a coordinate of time variable"
 
         # Move all observations for each trajectory to starting row
         maxN = 0
         for ti in range(len(ds.trajectory)):
-            obsvars = [var for var in ds.variables if self.obsdim in ds[var].dims]
+            obsvars = [
+                var for var in ds.variables if self.obsdim in ds[var].dims
+            ]
             iv = np.full(on, False)
             for var in obsvars:
                 ivv = ~pd.isnull(
@@ -195,7 +198,7 @@ class Traj2d(Traj):
         return ds
 
     @__require_obsdim__
-    def gridtime(self, times, timedim = None):
+    def gridtime(self, times, timedim=None):
         if isinstance(times, str):  # Make time series with given interval
             import pandas as pd
             start_time = np.nanmin(np.asarray(self.ds.time))
@@ -222,7 +225,7 @@ class Traj2d(Traj):
                    .set_index({timedim: timedim})
 
             _, ui = np.unique(dt[timedim], return_index=True)
-            dt = dt.isel({timedim:ui})
+            dt = dt.isel({timedim: ui}).dropna(timedim)
 
             dt = dt.interp({timedim: times})
 
