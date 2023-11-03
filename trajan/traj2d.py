@@ -200,7 +200,6 @@ class Traj2d(Traj):
     @__require_obsdim__
     def gridtime(self, times, timedim=None):
         if isinstance(times, str):  # Make time series with given interval
-            import pandas as pd
             start_time = np.nanmin(np.asarray(self.ds.time))
             end_time = np.nanmax(np.asarray(self.ds.time))
             times = pd.date_range(start_time,
@@ -225,8 +224,8 @@ class Traj2d(Traj):
                    .set_index({timedim: timedim})
 
             _, ui = np.unique(dt[timedim], return_index=True)
-            dt = dt.isel({timedim: ui}).dropna(timedim)
-
+            dt = dt.isel({timedim: ui})
+            dt = dt.isel({timedim : np.where(~pd.isna(dt[timedim].values))[0]})
             dt = dt.interp({timedim: times})
 
             if d is None:

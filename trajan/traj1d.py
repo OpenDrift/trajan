@@ -1,6 +1,7 @@
 import numpy as np
 import xarray as xr
 import numpy as np
+import pandas as pd
 import logging
 from .traj import Traj, __require_obsdim__
 from . import skill
@@ -210,7 +211,6 @@ class Traj1d(Traj):
     @__require_obsdim__
     def gridtime(self, times, timedim = None):
         if isinstance(times, str):  # Make time series with given interval
-            import pandas as pd
             start_time = np.nanmin(np.asarray(self.ds.time))
             end_time = np.nanmax(np.asarray(self.ds.time))
             times = pd.date_range(start_time,
@@ -234,8 +234,8 @@ class Traj1d(Traj):
             logger.warning('non-unique time points, dropping time-duplicates')
 
         ds = ds.isel({timedim : ui})
-
-        ds = ds.interp({timedim: times}).dropna(timedim)
+        ds = ds.isel({timedim : np.where(~pd.isna(ds[timedim].values))[0]})
+        ds = ds.interp({timedim: times})
 
         if not 'trajectory' in ds.dims:
             ds = ds.expand_dims('trajectory')
