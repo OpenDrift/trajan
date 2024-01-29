@@ -149,7 +149,7 @@ def read_omb_csv(path_in: Path,
         # a GNSS packet may contain several data entries; split it here for simplicity
         if crrt_kind == "G":
             for crrt_fix in crrt_list_packets:
-                if crrt_fix.datetime_fix > crrt_start_time:
+                if crrt_start_time is None or crrt_fix.datetime_fix > crrt_start_time:
                     crrt_parsed = ParsedIridiumMessage(
                         device_from=crrt_data.Device,
                         kind=crrt_kind,
@@ -168,7 +168,7 @@ def read_omb_csv(path_in: Path,
                 frequencies_set = True
                 frequencies = crrt_list_packets[0].list_frequencies
 
-            if crrt_list_packets[0].datetime_fix > crrt_start_time:
+            if crrt_start_time is None or crrt_list_packets[0].datetime_fix > crrt_start_time:
                 crrt_parsed = ParsedIridiumMessage(
                     device_from=crrt_data.Device,
                     kind=crrt_kind,
