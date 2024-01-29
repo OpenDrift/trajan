@@ -6,6 +6,7 @@ Reading an OMB Rock7 CSV file into trajan
 from pathlib import Path
 from trajan.readers.omb import read_omb_csv
 import coloredlogs
+import datetime
 
 # adjust the level of information printed
 # coloredlogs.install(level='error')
@@ -35,9 +36,17 @@ print(xr_result)
 
 #%%
 # example 2: custom size of wave packets; for users who have changed the firmware to transmit
+# and using a set start time: ignore messages before it
 # more or less spectrum bins
 
 path_to_test_data = Path.cwd().parent / "tests" / "test_data" / "csv" / "omb2.csv"
+
+# the start times dict specification
+dict_instruments_params = {
+    "RockBLOCK 206702": {
+        "start_time": datetime.datetime(2022, 10, 29, 0, 0, 0),
+    }
+}
 
 # the properties description of the modified binary wave packets
 dict_wave_packet_params = {
@@ -47,7 +56,7 @@ dict_wave_packet_params = {
 }
 
 # specify the binary wave packet specification corresponding to the modified firmware
-xr_result = read_omb_csv(path_to_test_data, modified_wave_packet_properties=dict_wave_packet_params)
+xr_result = read_omb_csv(path_to_test_data, dict_instruments_params=dict_instruments_params, modified_wave_packet_properties=dict_wave_packet_params)
 
 # look at the dataset obtained
 print(xr_result)
