@@ -12,6 +12,8 @@ def test_parcels_flatmesh(plot):
 
     if plot:
         plt.show()
+    else:
+        plt.close()
 
 @pytest.mark.xfail
 def test_parcels_flatmesh_animate(plot):
@@ -22,3 +24,5 @@ def test_parcels_flatmesh_animate(plot):
 
     if plot:
         plt.show()
+    else:
+        plt.close()
