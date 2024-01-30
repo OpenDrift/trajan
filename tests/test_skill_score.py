@@ -8,7 +8,7 @@ from datetime import timedelta
 
 def test_barents_self(barents):
     # this should be full score..
-    barents = barents.traj.gridtime('1H')
+    barents = barents.traj.gridtime('1h')
     print(barents)
     skill = barents.traj.skill(barents)
     print(skill)
@@ -17,7 +17,7 @@ def test_barents_self(barents):
 
 
 def test_barents_trajs(barents):
-    barents = barents.traj.gridtime('1H')
+    barents = barents.traj.gridtime('1h')
     b0 = barents.isel(trajectory=0).dropna('time')
     b1 = barents.isel(trajectory=1).sel(time=slice(b0.time[0], b0.time[-1]))
     b1 = b1.traj.gridtime(b0.time)
@@ -26,11 +26,11 @@ def test_barents_trajs(barents):
     np.testing.assert_allclose(skill.values, 0.544782, atol=0.001)
 
 def test_barents_align(barents):
-    barents = barents.traj.gridtime('1H')
+    barents = barents.traj.gridtime('1h')
     b0 = barents.isel(trajectory=0)
 
-    # assert b0.dims['trajectory'] == 1
-    assert barents.dims['trajectory'] == 2
+    # assert b0.sizes['trajectory'] == 1
+    assert barents.sizes['trajectory'] == 2
 
     (b01, _) = xr.broadcast(b0, barents)
     b01 = b01.transpose('trajectory', ...)

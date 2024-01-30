@@ -332,7 +332,7 @@ class Traj:
 
         lon = self.ds.lon
         lat = self.ds.lat
-        lenobs = self.ds.dims[self.obsdim]
+        lenobs = self.ds.sizes[self.obsdim]
         lonfrom = lon.isel({self.obsdim: slice(0, lenobs - 1)})
         latfrom = lat.isel({self.obsdim: slice(0, lenobs - 1)})
         lonto = lon.isel({self.obsdim: slice(1, lenobs)})

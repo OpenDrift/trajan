@@ -10,7 +10,7 @@ def test_read_example_csv(drifter_csv, plot):
     ds = ta.read_csv(drifter_csv, name='Device', time='Time', lon='Longitude', lat='Latitude')
     print(ds)
 
-    assert len(dc) == ds.dims['obs']
+    assert len(dc) == ds.sizes['obs']
 
     assert ds.trajectory.attrs['cf_role'] == 'trajectory_id'
     assert ds.trajectory.attrs['long_name'] == 'trajectory name'
@@ -33,7 +33,7 @@ def test_concat(drifter_csv, plot):
     print(ds)
 
     # obs dim is same as max of dc and dc2
-    assert len(dc2) == ds.dims['obs']
+    assert len(dc2) == ds.sizes['obs']
 
 def test_lungard(test_data):
     b16 = pd.read_csv(test_data / 'csv/bug16.csv.xz')
@@ -46,10 +46,10 @@ def test_lungard(test_data):
 
     print(ds)
 
-    assert ds.dims['obs'] == np.max((len(b16), len(b23)))
+    assert ds.sizes['obs'] == np.max((len(b16), len(b23)))
 
-    assert ds.isel(trajectory=1).dropna('obs', how='all').dims['obs'] == len(b16)
-    assert ds.isel(trajectory=0).dropna('obs', how='all').dims['obs'] == len(b23)
+    assert ds.isel(trajectory=1).dropna('obs', how='all').sizes['obs'] == len(b16)
+    assert ds.isel(trajectory=0).dropna('obs', how='all').sizes['obs'] == len(b23)
 
     dsg = ds.drop_vars(['Type', 'File'])
     dsg = dsg.traj.gridtime('1min')
@@ -64,7 +64,7 @@ def test_seals(test_data, tmpdir):
     ds = ta.read_csv(s, lat='Lat', lon='Lon', time='Timestamp', name='Instrument')
     print(ds)
 
-    assert ds.dims['trajectory'] == 5
+    assert ds.sizes['trajectory'] == 5
     assert (ds['trajectory'].values == ['T1', 'T2', 'T3', 'T4', 'T5']).all()
 
     ds.to_netcdf(tmpdir / 'test.nc')
@@ -74,7 +74,7 @@ def test_condense_obs(test_data, tmpdir):
     ds = ta.read_csv(s, lat='Lat', lon='Lon', time='Timestamp', name='Instrument', __test_condense__=True)
     print(ds)
 
-    assert ds.dims['trajectory'] == 5
+    assert ds.sizes['trajectory'] == 5
     assert (ds['trajectory'].values == ['T1', 'T2', 'T3', 'T4', 'T5']).all()
 
     assert ~np.isnan(ds['time'].isel(trajectory = 0).values[0])
@@ -83,9 +83,9 @@ def test_condense_obs(test_data, tmpdir):
     ds2 = ds.traj.condense_obs()
     print(ds2)
 
-    assert ds2.dims['obs'] < ds.dims['obs']
+    assert ds2.sizes['obs'] < ds.sizes['obs']
 
-    for ti in range(ds.dims['trajectory']):
+    for ti in range(ds.sizes['trajectory']):
         assert np.all(ds.isel(trajectory=ti).lon.dropna('obs') == ds2.isel(trajectory=ti).lon)
         assert np.all(ds.isel(trajectory=ti).lat.dropna('obs') == ds2.isel(trajectory=ti).lat)
         assert np.all(ds.isel(trajectory=ti).time.dropna('obs') == ds2.isel(trajectory=ti).time)

@@ -156,7 +156,7 @@ class Plot:
             kwargs['color'] = self.DEFAULT_LINE_COLOR
 
         if 'alpha' not in kwargs and 'trajectory' in self.ds.dims:
-            num = self.ds.dims['trajectory']
+            num = self.ds.sizes['trajectory']
             if num>100:  # If many trajectories, make more transparent
                 kwargs['alpha'] = np.maximum(.1, 100/np.float64(num))
 

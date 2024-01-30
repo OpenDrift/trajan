@@ -11,7 +11,7 @@ def test_read_csv_omb_default_waves(test_data, tmpdir):
     assert ds.attrs['time_coverage_start'] == '2022-11-12T00:00:37'
     assert ds.attrs['time_coverage_end'] == '2022-11-12T02:30:27'
 
-    assert ds.dims['trajectory'] == 2
+    assert ds.sizes['trajectory'] == 2
     print(ds.time)
 
     # grid dataset
@@ -24,7 +24,7 @@ def test_read_csv_omb_default_waves(test_data, tmpdir):
     assert ds2.attrs['time_coverage_start'] == '2022-11-12T00:00:37'
     assert ds2.attrs['time_coverage_end'] == '2022-11-12T02:30:27'
 
-    assert ds2.dims['trajectory'] == 2
+    assert ds2.sizes['trajectory'] == 2
 
     assert ds == ds2
 

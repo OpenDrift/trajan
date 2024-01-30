@@ -14,7 +14,7 @@ def test_interpolate_barents(barents, plot):
     """Interpolate subset of drifter time series to 6-hourly means"""
 
     print(barents)
-    times = pd.date_range("2022-10-01", "2022-11-01", freq='6H')
+    times = pd.date_range("2022-10-01", "2022-11-01", freq='6h')
 
     barents_gridded = barents.traj.gridtime(times)
     assert_almost_equal(
@@ -54,7 +54,7 @@ def test_distance_single_point(barents):
     print(d)
 
 def test_interpolate_1d_barents(barents):
-    times = pd.date_range("2022-10-01", "2022-11-01", freq='6H')
+    times = pd.date_range("2022-10-01", "2022-11-01", freq='6h')
 
     barents_gridded = barents.traj.gridtime(times)
 
@@ -68,7 +68,7 @@ def test_interpolate_1d_barents(barents):
 
     np.testing.assert_array_equal(barents_gridded.time, b3.time)
 
-    times = pd.date_range("2022-10-12", "2022-11-01", freq='6H')
+    times = pd.date_range("2022-10-12", "2022-11-01", freq='6h')
     b4 = barents_gridded.traj.gridtime(times)
 
     np.testing.assert_array_equal(times, b4.time)
@@ -105,7 +105,7 @@ def test_speed(barents, plot):
     assert_almost_equal(speed.mean(), 0.461, 3)
 
     # Gridding to hourly
-    bh = barents.traj.gridtime('1H')
+    bh = barents.traj.gridtime('1h')
     speed_bh = bh.traj.speed()
     speed_bh = speed_bh.where(speed_bh > 0.01)
 
@@ -134,7 +134,7 @@ def test_insert_nan_where(barents, plot):
         barents.traj.time_to_next() > np.timedelta64(30, 'm'))
 
     assert all([a == b for a, b in zip(barents.keys(), b2.keys())])
-    assert b2.dims['obs'] == 3222
+    assert b2.sizes['obs'] == 3222
 
     if plot:
         barents.traj.plot(color='b', linewidth=2)
@@ -155,7 +155,7 @@ def test_drop_where(barents, plot):
     # After removing positions with very small time step, calculated maximum speed is reasonable
     assert_almost_equal(b2.traj.speed().max(), 1.287, 1)
 
-    assert barents.dims['obs'] == 2287
-    assert b2.dims['obs'] == 2285
+    assert barents.sizes['obs'] == 2287
+    assert b2.sizes['obs'] == 2285
     # Trimming off the empty positions at the end
-    assert b2.dropna(dim='obs', how='all').dims['obs'] == 2279
+    assert b2.dropna(dim='obs', how='all').sizes['obs'] == 2279

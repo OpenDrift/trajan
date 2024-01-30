@@ -31,7 +31,7 @@ class Animation:
         ax = self.ds.traj.plot.set_up_map(kwargs)
         fig = ax.get_figure()
 
-        ds = self.ds.traj.gridtime(times='1H')
+        ds = self.ds.traj.gridtime(times='1h')
         frames = ds.time.shape[0]
 
         logger.debug(f'Running animation.. frames: {frames}')

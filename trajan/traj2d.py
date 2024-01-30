@@ -31,7 +31,7 @@ class Traj2d(Traj):
            Last time is repeated for last position (which has no next position)
         """
         time = self.ds.time
-        lenobs = self.ds.dims['obs']
+        lenobs = self.ds.sizes['obs']
         td = time.isel(obs=slice(1, lenobs)) - time.isel(
             obs=slice(0, lenobs - 1))
         td = xr.concat((td, td.isel(obs=-1)),
@@ -52,11 +52,11 @@ class Traj2d(Traj):
         max_obs = (index_of_last + num_inserts).max().values
 
         # Create new empty dataset with extended obs dimension
-        trajcoord = range(self.ds.dims['trajectory'])
+        trajcoord = range(self.ds.sizes['trajectory'])
         nd = xr.Dataset(
             coords={
                 'trajectory':
-                (["trajectory"], range(self.ds.dims['trajectory'])),
+                (["trajectory"], range(self.ds.sizes['trajectory'])),
                 'obs': (['obs'], range(max_obs))  # Longest trajectory
             },
             attrs=self.ds.attrs)
@@ -68,13 +68,13 @@ class Traj2d(Traj):
                 continue
             # Create empty dataarray to hold interpolated values for given variable
             da = xr.DataArray(
-                data=np.zeros(tuple(nd.dims[di] for di in nd.dims)) * np.nan,
+                data=np.zeros(tuple(nd.sizes[di] for di in nd.dims)) * np.nan,
                 dims=nd.dims,
                 attrs=var.attrs,
             )
 
             for t in range(
-                    self.ds.dims['trajectory']):  # loop over trajectories
+                    self.ds.sizes['trajectory']):  # loop over trajectories
                 numins = num_inserts[t]
                 olddata = var.isel(trajectory=t).values
                 wh = np.argwhere(condition.isel(trajectory=t).values) + 1
@@ -106,16 +106,16 @@ class Traj2d(Traj):
 
         trajs = []
         newlen = 0
-        for i in range(self.ds.dims['trajectory']):
+        for i in range(self.ds.sizes['trajectory']):
             new = self.ds.isel(trajectory=i).drop_sel(obs=np.where(
                 condition.isel(
                     trajectory=i))[0])  # Dropping from given trajectory
-            newlen = max(newlen, new.dims['obs'])
+            newlen = max(newlen, new.sizes['obs'])
             trajs.append(new)
 
         # Ensure all trajectories have equal length, by padding with NaN at end
         trajs = [
-            t.pad(pad_width={'obs': (0, newlen - t.dims['obs'])})
+            t.pad(pad_width={'obs': (0, newlen - t.sizes['obs'])})
             for t in trajs
         ]
 
@@ -146,13 +146,13 @@ class Traj2d(Traj):
             A new Dataset with observations condensed.
         """
 
-        on = self.ds.dims[self.obsdim]
+        on = self.ds.sizes[self.obsdim]
         logger.debug(f'Condensing {on} observations.')
 
         ds = self.ds.copy(deep=True)
 
         # The observation coordinate will be re-written
-        ds = ds.drop([self.obsdim])
+        ds = ds.drop_vars([self.obsdim])
 
         assert self.obsdim in ds[
             self.timedim].dims, "observation not a coordinate of time variable"
@@ -214,7 +214,7 @@ class Traj2d(Traj):
 
         d = None
 
-        for t in range(self.ds.dims['trajectory']):
+        for t in range(self.ds.sizes['trajectory']):
             dt = self.ds.isel(trajectory=t) \
                         .dropna(self.obsdim, how='all')
 

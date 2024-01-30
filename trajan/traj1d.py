@@ -36,7 +36,7 @@ class Traj1d(Traj):
 
     def velocity_spectrum(self):
 
-        if self.ds.dims['trajectory'] > 1:
+        if self.ds.sizes['trajectory'] > 1:
             raise ValueError(
                 'Spectrum can only be calculated for a single trajectory')
 
@@ -68,7 +68,7 @@ class Traj1d(Traj):
         ### TODO unfinished method
 
         from .tools import rotary_spectra
-        if self.ds.dims['trajectory'] > 1:
+        if self.ds.sizes['trajectory'] > 1:
             raise ValueError(
                 'Spectrum can only be calculated for a single trajectory')
 
@@ -166,9 +166,9 @@ class Traj1d(Traj):
 
         """
 
-        if self.ds.dims['trajectory'] != other.dims['trajectory']:
+        if self.ds.sizes['trajectory'] != other.sizes['trajectory']:
             raise ValueError(
-                f"There must be the same number of trajectories in the two datasets that are compared. This dataset: {self.ds.dims['trajectory']}, other: {other.dims['trajectory']}."
+                f"There must be the same number of trajectories in the two datasets that are compared. This dataset: {self.ds.sizes['trajectory']}, other: {other.sizes['trajectory']}."
             )
 
         diff = np.max(
@@ -181,7 +181,7 @@ class Traj1d(Traj):
                 f"The two datasets must have approximately equal time coordinates, maximum difference: {diff} seconds. Consider using `gridtime` to interpolate one of the datasets."
             )
 
-        s = np.zeros((self.ds.dims['trajectory']), dtype=np.float32)
+        s = np.zeros((self.ds.sizes['trajectory']), dtype=np.float32)
 
         # ds = self.ds.dropna(dim=self.obsdim)
         # other = other.dropna(dim=other.traj.obsdim)

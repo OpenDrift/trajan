@@ -26,5 +26,5 @@ def test_gridtime(test_data):
     ds = xr.open_dataset(test_data / 'bug32.nc')
     print(ds)
 
-    dg = ds.traj.gridtime('1H')
+    dg = ds.traj.gridtime('1h')
     print(dg)
