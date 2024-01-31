@@ -4,6 +4,7 @@ import logging
 import pandas as pd
 from dataclasses import dataclass
 import numpy as np
+import datetime
 
 from .omb_decoder import decode_message
 from typing import Union
@@ -61,6 +62,7 @@ def append_dict_with_entry(dict_in: dict, parsed_entry: ParsedIridiumMessage):
 
 
 def read_omb_csv(path_in: Path,
+                 dict_instruments_params: dict = None,
                  modified_wave_packet_properties: dict = None) -> xr.Dataset:
     logger.debug("read path to pandas")
 
@@ -118,6 +120,15 @@ def read_omb_csv(path_in: Path,
             )
             continue
 
+        # only use data that are after the start time for the current buoy
+        crrt_start_time = None
+
+        if dict_instruments_params is not None:
+            crrt_instrument = getattr(crrt_data, "Device")
+            if crrt_instrument in dict_instruments_params:
+                if "start_time" in dict_instruments_params[crrt_instrument]:
+                    crrt_start_time = dict_instruments_params[crrt_instrument]["start_time"]
+
         # we should only have valid dataframes at this point; attempt to decode
         # hard to catch exceptions in a fine grain way, so cath all, but only on the decoding itself
         # however, in practice, all messages should be decodable, and if not this is a serious issue; don t be silent
@@ -138,14 +149,18 @@ def read_omb_csv(path_in: Path,
         # a GNSS packet may contain several data entries; split it here for simplicity
         if crrt_kind == "G":
             for crrt_fix in crrt_list_packets:
-                crrt_parsed = ParsedIridiumMessage(
-                    device_from=crrt_data.Device,
-                    kind=crrt_kind,
-                    meta=crrt_meta,
-                    data=crrt_fix,
-                )
+                if crrt_start_time is None or crrt_fix.datetime_fix > crrt_start_time:
+                    crrt_parsed = ParsedIridiumMessage(
+                        device_from=crrt_data.Device,
+                        kind=crrt_kind,
+                        meta=crrt_meta,
+                        data=crrt_fix,
+                    )
 
-                append_dict_with_entry(dict_entries, crrt_parsed)
+                    append_dict_with_entry(dict_entries, crrt_parsed)
+
+                else:
+                    logger.info(f"buoy {crrt_instrument}: ignore fix {crrt_fix}, since before {crrt_start_time}")
 
         # other packets contain a single entry: add as is
         else:
@@ -153,14 +168,18 @@ def read_omb_csv(path_in: Path,
                 frequencies_set = True
                 frequencies = crrt_list_packets[0].list_frequencies
 
-            crrt_parsed = ParsedIridiumMessage(
-                device_from=crrt_data.Device,
-                kind=crrt_kind,
-                meta=crrt_meta,
-                data=crrt_list_packets[0],
-            )
+            if crrt_start_time is None or crrt_list_packets[0].datetime_fix > crrt_start_time:
+                crrt_parsed = ParsedIridiumMessage(
+                    device_from=crrt_data.Device,
+                    kind=crrt_kind,
+                    meta=crrt_meta,
+                    data=crrt_list_packets[0],
+                )
 
-            append_dict_with_entry(dict_entries, crrt_parsed)
+                append_dict_with_entry(dict_entries, crrt_parsed)
+
+            else:
+                logger.info(f"buoy {crrt_instrument}: ignore spectrum with timestamp {crrt_list_packets[0].datetime_fix}, since before {crrt_start_time}")
 
     if number_valid_entries == 0:
         logger.warning(
