@@ -209,10 +209,14 @@ class Traj1d(Traj):
                             attrs={'method': method})
 
     @__require_obsdim__
-    def gridtime(self, times, timedim = None):
+    def gridtime(self, times, timedim=None, round=True):
         if isinstance(times, str):  # Make time series with given interval
-            start_time = np.nanmin(np.asarray(self.ds.time))
-            end_time = np.nanmax(np.asarray(self.ds.time))
+            if round is True:
+                start_time = np.nanmin(np.asarray(self.ds.time.dt.floor(times)))
+                end_time = np.nanmax(np.asarray(self.ds.time.dt.ceil(times)))
+            else:
+                start_time = np.nanmin(np.asarray(self.ds.time))
+                end_time = np.nanmax(np.asarray(self.ds.time))
             times = pd.date_range(start_time,
                                   end_time,
                                   freq=times,
