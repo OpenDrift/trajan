@@ -15,9 +15,17 @@ def test_barents_self(barents):
 
     np.testing.assert_allclose(skill.values, 1.)
 
-
 def test_barents_trajs(barents):
     barents = barents.traj.gridtime('1h')
+    b0 = barents.isel(trajectory=0).dropna('time')
+    b1 = barents.isel(trajectory=1).sel(time=slice(b0.time[0], b0.time[-1]))
+    b1 = b1.traj.gridtime(b0.time)
+    skill = b0.traj.skill(b1, tolerance_threshold=1)
+    print(skill)
+    np.testing.assert_allclose(skill.values, 0.543, atol=0.001)
+
+def test_barents_trajs_noround(barents):
+    barents = barents.traj.gridtime('1h', round=False)
     b0 = barents.isel(trajectory=0).dropna('time')
     b1 = barents.isel(trajectory=1).sel(time=slice(b0.time[0], b0.time[-1]))
     b1 = b1.traj.gridtime(b0.time)
