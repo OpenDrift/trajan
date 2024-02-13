@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trajan"
-version = "0.5.1"
+version = "0.6.0"
 description = "Trajectory analysis package for simulated and observed trajectories"
 authors = ["Gaute Hope <gauteh@met.no>", "Knut-Frode Dagestad <knutfd@met.no>"]
 license = "GPLv2"
