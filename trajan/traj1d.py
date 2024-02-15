@@ -210,7 +210,7 @@ class Traj1d(Traj):
 
     @__require_obsdim__
     def gridtime(self, times, timedim=None, round=True):
-        if isinstance(times, str):  # Make time series with given interval
+        if isinstance(times, str) or isinstance(times, pd.Timedelta):  # Make time series with given interval
             if round is True:
                 start_time = np.nanmin(np.asarray(self.ds.time.dt.floor(times)))
                 end_time = np.nanmax(np.asarray(self.ds.time.dt.ceil(times)))

@@ -386,38 +386,56 @@ class Traj:
 
         return u, v
 
-    def get_area_convex_hull(self):
-        """Returns the area of the convex hull spanned by all particles, per timestep"""
+    def convex_hull(self):
+        """Returns the scipy convex hull for all particles, in geographical coordinates"""
 
         from scipy.spatial import ConvexHull
-        from pyproj import Geod
 
-        area = []
-        lons = self.ds.lon.where(self.ds.status == 0)
-        lats = self.ds.lat.where(self.ds.status == 0)
-        for i in range(self.ds.dims['time']):
-            lat = lats.isel(time=i)
-            lon = lons.isel(time=i)
-            fin = np.isfinite(lat + lon)
-            if np.sum(fin) <= 3:
-                area.append(0)
-                continue
-            if len(np.unique(lat)) == 1 and len(np.unique(lon)) == 1:
-                area.append(0)
-                continue
-            lat = lat[fin]
-            lon = lon[fin]
-            aea = pyproj.Proj(
-                f'+proj=aea +lat_0={lat.mean().values} +lat_1={lat.min().values} +lat_2={lat.max().values} +lon_0={lon.mean().values} +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs'
-            )
+        lon = self.ds.lon.where(self.ds.status == 0)
+        lat = self.ds.lat.where(self.ds.status == 0)
+        fin = np.isfinite(lat + lon)
+        if np.sum(fin) <= 3:
+            return None
+        if len(np.unique(lat)) == 1 and len(np.unique(lon)) == 1:
+            return None
+        lat = lat[fin]
+        lon = lon[fin]
+        points = np.vstack((lon.T, lat.T)).T
+        return ConvexHull(points)
 
-            x, y = aea(lat, lon, inverse=False)
-            fin = np.isfinite(x + y)
-            points = np.vstack((y.T, x.T)).T
-            hull = ConvexHull(points)
-            area.append(hull.volume)  # volume=area for 2D as here
+    def convex_hull_contains_point(self, lon, lat):
+        """Returns True if given point is within the scipy convex hull for all particles"""
+        from matplotlib.patches import Polygon
 
-        return np.array(area)
+        hull = self.ds.traj.convex_hull()
+        p = Polygon(hull.points[hull.vertices])
+        point = np.c_[lon, lat]
+        return p.contains_points(point)[0]
+
+    def get_area_convex_hull(self):
+        """Returns the area [m2] of the convex hull spanned by all particles"""
+
+        from scipy.spatial import ConvexHull
+
+        lon = self.ds.lon.where(self.ds.status == 0)
+        lat = self.ds.lat.where(self.ds.status == 0)
+        fin = np.isfinite(lat + lon)
+        if np.sum(fin) <= 3:
+            return 0
+        if len(np.unique(lat)) == 1 and len(np.unique(lon)) == 1:
+            return 0
+        lat = lat[fin]
+        lon = lon[fin]
+        # An equal area projection centered around the particles
+        aea = pyproj.Proj(
+            f'+proj=aea +lat_0={lat.mean().values} +lat_1={lat.min().values} +lat_2={lat.max().values} +lon_0={lon.mean().values} +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs'
+        )
+
+        x, y = aea(lat, lon, inverse=False)
+        fin = np.isfinite(x + y)
+        points = np.vstack((y.T, x.T)).T
+        hull = ConvexHull(points)
+        return np.array(hull.volume)  # volume=area for 2D as here
 
     @abstractmethod
     def gridtime(self, times, timedim = None):
