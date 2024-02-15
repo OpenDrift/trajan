@@ -197,3 +197,78 @@ class Plot:
                 paths = ax.plot(x, y, transform=self.gcrs, *args, **kwargs)
 
         return paths
+
+    def scatter(self, *args, **kwargs):
+        """
+        Plot the particles as points.
+
+        Args:
+
+            ax: Use existing axes, otherwise a new one is set up.
+
+            crs: Specify crs for new axis.
+
+        Returns:
+
+            Matplotlib lines, and axes.
+        """
+
+        logger.debug(f'Plotting points')
+        ax = self.set_up_map(kwargs)
+
+        if 'marker' not in kwargs:
+            kwargs['marker'] = '.'
+
+        if 'color' not in kwargs:
+            kwargs['color'] = self.DEFAULT_LINE_COLOR
+
+        if 'alpha' not in kwargs and 'trajectory' in self.ds.dims:
+            num = self.ds.sizes['trajectory']
+            if num>100:  # If many particles, make more transparent
+                kwargs['alpha'] = np.maximum(.1, 100/np.float64(num))
+
+        if self.__cartesian__:
+            x = self.ds.traj.tx.values.T
+            y = self.ds.traj.ty.values.T
+        else:
+            x = self.ds.traj.tlon.values.T
+            y = self.ds.traj.tlat.values.T
+
+        if self.__cartesian__:
+            paths = ax.scatter(x, y, *args, **kwargs)
+        else:
+            paths = ax.scatter(x, y, transform=self.gcrs, *args, **kwargs)
+
+        return paths
+
+    def convex_hull(self, *args, **kwargs):
+        """
+        Plot the convex hull around all particles
+
+        Args:
+
+            ax: Use existing axes, otherwise a new one is set up.
+
+            crs: Specify crs for new axis.
+
+        Returns:
+
+            Matplotlib lines, and axes.
+        """
+
+        logger.debug(f'Plotting convex hull')
+        hull = self.ds.traj.convex_hull()
+
+        ax = self.set_up_map(kwargs)
+
+        if 'color' not in kwargs:
+            kwargs['color'] = self.DEFAULT_LINE_COLOR
+
+        # TODO: might not work for cartesian plots
+        line_segments = [hull.points[simplex] for simplex in hull.simplices]
+        from matplotlib.collections import LineCollection
+        paths = ax.add_collection(LineCollection(line_segments, transform=self.gcrs,
+                                                 *args, **kwargs))
+
+        return paths
+
