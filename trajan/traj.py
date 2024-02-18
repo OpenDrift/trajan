@@ -408,6 +408,8 @@ class Traj:
         from matplotlib.patches import Polygon
 
         hull = self.ds.traj.convex_hull()
+        if hull is None:
+            return False
         p = Polygon(hull.points[hull.vertices])
         point = np.c_[lon, lat]
         return p.contains_points(point)[0]
