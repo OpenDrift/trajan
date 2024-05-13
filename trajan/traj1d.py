@@ -239,7 +239,11 @@ class Traj1d(Traj):
 
         ds = ds.isel({timedim : ui})
         ds = ds.isel({timedim : np.where(~pd.isna(ds[timedim].values))[0]})
-        ds = ds.interp({timedim: times})
+
+        if ds.sizes[timedim] > 0:
+            ds = ds.interp({timedim: times})
+        else:
+            logger.warning(f"time dimension ({timedim}) is zero size")
 
         if not 'trajectory' in ds.dims:
             ds = ds.expand_dims('trajectory')

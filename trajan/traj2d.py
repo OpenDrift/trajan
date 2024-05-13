@@ -230,7 +230,11 @@ class Traj2d(Traj):
             _, ui = np.unique(dt[timedim], return_index=True)
             dt = dt.isel({timedim: ui})
             dt = dt.isel({timedim : np.where(~pd.isna(dt[timedim].values))[0]})
-            dt = dt.interp({timedim: times})
+
+            if dt.sizes[timedim] > 0:
+                dt = dt.interp({timedim: times})
+            else:
+                logger.warning(f"time dimension ({timedim}) is zero size")
 
             if d is None:
                 d = dt.expand_dims('trajectory')
