@@ -5,6 +5,7 @@ TrajAn is a Python package with functionality to handle trajectory datasets foll
 
 Trajectory datasets contain position time series from e.g. drifting buoys, or output from lagrangian models.
 
+The source code is available on https://github.com/OpenDrift/trajan
 
 Installation
 ------------
