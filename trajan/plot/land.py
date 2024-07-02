@@ -66,7 +66,7 @@ def add_land(ax,
         cmap = colors.ListedColormap([ocean_color, land_color])
         ax.imshow(img,
                   origin='lower',
-                  extent=[lonmin, lonmax, latmin, latmax],
+                  extent=[lonmin.values, lonmax.values, latmin.values, latmax.values],
                   zorder=0,
                   transform=ccrs.PlateCarree(globe=globe),
                   cmap=cmap)
