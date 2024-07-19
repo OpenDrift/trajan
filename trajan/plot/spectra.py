@@ -63,9 +63,11 @@ def plot_trajan_spectra(
         for ind, _ in enumerate(xr_trajan_in["trajectory"]):
             crrt_spectra_times = xr_trajan_in.isel(
                 trajectory=ind)["time_waves_imu"].to_numpy()
-            list_date_start.append(np.min(crrt_spectra_times))
-            list_date_end.append(np.max(crrt_spectra_times))
+            list_date_start.append(np.nanmin(crrt_spectra_times))
+            list_date_end.append(np.nanmax(crrt_spectra_times))
 
+        list_date_start = [x for x in list_date_start if np.isfinite(x)]
+        list_date_end = [x for x in list_date_end if np.isfinite(x)]
         date_start = min(list_date_start)
         date_end = max(list_date_end)
 

@@ -12,8 +12,8 @@ import coloredlogs
 import datetime
 
 # adjust the level of information printed
-coloredlogs.install(level='error')
-# coloredlogs.install(level='debug')
+# coloredlogs.install(level='error')
+coloredlogs.install(level='debug')
 
 # %%
 
