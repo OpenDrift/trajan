@@ -13,6 +13,8 @@ def test_plot_spectra_noextraargs(test_data, plot):
     if plot:
         plt.show()
 
+    plt.close('all')
+
 
 def test_plot_spectra_withargs(test_data, tmpdir, plot):
     csv_in = test_data / 'csv/omb3.csv'
@@ -34,3 +36,5 @@ def test_plot_spectra_withargs(test_data, tmpdir, plot):
 
     if plot:
         plt.show()
+
+    plt.close('all')
