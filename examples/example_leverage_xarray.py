@@ -1,5 +1,5 @@
 """
-Examples of leveraging xarray in combination with trajan 
+Examples of leveraging xarray in combination with trajan
 ================================================
 """
 
@@ -12,7 +12,6 @@ from pathlib import Path
 from trajan.readers.omb import read_omb_csv
 import coloredlogs
 import datetime
-import matplotlib.pyplot as plt
 
 # %%
 
@@ -55,7 +54,7 @@ print(f"{list_buoys = }")
 
 # %%
 
-# some users prefer to receive CSV files: dump all trajectories as CSV
+# some users prefer to receive CSV files to perform their analysis: dump all trajectories as CSV
 
 # all positions to CSV, 1 CSV per buoy
 for crrt_buoy in list_buoys:
@@ -68,7 +67,7 @@ print_head("drifter_1_gps.csv")
 
 # %%
 
-# similarly, some users prefer to receive CSV files for the wave information
+# similarly, some users prefer to receive CSV files for the wave information to perform their analysis
 
 # scalar data are easy to dump: the following creates files with
 # all wave statistics to CSV, 1 file per buoy
@@ -80,7 +79,7 @@ for crrt_buoy in list_buoys:
 print_head("drifter_1_wavestats.csv")
 
 # for spectra, we need to get the frequencies first and to label things
-# all spectra to CSV
+# all spectra to CSV, 1 file per buoy, 1 frequency per columns
 for crrt_buoy in list_buoys:
     crrt_xr = xr_buoys.sel(trajectory=crrt_buoy)
     # the how="all" is very important: since in the processed spectrum the "invalid / high noise" bins are set to NaN, we must only throw away the wave spectra for which all
@@ -105,14 +104,18 @@ print_head("drifter_1_wavespectra.csv")
 
 xr_specific_buoy = xr_buoys.sel(trajectory="drifter_1")
 
-# TODO: add time limits
-
 # make a restricted dataset about only the GPS data for a specific buoy, making GPS time the new dim
 # this works because we now have a single buoy so there is only 1 "time" left
 xr_specific_buoy_gps = xr_specific_buoy.swap_dims({'obs': 'time'})[["lat", "lon"]]
+
 # keep only the valid GPS points: avoid the NaT that are due to time alignment in the initial nc file
 xr_specific_buoy_gps = xr_specific_buoy_gps.dropna(dim='time')
-xr_specific_buoy_gps.traj.plot()
+
+# select a specific time interval
+xr_specific_buoy_time_gps = xr_specific_buoy_gps.sel(time=slice("2022-06-17T10", "2022-06-18T01"))
+
+# plot
+xr_specific_buoy_time_gps.traj.plot()
 
 plt.show()
 
