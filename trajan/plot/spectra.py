@@ -20,6 +20,7 @@ def plot_trajan_spectra(
         tuple_vrange_pcolor: Union[None, Tuple[float, float]] = None,
         plt_show: bool = True,
         fignamesave: Union[None, str, Path] = None,
+        field: str = "processed_elevation_energy_spectrum",
         nseconds_gap: float = 6 * 3600):
     """Plot the wave spectra information from a trajan compatible xarray.
     All spectra are plotted as a vertical array of subfigures, with a common
@@ -45,6 +46,11 @@ def plot_trajan_spectra(
             - None to not save the figure
             - a valid filename string or path ending in .png or .pdf to save
             the figure to disk
+
+        `field`: string, the xr_trajan_in field to use as the 1D spectrum data;
+        by default, this is the "processed_elevation_energy_spectrum", but
+        one could also set "elevation_energy_spectrum" to plot also the bins
+        with low frequency noise.
 
         `nseconds_gap`: float, number of seconds between 2 consecutive
         spectra for one instrument above which we consider that there is a
@@ -104,7 +110,7 @@ def plot_trajan_spectra(
 
         try:
             crrt_spectra = xr_trajan_in.isel(trajectory=ind)[
-                "processed_elevation_energy_spectrum"].to_numpy()
+                field].to_numpy()
             crrt_spectra_times = xr_trajan_in.isel(
                 trajectory=ind)["time_waves_imu"].to_numpy()
 
