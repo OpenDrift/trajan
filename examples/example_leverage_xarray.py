@@ -105,6 +105,8 @@ print_head("drifter_1_wavespectra.csv")
 
 xr_specific_buoy = xr_buoys.sel(trajectory="drifter_1")
 
+# TODO: add time limits
+
 # make a restricted dataset about only the GPS data for a specific buoy, making GPS time the new dim
 # this works because we now have a single buoy so there is only 1 "time" left
 xr_specific_buoy_gps = xr_specific_buoy.swap_dims({'obs': 'time'})[["lat", "lon"]]
@@ -115,4 +117,6 @@ xr_specific_buoy_gps.traj.plot()
 plt.show()
 
 # %%
+
+# TODO: do the same with spectra
 
