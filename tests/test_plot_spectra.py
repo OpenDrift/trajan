@@ -2,15 +2,19 @@ from pathlib import Path
 from trajan.readers.omb import read_omb_csv
 from trajan.plot.spectra import plot_trajan_spectra
 import datetime
+import matplotlib.pyplot as plt
 
 
-def test_plot_spectra_noextraargs(test_data):
+def test_plot_spectra_noextraargs(test_data, plot):
     csv_in = test_data / 'csv/omb3.csv'
     xr_data = read_omb_csv(csv_in)
     plot_trajan_spectra(xr_data, plt_show=False)
 
+    if plot:
+        plt.show()
 
-def test_plot_spectra_withargs(test_data, tmpdir):
+
+def test_plot_spectra_withargs(test_data, tmpdir, plot):
     csv_in = test_data / 'csv/omb3.csv'
     xr_data = read_omb_csv(csv_in)
     time_start = datetime.datetime(2022, 6, 16, 12, 30, 0)
@@ -27,3 +31,6 @@ def test_plot_spectra_withargs(test_data, tmpdir):
         fignamesave=fignamesave,
         nseconds_gap=nseconds_gap,
     )
+
+    if plot:
+        plt.show()
