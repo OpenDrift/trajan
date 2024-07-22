@@ -5,11 +5,10 @@ Examples of leveraging xarray in combination with trajan
 
 # %%
 
-import xarray as xr
-import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from trajan.readers.omb import read_omb_csv
+from trajan.plot.spectra import plot_trajan_spectra
 import coloredlogs
 import datetime
 
@@ -100,7 +99,10 @@ print_head("drifter_1_wavespectra.csv")
 
 # %%
 
-# it is easy to look into one single trajectory:
+# it is easy to look into one single trajectory and select a time slice:
+# (note that, for trajectories coming from buoys that have "real world", buoy dependent
+# sample time, one needs to select only 1 trajectory at a time, since the time axis
+# has to be unique, and it will be different from buoy to buoy)
 
 xr_specific_buoy = xr_buoys.sel(trajectory="drifter_1")
 
@@ -116,10 +118,45 @@ xr_specific_buoy_time_gps = xr_specific_buoy_gps.sel(time=slice("2022-06-17T10",
 
 # plot
 xr_specific_buoy_time_gps.traj.plot()
-
 plt.show()
 
 # %%
 
-# TODO: do the same with spectra
+# similarly, it is easy to plot wave statistics over a given time slice:
 
+xr_specific_buoy = xr_buoys.sel(trajectory="drifter_1")
+
+# select the wave data for a specific buoy and make time_waves_imu the new time dim
+# this works because we have only 1 buoy left, so only 1 time_waves_imu
+# the how="all" is necessary to not throw away the records for which some few bins
+# have been marked as nan due to the low frequency noise
+xr_specific_buoy_waves = xr_specific_buoy.swap_dims({"obs_waves_imu": "time_waves_imu"})[["accel_energy_spectrum", "elevation_energy_spectrum", "processed_elevation_energy_spectrum", "pcutoff", "pHs0", "pT02", "pT24", "Hs0", "T02", "T24"]].rename({"time_waves_imu": "time"}).dropna(dim="time", how="all")
+
+# plot, for example, swh related quantities; naturally, could use any other fields
+# (except the spectra themselves that are array data)
+
+fix, ax = plt.subplots()
+
+xr_specific_buoy_waves_specific_time = xr_specific_buoy_waves.sel(time=slice("2022-06-17T10", "2022-06-18T01"))
+for crrt_field in ["Hs0", "pHs0"]:
+    xr_specific_buoy_waves_specific_time[crrt_field].plot.line(ax=ax, label=crrt_field)
+
+plt.legend()
+plt.ylabel("significant wave height [m]")
+plt.show()
+# 
+
+# %%
+
+# to plot one or more 1D wave spectra, we have dedicated tooling:
+
+# plot the spectra for just a few of the buoys; you could also not sel to plot the whole dataset
+xr_several_buoys = xr_buoys.sel(trajectory=["drifter_1", "drifter_2"])
+
+# tuning of start and end dates
+date_start = datetime.datetime(2022, 6, 16, 0, 0, 0)
+date_end = datetime.datetime(2022, 6, 18, 0, 0, 0)
+
+plot_trajan_spectra(xr_several_buoys, tuple_date_start_end=(date_start, date_end))
+
+# %%
