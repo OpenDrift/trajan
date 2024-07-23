@@ -10,6 +10,8 @@ The source code is available on https://github.com/OpenDrift/trajan
 Installation
 ------------
 
+**Install from internet package sources (recommended for users)**
+
 .. code-block:: console
 
    $ conda install -c conda-forge trajan
@@ -21,6 +23,13 @@ or
 
    $ pip install trajan
 
+**Install from source (recommended to develop for Trajan)**
+
+.. code-block:: console
+   $ cd trajan  # move to the location of the trajan root, containing the pyproject.toml file
+   $ pip install .
+
+Remember to re-install each time you have done an edit during the development process.
 
 Usage
 -----
