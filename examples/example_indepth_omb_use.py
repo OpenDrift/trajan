@@ -1,6 +1,6 @@
 """
-Examples of leveraging xarray in combination with trajan
-================================================
+Examples of leveraging xarray in combination with trajan to analyze OMB data
+==============================================================================
 """
 
 # %%
@@ -86,12 +86,12 @@ for crrt_buoy in list_buoys:
     # if you want a CSV without any NaN, you can use "elevation_energy_spectrum" instead of "processed_elevation_energy_spectrum" to use the spectra with all bins, including
     # the bins that are dominated by low frequency noise
     crrt_xr_wave_spectra = crrt_xr.swap_dims({"obs_waves_imu": "time_waves_imu"})[["processed_elevation_energy_spectrum"]].rename({"time_waves_imu": "time"}).dropna(dim="time", how="all")
-    
+
     list_frequencies = list(crrt_xr_wave_spectra.frequencies_waves_imu.data)
-    
+
     for crrt_ind, crrt_freq in enumerate(list_frequencies):
-        crrt_xr_wave_spectra[f"f={crrt_freq}"]=(['time'],  crrt_xr_wave_spectra["processed_elevation_energy_spectrum"][:, crrt_ind].data)
-        
+        crrt_xr_wave_spectra[f"f={crrt_freq}"] = (['time'],  crrt_xr_wave_spectra["processed_elevation_energy_spectrum"][:, crrt_ind].data)
+
     crrt_xr_wave_spectra = crrt_xr_wave_spectra.drop_vars("processed_elevation_energy_spectrum").drop_dims("frequencies_waves_imu")
     crrt_xr_wave_spectra.to_dataframe().to_csv(f"{crrt_buoy}_wavespectra.csv", na_rep="NaN")
 
@@ -144,7 +144,6 @@ for crrt_field in ["Hs0", "pHs0"]:
 plt.legend()
 plt.ylabel("significant wave height [m]")
 plt.show()
-# 
 
 # %%
 
