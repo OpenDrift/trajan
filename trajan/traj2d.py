@@ -198,10 +198,25 @@ class Traj2d(Traj):
         return ds
 
     @__require_obsdim__
+    def seltime(self, t0=None, t1=None):
+        """
+        Select observations in time window between `t0` and `t1`.
+        """
+
+        t0 = pd.to_datetime(t0)
+        t1 = pd.to_datetime(t1)
+
+        return self.ds.where(np.logical_and(self.ds[self.timedim] >= t0,
+                                            self.ds[self.timedim] <= t1),
+                             drop=True)
+
+    @__require_obsdim__
     def gridtime(self, times, timedim=None, round=True):
-        if isinstance(times, str) or isinstance(times, pd.Timedelta):  # Make time series with given interval
+        if isinstance(times, str) or isinstance(
+                times, pd.Timedelta):  # Make time series with given interval
             if round is True:
-                start_time = np.nanmin(np.asarray(self.ds.time.dt.floor(times)))
+                start_time = np.nanmin(np.asarray(
+                    self.ds.time.dt.floor(times)))
                 end_time = np.nanmax(np.asarray(self.ds.time.dt.ceil(times)))
             else:
                 start_time = np.nanmin(np.asarray(self.ds.time))
@@ -229,7 +244,7 @@ class Traj2d(Traj):
 
             _, ui = np.unique(dt[timedim], return_index=True)
             dt = dt.isel({timedim: ui})
-            dt = dt.isel({timedim : np.where(~pd.isna(dt[timedim].values))[0]})
+            dt = dt.isel({timedim: np.where(~pd.isna(dt[timedim].values))[0]})
 
             if dt.sizes[timedim] > 0:
                 dt = dt.interp({timedim: times})

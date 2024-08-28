@@ -209,10 +209,20 @@ class Traj1d(Traj):
                             attrs={'method': method})
 
     @__require_obsdim__
+    def seltime(self, t0=None, t1=None):
+        """
+        Select observations in time window between `t0` and `t1`.
+        """
+
+        return self.ds.sel({self.timedim: slice(t0, t1)})
+
+    @__require_obsdim__
     def gridtime(self, times, timedim=None, round=True):
-        if isinstance(times, str) or isinstance(times, pd.Timedelta):  # Make time series with given interval
+        if isinstance(times, str) or isinstance(
+                times, pd.Timedelta):  # Make time series with given interval
             if round is True:
-                start_time = np.nanmin(np.asarray(self.ds.time.dt.floor(times)))
+                start_time = np.nanmin(np.asarray(
+                    self.ds.time.dt.floor(times)))
                 end_time = np.nanmax(np.asarray(self.ds.time.dt.ceil(times)))
             else:
                 start_time = np.nanmin(np.asarray(self.ds.time))
@@ -230,15 +240,17 @@ class Traj1d(Traj):
         ds = self.ds
 
         if self.obsdim != timedim:
-            ds = ds.rename({self.obsdim: timedim}).set_index({timedim: timedim})
+            ds = ds.rename({
+                self.obsdim: timedim
+            }).set_index({timedim: timedim})
 
         _, ui = np.unique(ds[timedim], return_index=True)
 
         if len(ui) != len(self.ds[timedim]):
             logger.warning('non-unique time points, dropping time-duplicates')
 
-        ds = ds.isel({timedim : ui})
-        ds = ds.isel({timedim : np.where(~pd.isna(ds[timedim].values))[0]})
+        ds = ds.isel({timedim: ui})
+        ds = ds.isel({timedim: np.where(~pd.isna(ds[timedim].values))[0]})
 
         if ds.sizes[timedim] > 0:
             ds = ds.interp({timedim: times})
