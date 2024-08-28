@@ -123,7 +123,10 @@ def from_dataframe(df: pd.DataFrame,
     df = df.rename(columns={lat: 'lat', lon: 'lon', time: 'time'})
 
     if name is not None:
-        df = df.rename(columns={name: 'trajectory'})
+        if name in df.columns:
+            df = df.rename(columns={name: 'trajectory'})
+        else:
+            df['trajectory'] = name
     else:
         df['trajectory'] = 'Drifter 1'
 
