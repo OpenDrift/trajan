@@ -200,7 +200,9 @@ class Traj2d(Traj):
     @__require_obsdim__
     def seltime(self, t0=None, t1=None):
         """
-        Select observations in time window between `t0` and `t1`.
+        Select observations in time window between `t0` and `t1` (inclusive).
+
+        Warning: This is unlikely to work if the observation dimension has been condensed (:ref:`condens_obs`).
         """
 
         t0 = pd.to_datetime(t0)
