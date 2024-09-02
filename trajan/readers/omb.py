@@ -227,7 +227,8 @@ def read_omb_csv(path_in: Path,
                          dims=["frequencies_waves_imu"],
                          attrs={
                              "_FillValue": "NaN",
-                             "unit": "Hz",
+                             "units": "Hz",
+                             "long_name": "sea_surface_wave_frequency_spectrum_bin_centers"
                          }),
             #
             # gnss position vars
@@ -245,7 +246,7 @@ def read_omb_csv(path_in: Path,
                          attrs={
                              "_FillValue": "NaN",
                              "standard_name": "latitude",
-                             "unit": "degree_north",
+                             "units": "degree_north",
                          }),
             #
             'lon':
@@ -254,7 +255,7 @@ def read_omb_csv(path_in: Path,
                          attrs={
                              "_FillValue": "NaN",
                              "standard_name": "longitude",
-                             "unit": "degree_east",
+                             "units": "degree_east",
                          }),
             #
             # imu waves vars
@@ -273,6 +274,8 @@ def read_omb_csv(path_in: Path,
                     (trajectory, obs_waves_imu, frequencies_waves_imu)),
                 attrs={
                     "_FillValue": "NaN",
+                    "long_name": "sea_surface_wave_acceleration_energy_spectrum",
+                    "units": "m2 s-3",
                 }),
             #
             'elevation_energy_spectrum':
@@ -282,6 +285,8 @@ def read_omb_csv(path_in: Path,
                     (trajectory, obs_waves_imu, frequencies_waves_imu)),
                 attrs={
                     "_FillValue": "NaN",
+                    "long_name": "sea_surface_wave_elevation_energy_spectrum",
+                    "units": "m2 s",
                 }),
             #
             'processed_elevation_energy_spectrum':
@@ -291,6 +296,8 @@ def read_omb_csv(path_in: Path,
                     (trajectory, obs_waves_imu, frequencies_waves_imu)),
                 attrs={
                     "_FillValue": "NaN",
+                    "long_name": "sea_surface_wave_elevation_energy_spectrum_processed",
+                    "units": "m2 s",
                 }),
             #
             'pcutoff':
@@ -298,6 +305,8 @@ def read_omb_csv(path_in: Path,
                          data=np.nan * np.ones((trajectory, obs_waves_imu)),
                          attrs={
                              "_FillValue": "NaN",
+                             "long_name": "bin_index_lowfrequency_cutoff_sea_surface_wave_spectrum",
+                             "units": "1",
                          }),
             #
             'pHs0':
@@ -308,7 +317,9 @@ def read_omb_csv(path_in: Path,
                     "_FillValue":
                     "NaN",
                     "definition":
-                    "4 * math.sqrt(m0) of low freq cutoff elevation spectrum"
+                    "4 * math.sqrt(m0) of low freq cutoff elevation spectrum",
+                    "long_name": "processed_sea_surface_wave_significant_height",
+                    "units": "m",
                 }),
             #
             'pT02':
@@ -319,7 +330,9 @@ def read_omb_csv(path_in: Path,
                     "_FillValue":
                     "NaN",
                     "definition":
-                    "math.sqrt(m0 / m2) of low freq cutoff elevation spectrum"
+                    "math.sqrt(m0 / m2) of low freq cutoff elevation spectrum",
+                    "long_name": "processed_sea_surface_wave_mean_period_from_variance_spectral_density_second_frequency_moment",
+                    "units": "s",
                 }),
             #
             'pT24':
@@ -330,7 +343,9 @@ def read_omb_csv(path_in: Path,
                     "_FillValue":
                     "NaN",
                     "definition":
-                    "math.sqrt(m2 / m4) of low freq cutoff elevation spectrum"
+                    "math.sqrt(m2 / m4) of low freq cutoff elevation spectrum",
+                    "long_name": "processed_sea_surface_wave_mean_period_from_fourth_frequency_moment",
+                    "units": "s",
                 }),
             #
             'Hs0':
@@ -340,7 +355,8 @@ def read_omb_csv(path_in: Path,
                              "_FillValue":
                              "NaN",
                              "definition":
-                             "4 * math.sqrt(m0) of full elevation spectrum"
+                             "4 * math.sqrt(m0) of full elevation spectrum",
+                            "standard_name": "sea_surface_wave_significant_height",
                          }),
             #
             'T02':
@@ -350,7 +366,8 @@ def read_omb_csv(path_in: Path,
                              "_FillValue":
                              "NaN",
                              "definition":
-                             "math.sqrt(m0 / m2) of full elevation spectrum"
+                             "math.sqrt(m0 / m2) of full elevation spectrum",
+                             "standard_name": "sea_surface_wave_mean_period_from_variance_spectral_density_second_frequency_moment",
                          }),
             #
             'T24':
@@ -360,7 +377,9 @@ def read_omb_csv(path_in: Path,
                              "_FillValue":
                              "NaN",
                              "definition":
-                             "math.sqrt(m2 / m4) of full elevation spectrum"
+                             "math.sqrt(m2 / m4) of full elevation spectrum",
+                             "long_name": "sea_surface_wave_mean_period_from_spectral_density_fourth_frequency_moment",
+                             "units": "s",
                          }),
         }, )
 
