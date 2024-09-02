@@ -220,6 +220,8 @@ def read_omb_csv(path_in: Path,
                          attrs={
                              "cf_role": "trajectory_id",
                              "standard_name": "platform_id",
+                             "units": "1",
+                             "long_name": "ID / name of each buoy present in the deployment data.",
                          }).astype(str),
             #
             'frequencies_waves_imu':
@@ -227,7 +229,10 @@ def read_omb_csv(path_in: Path,
                          dims=["frequencies_waves_imu"],
                          attrs={
                              "_FillValue": "NaN",
-                             "units": "Hz",
+                             # NOTE: not sure if this can be used for individual frequency bins
+                             "standard_name": "wave_frequency",
+                             "units": "s-1",
+                             "long_name": "Frequency bins (center values) for the 1-dimensional spectra.",
                          }),
             #
             # gnss position vars
@@ -237,6 +242,7 @@ def read_omb_csv(path_in: Path,
                          data=empty_time,
                          attrs={
                              "standard_name": "time",
+                             "long_name": "Time for the GNSS position records.",
                          }),
             #
             'lat':
@@ -264,6 +270,7 @@ def read_omb_csv(path_in: Path,
                          data=empty_time_waves_imu,
                          attrs={
                              "standard_name": "time",
+                             "long_name": "Time for the wave information records."
                          }),
             #
             'accel_energy_spectrum':
@@ -273,6 +280,9 @@ def read_omb_csv(path_in: Path,
                     (trajectory, obs_waves_imu, frequencies_waves_imu)),
                 attrs={
                     "_FillValue": "NaN",
+                    # no standard name for the *acceleration* spectrum
+                    "long_name": "1-dimensional vertical wave acceleration energy spectrum",
+                    "units": "m2 s-3",
                 }),
             #
             'elevation_energy_spectrum':
@@ -282,6 +292,9 @@ def read_omb_csv(path_in: Path,
                     (trajectory, obs_waves_imu, frequencies_waves_imu)),
                 attrs={
                     "_FillValue": "NaN",
+                    "standard_name": "sea_surface_wave_variance_spectral_density",
+                    "long_name": "1-dimensional wave elevation vertical energy spectrum, without post processing",
+                    "units": "m2 s",
                 }),
             #
             'processed_elevation_energy_spectrum':
@@ -291,6 +304,9 @@ def read_omb_csv(path_in: Path,
                     (trajectory, obs_waves_imu, frequencies_waves_imu)),
                 attrs={
                     "_FillValue": "NaN",
+                    "standard_name": "sea_surface_wave_variance_spectral_density",
+                    "long_name": "1-dimensional wave elevation vertical energy spectrum, removing the bins dominated by low frequency noise",
+                    "units": "m2 s",
                 }),
             #
             'pcutoff':
@@ -298,6 +314,8 @@ def read_omb_csv(path_in: Path,
                          data=np.nan * np.ones((trajectory, obs_waves_imu)),
                          attrs={
                              "_FillValue": "NaN",
+                             "long_name": "Cutoff bin number for the bins dominated by low frequency noise; below this, bins are dominated by low frequency noise; determined automatically by a peak-finding algorithm",
+                             "units": "1",
                          }),
             #
             'pHs0':
@@ -305,10 +323,11 @@ def read_omb_csv(path_in: Path,
                 dims=["trajectory", "obs_waves_imu"],
                 data=np.nan * np.ones((trajectory, obs_waves_imu)),
                 attrs={
-                    "_FillValue":
-                    "NaN",
-                    "definition":
-                    "4 * math.sqrt(m0) of low freq cutoff elevation spectrum"
+                    "_FillValue": "NaN",
+                    "definition": "4 * math.sqrt(m0) of elevation spectrum with low frequency cutoff applied",
+                    "standard_name": "sea_surface_wave_significant_height",
+                    "long_name": "significant wave height determined from the wave 1-d vertical elevation spectrum, applying low frequency cutoff",
+                    "units": "m",
                 }),
             #
             'pT02':
@@ -316,10 +335,11 @@ def read_omb_csv(path_in: Path,
                 dims=["trajectory", "obs_waves_imu"],
                 data=np.nan * np.ones((trajectory, obs_waves_imu)),
                 attrs={
-                    "_FillValue":
-                    "NaN",
-                    "definition":
-                    "math.sqrt(m0 / m2) of low freq cutoff elevation spectrum"
+                    "_FillValue": "NaN",
+                    "definition": "math.sqrt(m0 / m2) of elevation spectrum with low frequency cutoff applied",
+                    "standard_name": "sea_surface_wave_mean_period_from_variance_spectral_density_second_frequency_moment",
+                    "long_name": "Wave period from 0th and 2nd order moments, computed using the spectrum with low frequency cutoff applied",
+                    "units": "s",
                 }),
             #
             'pT24':
@@ -327,40 +347,44 @@ def read_omb_csv(path_in: Path,
                 dims=["trajectory", "obs_waves_imu"],
                 data=np.nan * np.ones((trajectory, obs_waves_imu)),
                 attrs={
-                    "_FillValue":
-                    "NaN",
-                    "definition":
-                    "math.sqrt(m2 / m4) of low freq cutoff elevation spectrum"
+                    "_FillValue": "NaN",
+                    "definition": "math.sqrt(m2 / m4) of elevation spectrum with low frequency cutoff applied",
+                    # NOTE: no standard_name for this specific wave period definition
+                    "long_name": "Wave period from 2nd and 4th order moments, computed using the spectrum with low frequency cutoff applied",
+                    "units": "s",
                 }),
             #
             'Hs0':
             xr.DataArray(dims=["trajectory", "obs_waves_imu"],
                          data=np.nan * np.ones((trajectory, obs_waves_imu)),
                          attrs={
-                             "_FillValue":
-                             "NaN",
-                             "definition":
-                             "4 * math.sqrt(m0) of full elevation spectrum"
+                            "_FillValue": "NaN",
+                            "definition": "4 * math.sqrt(m0) of elevation spectrum",
+                            "standard_name": "sea_surface_wave_significant_height",
+                            "long_name": "significant wave height determined from the wave 1-d vertical elevation spectrum",
+                            "units": "m",
                          }),
             #
             'T02':
             xr.DataArray(dims=["trajectory", "obs_waves_imu"],
                          data=np.nan * np.ones((trajectory, obs_waves_imu)),
                          attrs={
-                             "_FillValue":
-                             "NaN",
-                             "definition":
-                             "math.sqrt(m0 / m2) of full elevation spectrum"
+                            "_FillValue": "NaN",
+                            "definition": "math.sqrt(m0 / m2) of elevation spectrum",
+                            "standard_name": "sea_surface_wave_mean_period_from_variance_spectral_density_second_frequency_moment",
+                            "long_name": "Wave period from 0th and 2nd order moments",
+                            "units": "s",
                          }),
             #
             'T24':
             xr.DataArray(dims=["trajectory", "obs_waves_imu"],
                          data=np.nan * np.ones((trajectory, obs_waves_imu)),
                          attrs={
-                             "_FillValue":
-                             "NaN",
-                             "definition":
-                             "math.sqrt(m2 / m4) of full elevation spectrum"
+                            "_FillValue": "NaN",
+                            "definition": "math.sqrt(m2 / m4) of elevation spectrum",
+                            # NOTE: no standard_name for this specific wave period definition
+                            "long_name": "Wave period from 2nd and 4th order moments",
+                            "units": "s",
                          }),
         }, )
 
@@ -453,6 +477,7 @@ def read_omb_csv(path_in: Path,
     xr_result = xr_result.traj.assign_cf_attrs(
         creator_name="XX:TODO",
         creator_email="XX:TODO",
+        creator_institution="XX:TODO",
         title="XX:TODO",
         summary="XX:TODO",
         history=
