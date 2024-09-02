@@ -308,7 +308,7 @@ def read_omb_csv(path_in: Path,
                          data=np.nan * np.ones((trajectory, obs_waves_imu)),
                          attrs={
                              "_FillValue": "NaN",
-                             "long_name": "Cutoff bin number for the bins dominated by low frequency noise; below this, bins are dominated by low frequency noise; determined by a peak-finding algorithm",
+                             "long_name": "Cutoff bin number for the bins dominated by low frequency noise; below this, bins are dominated by low frequency noise; determined automatically by a peak-finding algorithm",
                              "units": "1",
                          }),
             #
@@ -341,6 +341,7 @@ def read_omb_csv(path_in: Path,
                 attrs={
                     "_FillValue": "NaN",
                     "definition": "math.sqrt(m2 / m4) of elevation spectrum with low frequency cutoff applied",
+                    # NOTE: no standard_name for this specific wave period definition
                     "long_name": "Wave period from 2nd and 4th order moments, computed using the spectrum with low frequency cutoff applied",
                     "units": "s",
                 }),
@@ -371,6 +372,7 @@ def read_omb_csv(path_in: Path,
                          attrs={
                             "_FillValue": "NaN",
                             "definition": "math.sqrt(m2 / m4) of elevation spectrum",
+                            # NOTE: no standard_name for this specific wave period definition
                             "long_name": "Wave period from 2nd and 4th order moments",
                             "units": "s",
                          }),
@@ -465,6 +467,7 @@ def read_omb_csv(path_in: Path,
     xr_result = xr_result.traj.assign_cf_attrs(
         creator_name="XX:TODO",
         creator_email="XX:TODO",
+        creator_institution="XX:TODO",
         title="XX:TODO",
         summary="XX:TODO",
         history=
