@@ -228,7 +228,7 @@ def read_omb_csv(path_in: Path,
                          attrs={
                              "_FillValue": "NaN",
                              "units": "Hz",
-                             "long_name": "sea_surface_wave_frequency_spectrum_bin_centers"
+                             "long_name": "sea_surface_wave_frequency_spectrum_bin_centers",
                          }),
             #
             # gnss position vars

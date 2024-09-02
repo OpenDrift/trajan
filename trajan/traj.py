@@ -309,17 +309,17 @@ class Traj:
         ds['distance'] = xr.DataArray(distance,
                                       name='distance',
                                       coords=self.ds.traj.tlon.coords,
-                                      attrs={'unit': 'm'})
+                                      attrs={'units': 'm'})
 
         ds['az_fwd'] = xr.DataArray(az_fwd,
                                     name='forward azimuth',
                                     coords=self.ds.traj.tlon.coords,
-                                    attrs={'unit': 'degrees'})
+                                    attrs={'units': 'degrees'})
 
         ds['az_bwd'] = xr.DataArray(a2,
                                     name='back azimuth',
                                     coords=self.ds.traj.tlon.coords,
-                                    attrs={'unit': 'degrees'})
+                                    attrs={'units': 'degrees'})
 
         return ds
 
