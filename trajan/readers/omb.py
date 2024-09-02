@@ -227,7 +227,7 @@ def read_omb_csv(path_in: Path,
                          dims=["frequencies_waves_imu"],
                          attrs={
                              "_FillValue": "NaN",
-                             "unit": "Hz",
+                             "units": "Hz",
                          }),
             #
             # gnss position vars
@@ -245,7 +245,7 @@ def read_omb_csv(path_in: Path,
                          attrs={
                              "_FillValue": "NaN",
                              "standard_name": "latitude",
-                             "unit": "degree_north",
+                             "units": "degree_north",
                          }),
             #
             'lon':
@@ -254,7 +254,7 @@ def read_omb_csv(path_in: Path,
                          attrs={
                              "_FillValue": "NaN",
                              "standard_name": "longitude",
-                             "unit": "degree_east",
+                             "units": "degree_east",
                          }),
             #
             # imu waves vars
