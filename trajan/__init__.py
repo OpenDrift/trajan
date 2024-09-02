@@ -186,12 +186,12 @@ def trajectory_dict_to_dataset(trajectory_dict,
             if var == 'lat':
                 variable_attributes[var] = {
                     'standard_name': 'latitude',
-                    'unit': 'degree_north'
+                    'units': 'degree_north'
                 }
             elif var == 'lon':
                 variable_attributes[var] = {
                     'standard_name': 'longitude',
-                    'unit': 'degree_east'
+                    'units': 'degree_east'
                 }
             else:
                 variable_attributes[var] = {}
