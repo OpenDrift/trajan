@@ -9,6 +9,7 @@ import datetime
 from .omb_decoder import decode_message
 from typing import Union
 from .omb_decoder import GNSS_Metadata, Waves_Metadata, Thermistors_Metadata, GNSS_Packet, Waves_Packet, Thermistors_Packet, _BD_YWAVE_NBR_BINS
+from ..utils import interpolate_variable_to_newtimes
 
 logger = logging.getLogger(__name__)
 
@@ -273,6 +274,24 @@ def read_omb_csv(path_in: Path,
                              "long_name": "Time for the wave information records."
                          }),
             #
+            'lat_waves_imu':
+            xr.DataArray(dims=["trajectory", "obs_waves_imu"],
+                         data=np.nan * np.ones((trajectory, obs_waves_imu)),
+                         attrs={
+                             "_FillValue": "NaN",
+                             "standard_name": "latitude",
+                             "units": "degree_north",
+                         }),
+            #
+            'lon_waves_imu':
+            xr.DataArray(dims=["trajectory", "obs_waves_imu"],
+                         data=np.nan * np.ones((trajectory, obs_waves_imu)),
+                         attrs={
+                             "_FillValue": "NaN",
+                             "standard_name": "longitude",
+                             "units": "degree_east",
+                         }),
+            #
             'accel_energy_spectrum':
             xr.DataArray(
                 dims=["trajectory", "obs_waves_imu", "frequencies_waves_imu"],
@@ -473,6 +492,24 @@ def read_omb_csv(path_in: Path,
 
             xr_result["T24"][crrt_instrument_idx, crrt_wave_idx] = \
                 crrt_wave_data.data.Tc
+
+        crrt_lat_waves_imu = interpolate_variable_to_newtimes(
+            xr_result["time"][crrt_instrument_idx, :],
+            xr_result["lat"][crrt_instrument_idx, :],
+            xr_result["time_waves_imu"][crrt_instrument_idx, :]
+        )
+
+        xr_result["lat_waves_imu"][crrt_instrument_idx, :] = \
+            crrt_lat_waves_imu
+
+        crrt_lon_waves_imu = interpolate_variable_to_newtimes(
+            xr_result["time"][crrt_instrument_idx, :],
+            xr_result["lon"][crrt_instrument_idx, :],
+            xr_result["time_waves_imu"][crrt_instrument_idx, :]
+        )
+
+        xr_result["lon_waves_imu"][crrt_instrument_idx, :] = \
+            crrt_lon_waves_imu
 
     xr_result = xr_result.traj.assign_cf_attrs(
         creator_name="XX:TODO",
