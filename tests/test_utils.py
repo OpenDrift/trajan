@@ -1,3 +1,4 @@
+import numpy as np
 from trajan.utils import interpolate_variable_to_newtimes
 
 
@@ -28,6 +29,7 @@ def test_interpolate_variable_to_newtimes_order_0():
 
     newtimes = np.array(
         [
+            np.datetime64("NaT"),
             np.datetime64("2024-09-17T06:00:00"),
             np.datetime64("2024-09-17T11:00:00"),
             np.datetime64("2024-09-17T13:00:00"),
@@ -39,14 +41,17 @@ def test_interpolate_variable_to_newtimes_order_0():
             np.datetime64("2024-09-18T13:30:00"),
             np.datetime64("2024-09-18T13:59:00"),
             np.datetime64("2024-09-18T15:00:00"),
+            np.datetime64("NaT"),
             np.datetime64("2024-09-18T16:00:00"),
             np.datetime64("2024-09-18T20:00:00"),
+            np.datetime64("NaT"),
         ]
     )
 
     expected = np.array(
         [
             np.nan,
+            np.nan,
             0,
             0,
             np.nan,
@@ -57,7 +62,9 @@ def test_interpolate_variable_to_newtimes_order_0():
             200,
             200,
             400,
+            np.nan,
             400,
+            np.nan,
             np.nan,
         ]
     )
@@ -97,6 +104,7 @@ def test_interpolate_variable_to_newtimes_order_1():
 
     newtimes = np.array(
         [
+            np.datetime64("NaT"),
             np.datetime64("2024-09-17T06:00:00"),
             np.datetime64("2024-09-17T11:00:00"),
             np.datetime64("2024-09-17T13:00:00"),
@@ -108,13 +116,16 @@ def test_interpolate_variable_to_newtimes_order_1():
             np.datetime64("2024-09-18T13:30:00"),
             np.datetime64("2024-09-18T14:00:00"),
             np.datetime64("2024-09-18T15:00:00"),
+            np.datetime64("NaT"),
             np.datetime64("2024-09-18T16:00:00"),
             np.datetime64("2024-09-18T20:00:00"),
+            np.datetime64("NaT"),
         ]
     )
 
     expected = np.array(
         [
+            np.nan,
             np.nan,
             0,
             0,
@@ -126,7 +137,9 @@ def test_interpolate_variable_to_newtimes_order_1():
             250,
             300,
             400,
+            np.nan,
             400,
+            np.nan,
             np.nan,
         ]
     )
@@ -137,3 +150,8 @@ def test_interpolate_variable_to_newtimes_order_1():
     # print(f"{expected}")
 
     assert ((np.abs(result - expected) < 0.1) | (np.isnan(result) & np.isnan(expected))).all()
+
+
+if __name__ == "__main__":
+    test_interpolate_variable_to_newtimes_order_0()
+    test_interpolate_variable_to_newtimes_order_1()
