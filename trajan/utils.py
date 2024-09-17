@@ -46,6 +46,7 @@ def interpolate_variable_to_newtimes(times: np.ndarray[np.datetime64],
     assert np.all(times[:-1] <= times[1:])
 
     valid_newtimes = np.isfinite(newtimes)
+    full_newtimes = newtimes
     newtimes = newtimes[valid_newtimes]
 
     there_is_a_time_close_before_newtime = np.full((len(newtimes),), False)
@@ -89,6 +90,9 @@ def interpolate_variable_to_newtimes(times: np.ndarray[np.datetime64],
         linear_valid = np.logical_and(there_is_a_time_close_before_newtime, there_is_a_time_close_after_newtime)
         newtimes_interp[linear_valid] = newtimes_interp_linear[linear_valid]
 
-    return newtimes_interp
+    full_newtimes_interp = np.full(np.shape(full_newtimes), np.nan)
+    full_newtimes_interp[valid_newtimes] = newtimes_interp
+
+    return full_newtimes_interp
 
 
