@@ -72,7 +72,7 @@ print_head("drifter_1_gps.csv")
 # all wave statistics to CSV, 1 file per buoy
 for crrt_buoy in list_buoys:
     crrt_xr = xr_buoys.sel(trajectory=crrt_buoy)
-    crrt_xr_wave_statistics = crrt_xr.swap_dims({"obs_waves_imu": "time_waves_imu"})[["pcutoff", "pHs0", "pT02", "pT24", "Hs0", "T02", "T24"]].rename({"time_waves_imu": "time"}).dropna(dim="time")
+    crrt_xr_wave_statistics = crrt_xr.swap_dims({"obs_waves_imu": "time_waves_imu"})[["pcutoff", "pHs0", "pT02", "pT24", "Hs0", "T02", "T24", "lat_waves_imu", "lon_waves_imu"]].rename({"time_waves_imu": "time"}).dropna(dim="time")
     crrt_xr_wave_statistics.to_dataframe().to_csv(f"{crrt_buoy}_wavestats.csv")
 
 print_head("drifter_1_wavestats.csv")
@@ -130,7 +130,7 @@ xr_specific_buoy = xr_buoys.sel(trajectory="drifter_1")
 # this works because we have only 1 buoy left, so only 1 time_waves_imu
 # the how="all" is necessary to not throw away the records for which some few bins
 # have been marked as nan due to the low frequency noise
-xr_specific_buoy_waves = xr_specific_buoy.swap_dims({"obs_waves_imu": "time_waves_imu"})[["accel_energy_spectrum", "elevation_energy_spectrum", "processed_elevation_energy_spectrum", "pcutoff", "pHs0", "pT02", "pT24", "Hs0", "T02", "T24"]].rename({"time_waves_imu": "time"}).dropna(dim="time", how="all")
+xr_specific_buoy_waves = xr_specific_buoy.swap_dims({"obs_waves_imu": "time_waves_imu"})[["accel_energy_spectrum", "elevation_energy_spectrum", "processed_elevation_energy_spectrum", "pcutoff", "pHs0", "pT02", "pT24", "Hs0", "T02", "T24", "lon_waves_imu", "lat_waves_imu"]].rename({"time_waves_imu": "time"}).dropna(dim="time", how="all")
 
 # plot, for example, swh related quantities; naturally, could use any other fields
 # (except the spectra themselves that are array data)
@@ -157,5 +157,21 @@ date_start = datetime.datetime(2022, 6, 16, 0, 0, 0)
 date_end = datetime.datetime(2022, 6, 18, 0, 0, 0)
 
 plot_trajan_spectra(xr_several_buoys, tuple_date_start_end=(date_start, date_end))
+
+# %%
+
+# note that position interpolation at the times of wave information is already available in the lon_waves_imu
+
+plt.figure()
+plt.plot(xr_specific_buoy["time"], xr_specific_buoy["lat"], "+", label="lat from GPS data")
+plt.plot(xr_specific_buoy["time_waves_imu"], xr_specific_buoy["lat_waves_imu"], "*", label="lat interpolated at wave measurement positions")
+plt.legend()
+
+plt.figure()
+plt.plot(xr_specific_buoy["time"], xr_specific_buoy["lon"], "+", label="lon from GPS data")
+plt.plot(xr_specific_buoy["time_waves_imu"], xr_specific_buoy["lon_waves_imu"], "*", label="lon interpolated at wave measurement positions")
+plt.legend()
+
+plt.show()
 
 # %%
