@@ -1,6 +1,5 @@
 import numpy as np
 import xarray as xr
-import numpy as np
 import pandas as pd
 import logging
 from .traj import Traj, __require_obsdim__
@@ -257,7 +256,7 @@ class Traj1d(Traj):
         else:
             logger.warning(f"time dimension ({timedim}) is zero size")
 
-        if not 'trajectory' in ds.dims:
+        if 'trajectory' not in ds.dims:
             ds = ds.expand_dims('trajectory')
 
         return ds
