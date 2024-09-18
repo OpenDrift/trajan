@@ -13,17 +13,6 @@ Top-level API
     from_dataframe
     trajectory_dict_to_dataset (deprecated)
 
-.. Geometries
-.. ----------
-.. .. autosummary::
-..     :toctree: generated/
-
-..     geometry.decode_geometries
-..     geometry.encode_geometries
-..     geometry.shapely_to_cf
-..     geometry.cf_to_shapely
-..     geometry.GeometryNames
-
 .. currentmodule:: xarray
 
 .. DataArray

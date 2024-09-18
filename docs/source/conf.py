@@ -1,13 +1,15 @@
 import os, sys
 sys.path.insert(0, os.path.abspath('../..'))
 
+import trajan  # noqa
+
 import sphinx_autosummary_accessors
 # Configuration file for the Sphinx documentation builder.
 
 # -- Project information
 
 project = 'TrajAn'
-copyright = '2022-2023, G. Hope and K. F. Dagestad'
+copyright = '2022-2024, G. Hope and K. F. Dagestad'
 author = 'G. Hope and K. F. Dagestad'
 
 release = 'latest (git / main)'
@@ -68,6 +70,10 @@ html_context = {
     "github_repo": "trajan",
     "github_version": "main",
     "doc_path": "docs",
+}
+
+html_theme_options = {
+    "use_edit_page_button": True,
 }
 
 autosummary_generate = True
