@@ -41,27 +41,61 @@ extensions = [
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
-    'autoapi.extension',
+    # 'autoapi.extension',
     'sphinx.ext.autosummary',
     'sphinx_autosummary_accessors',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
     'sphinx_gallery.gen_gallery',
+    'numpydoc',
     'matplotlib.sphinxext.plot_directive',
 ]
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
+    "xarray": ("https://xarray.pydata.org/en/stable/", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
 }
 intersphinx_disabled_domains = ['std']
 
 templates_path = ["_templates", sphinx_autosummary_accessors.templates_path]
 
+html_context = {
+    # "github_url": "https://github.com", # or your GitHub Enterprise site
+    "github_user": "OpenDrift",
+    "github_repo": "trajan",
+    "github_version": "main",
+    "doc_path": "docs",
+}
+
+autosummary_generate = True
+
+autodoc_typehints = "description"
+autodoc_typehints_description_target = "documented"
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": True,
+    "private-members": True,
+}
+napoleon_use_param = True
+napoleon_use_rtype = True
+
+numpydoc_show_class_members = False
+# Report warnings for all validation checks except the ones listed after "all"
+numpydoc_validation_checks = {"all", "ES01", "EX01", "SA01", "SA04"}
+# don't report on objects that match any of these regex
+numpydoc_validation_exclude = {
+    r"\.__repr__$",
+    # "cf_xarray.accessor.",
+    # "cf_xarray.set_options.",
+}
+
 # -- Options for HTML output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
+

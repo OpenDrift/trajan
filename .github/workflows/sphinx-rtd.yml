@@ -38,7 +38,7 @@ jobs:
 
       - name: Install documentation dependencies
         run: |
-          micromamba install sphinx sphinx-rtd-theme sphinx-gallery sphinx-autoapi sphinx-autosummary-accessors
+          micromamba install -f docs/requirements.txt
 
       - name: Build docs with sphinx
         run: |
