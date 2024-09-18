@@ -75,11 +75,12 @@ Contents
 
    index
    gallery/index
-   autoapi/index
+
+   API Reference <api>
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :doc:`autoapi/index`
+* :doc:`api`
