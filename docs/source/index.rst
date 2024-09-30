@@ -81,7 +81,6 @@ Contents
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
    :caption: User Guide
 
    quickstart
@@ -91,5 +90,3 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
-* :doc:`api`
