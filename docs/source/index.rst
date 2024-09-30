@@ -78,6 +78,14 @@ Contents
 
    API Reference <api>
 
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: User Guide
+
+   quickstart
+   data-layout
+
 Indices and tables
 ==================
 
