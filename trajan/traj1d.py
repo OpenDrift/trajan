@@ -210,10 +210,6 @@ class Traj1d(Traj):
 
     @__require_obsdim__
     def seltime(self, t0=None, t1=None):
-        """
-        Select observations in time window between `t0` and `t1` (inclusive).
-        """
-
         return self.ds.sel({self.timedim: slice(t0, t1)})
 
     @__require_obsdim__

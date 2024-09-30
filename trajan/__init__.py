@@ -5,11 +5,14 @@ import collections
 import numpy as np
 import xarray as xr
 import pandas as pd
+import logging
 
-from . import trajectory_accessor as _
+from . import accessor as _
+from . import traj as _
 from . import skill as _
 from . import readers as _
 
+logger = logging.getLogger(__name__)
 
 def read_csv(f, **kwargs):
     """
@@ -240,4 +243,3 @@ def trajectory_dict_to_dataset(trajectory_dict,
                     })
 
     return ds
-

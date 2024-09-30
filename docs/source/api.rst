@@ -85,10 +85,15 @@ Attributes
    :toctree: generated/
    :template: autosummary/accessor_attribute.rst
 
+    Dataset.traj.plot
+    Dataset.traj.animate
     Dataset.traj.tx
     Dataset.traj.ty
     Dataset.traj.tlon
     Dataset.traj.tlat
+    Dataset.traj.crs
+    Dataset.traj.is_1d
+    Dataset.traj.is_2d
 
 .. _dsmeth:
 
@@ -101,5 +106,32 @@ Methods
 
     Dataset.traj.transform
     Dataset.traj.itransform
+    Dataset.traj.set_crs
+    Dataset.traj.assign_cf_attrs
+    Dataset.traj.index_of_last
+    Dataset.traj.speed
+    Dataset.traj.distance_to
+    Dataset.traj.distance_to_next
+    Dataset.traj.azimuth_to_next
+    Dataset.traj.velocity_components
+    Dataset.traj.convex_hull
+    Dataset.traj.convex_hull_contains_point
+    Dataset.traj.get_area_convex_hull
+    Dataset.traj.gridtime
+    Dataset.traj.seltime
+
+.. currentmodule:: trajan
+
+Plotting
+--------
+
+.. autosummary::
+   :toctree: generated/
+
+   plot.Plot
+   animation.Animation
+   plot.spectra.plot_trajan_spectra
+
+
 
 
