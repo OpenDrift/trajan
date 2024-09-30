@@ -60,9 +60,9 @@ for crrt_buoy in list_buoys:
     crrt_xr = xr_buoys.sel(trajectory=crrt_buoy)
     crrt_xr_gps = crrt_xr.swap_dims({'obs': 'time'})[["lat", "lon"]]
     crrt_xr_gps = crrt_xr_gps.dropna(dim='time', how="all")
-    crrt_xr_gps.to_dataframe().to_csv(f"{crrt_buoy}_gps.csv")
+    crrt_xr_gps.to_dataframe().to_csv(f"out/{crrt_buoy}_gps.csv")
 
-print_head("drifter_1_gps.csv")
+print_head("out/drifter_1_gps.csv")
 
 # %%
 
@@ -73,9 +73,9 @@ print_head("drifter_1_gps.csv")
 for crrt_buoy in list_buoys:
     crrt_xr = xr_buoys.sel(trajectory=crrt_buoy)
     crrt_xr_wave_statistics = crrt_xr.swap_dims({"obs_waves_imu": "time_waves_imu"})[["pcutoff", "pHs0", "pT02", "pT24", "Hs0", "T02", "T24"]].rename({"time_waves_imu": "time"}).dropna(dim="time", how="all")
-    crrt_xr_wave_statistics.to_dataframe().to_csv(f"{crrt_buoy}_wavestats.csv")
+    crrt_xr_wave_statistics.to_dataframe().to_csv(f"out/{crrt_buoy}_wavestats.csv")
 
-print_head("drifter_1_wavestats.csv")
+print_head("out/drifter_1_wavestats.csv")
 
 # for spectra, we need to get the frequencies first and to label things
 # all spectra to CSV, 1 file per buoy, 1 frequency per columns
@@ -93,9 +93,9 @@ for crrt_buoy in list_buoys:
         crrt_xr_wave_spectra[f"f={crrt_freq}"] = (['time'],  crrt_xr_wave_spectra["processed_elevation_energy_spectrum"][:, crrt_ind].data)
 
     crrt_xr_wave_spectra = crrt_xr_wave_spectra.drop_vars("processed_elevation_energy_spectrum").drop_dims("frequencies_waves_imu")
-    crrt_xr_wave_spectra.to_dataframe().to_csv(f"{crrt_buoy}_wavespectra.csv", na_rep="NaN")
+    crrt_xr_wave_spectra.to_dataframe().to_csv(f"out/{crrt_buoy}_wavespectra.csv", na_rep="NaN")
 
-print_head("drifter_1_wavespectra.csv")
+print_head("out/drifter_1_wavespectra.csv")
 
 # %%
 

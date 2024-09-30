@@ -1,3 +1,10 @@
+"""
+Extending xarray Dataset with functionality specific to trajectory datasets.
+
+Presently supporting Cf convention H.4.1
+https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html#_multidimensional_array_representation_of_trajectories.
+"""
+
 from abc import abstractmethod
 import pyproj
 import numpy as np
@@ -6,20 +13,10 @@ import cf_xarray as _
 import pandas as pd
 import logging
 
+from .plot import Plot
+from .animation import Animation
+
 logger = logging.getLogger(__name__)
-
-
-def __require_obsdim__(f):
-    """
-    This decorator is for methods of Traj that require a time or obs dimension to work.
-    """
-
-    def wrapper(*args, **kwargs):
-        if args[0].obsdim is None:
-            raise ValueError(f'{f} requires an obs or time dimension')
-        return f(*args, **kwargs)
-
-    return wrapper
 
 def detect_tx_dim(ds):
     if 'lon' in ds:
@@ -34,8 +31,31 @@ def detect_tx_dim(ds):
         raise ValueError("Could not determine x / lon variable")
 
 
+def detect_time_dim(ds, obsdim):
+    logger.debug(f'Detecting time-dimension for "{obsdim}"..')
+    for v in ds.variables:
+        if obsdim in ds[v].dims and 'time' in v:
+            return v
+
+    raise ValueError("no time dimension detected")
+
+def __require_obsdim__(f):
+    """
+    This decorator is for methods of Traj that require a time or obs dimension to work.
+    """
+
+    def wrapper(*args, **kwargs):
+        if args[0].obsdim is None:
+            raise ValueError(f'{f} requires an obs or time dimension')
+        return f(*args, **kwargs)
+
+    return wrapper
+
 class Traj:
     ds: xr.Dataset
+
+    __plot__: Plot
+    __animate__: Animation
 
     __gcrs__: pyproj.CRS
 
@@ -47,9 +67,34 @@ class Traj:
 
     def __init__(self, ds, obsdim, timedim):
         self.ds = ds
+        self.__plot__ = None
+        self.__animate__ = None
         self.__gcrs__ = pyproj.CRS.from_epsg(4326)
         self.obsdim = obsdim
         self.timedim = timedim
+
+
+    @property
+    def plot(self) -> Plot:
+        """
+        See :class:`trajan.plot.Plot`.
+        """
+        if self.__plot__ is None:
+            logger.debug(f'Setting up new plot object.')
+            self.__plot__ = Plot(self.ds)
+
+        return self.__plot__
+
+    @property
+    def animate(self):
+        """
+        See :class:`trajan.animation.Animation`.
+        """
+        if self.__animate__ is None:
+            logger.debug(f'Setting up new animation object.')
+            self.__animate__ = Animation(self.ds)
+
+        return self.__animate__
 
     @property
     def tx(self):
@@ -455,3 +500,7 @@ class Traj:
 
             A new dataset interpolated to the target times. The dataset will be 1D (i.e. gridded) and the time dimension will be named `time`.
         """
+
+    @abstractmethod
+    def seltime(self, t0=None, t1=None):
+        """ Select observations in time window between `t0` and `t1` (inclusive). """
