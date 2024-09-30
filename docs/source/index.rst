@@ -26,6 +26,7 @@ or
 **Install from source (recommended to develop for Trajan)**
 
 .. code-block:: console
+
    $ cd trajan  # move to the location of the trajan root, containing the pyproject.toml file
    $ pip install .
 
@@ -34,7 +35,7 @@ Remember to re-install each time you have done an edit during the development pr
 Usage
 -----
 
-_TrajAn_ is an `Xarry extension <https://docs.xarray.dev/en/stable/>`_. On drifter (or trajectory) datasets you can use the `.traj` accessor on `xarray.Dataset <https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html>`_ s. In order to register the accessor _trajan_ needs to be imported:
+*TrajAn* is an `Xarry extension <https://docs.xarray.dev/en/stable/>`_. On drifter (or trajectory) datasets you can use the `.traj` accessor on `xarray.Dataset <https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html>`_ s. In order to register the accessor _trajan_ needs to be imported:
 
 .. code-block:: python
 
