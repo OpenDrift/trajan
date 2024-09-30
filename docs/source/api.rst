@@ -8,6 +8,7 @@ Top-level API
 
 .. autosummary::
     :toctree: generated/
+    :caption: Loading datasets
 
     read_csv
     from_dataframe
@@ -84,6 +85,7 @@ Attributes
 .. autosummary::
    :toctree: generated/
    :template: autosummary/accessor_attribute.rst
+   :caption: Datasets
 
     Dataset.traj.plot
     Dataset.traj.animate
@@ -127,6 +129,7 @@ Plotting
 
 .. autosummary::
    :toctree: generated/
+   :caption: Plotting
 
    plot.Plot
    animation.Animation
