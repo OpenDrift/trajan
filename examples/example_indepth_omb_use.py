@@ -59,7 +59,7 @@ print(f"{list_buoys = }")
 for crrt_buoy in list_buoys:
     crrt_xr = xr_buoys.sel(trajectory=crrt_buoy)
     crrt_xr_gps = crrt_xr.swap_dims({'obs': 'time'})[["lat", "lon"]]
-    crrt_xr_gps = crrt_xr_gps.dropna(dim='time')
+    crrt_xr_gps = crrt_xr_gps.dropna(dim='time', how="all")
     crrt_xr_gps.to_dataframe().to_csv(f"out/{crrt_buoy}_gps.csv")
 
 print_head("out/drifter_1_gps.csv")
@@ -72,7 +72,7 @@ print_head("out/drifter_1_gps.csv")
 # all wave statistics to CSV, 1 file per buoy
 for crrt_buoy in list_buoys:
     crrt_xr = xr_buoys.sel(trajectory=crrt_buoy)
-    crrt_xr_wave_statistics = crrt_xr.swap_dims({"obs_waves_imu": "time_waves_imu"})[["pcutoff", "pHs0", "pT02", "pT24", "Hs0", "T02", "T24"]].rename({"time_waves_imu": "time"}).dropna(dim="time")
+    crrt_xr_wave_statistics = crrt_xr.swap_dims({"obs_waves_imu": "time_waves_imu"})[["pcutoff", "pHs0", "pT02", "pT24", "Hs0", "T02", "T24"]].rename({"time_waves_imu": "time"}).dropna(dim="time", how="all")
     crrt_xr_wave_statistics.to_dataframe().to_csv(f"out/{crrt_buoy}_wavestats.csv")
 
 print_head("out/drifter_1_wavestats.csv")
@@ -111,7 +111,7 @@ xr_specific_buoy = xr_buoys.sel(trajectory="drifter_1")
 xr_specific_buoy_gps = xr_specific_buoy.swap_dims({'obs': 'time'})[["lat", "lon"]]
 
 # keep only the valid GPS points: avoid the NaT that are due to time alignment in the initial nc file
-xr_specific_buoy_gps = xr_specific_buoy_gps.dropna(dim='time')
+xr_specific_buoy_gps = xr_specific_buoy_gps.dropna(dim='time', how="all")
 
 # select a specific time interval
 xr_specific_buoy_time_gps = xr_specific_buoy_gps.sel(time=slice("2022-06-17T10", "2022-06-18T01"))
