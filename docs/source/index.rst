@@ -74,17 +74,11 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   index
+   user_guide/index
    gallery/index
 
    API Reference <api>
 
-.. toctree::
-   :maxdepth: 2
-   :caption: User Guide
-
-   quickstart
-   data-layout
 
 Indices and tables
 ==================

@@ -101,10 +101,10 @@ class Traj:
         """
         Trajectory x coordinates (usually longitude).
 
-        .. see-also:
+        .. seealso::
 
-            * `ref:tlon`
-            * `ref:ty`
+            * :py:attr:`~xarray.Dataset.traj.tlon`
+            * :py:attr:`~xarray.Dataset.traj.ty`
         """
         return detect_tx_dim(self.ds)
 
@@ -113,10 +113,10 @@ class Traj:
         """
         Trajectory y coordinates (usually latitude).
 
-        .. see-also:
+        .. seealso::
 
-            * `ref:tlat`
-            * `ref:tx`
+            * :py:attr:`~xarray.Dataset.traj.tlat`
+            * :py:attr:`~xarray.Dataset.traj.tx`
         """
         if 'lat' in self.ds:
             return self.ds.lat
@@ -221,6 +221,10 @@ class Traj:
     def set_crs(self, crs):
         """
         Returns a new dataset with the CF-supported grid-mapping / projection set to `crs`.
+
+        .. warning::
+
+            This does not transform the coordinates, make sure that `crs` is matching the data in the dataset.
         """
 
         # TODO: Ideally this would be handled by cf-xarray or rio-xarray.
