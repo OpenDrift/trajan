@@ -268,10 +268,16 @@ class Traj:
 
     @abstractmethod
     def is_1d(self):
+        """
+        Returns True if dataset is 1D, i.e. time is a 1D coordinate variable.
+        """
         pass
 
     @abstractmethod
     def is_2d(self):
+        """
+        Returns True if dataset is 2D, i.e. time is a 2D variable and not a coordinate variable.
+        """
         pass
 
     def assign_cf_attrs(self,
