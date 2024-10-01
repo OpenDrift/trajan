@@ -27,35 +27,29 @@ def plot_trajan_spectra(
     horizontal time basis.
 
     Args:
-
-        `xr_trajan_in`: input xarray following the trajan conventions
-
+        `xr_trajan_in`:
+            input xarray following the trajan conventions
         `tuple_date_start_end`: can be either:
-            - None to plot over the full datetime range available across
-            trajectories
-            - a tuple of datetimes (datetime_start, datetime_end) to set
-            the time axis limits explicitely
-
+            - None to plot over the full datetime range available across trajectories
+            - a tuple of datetimes (datetime_start, datetime_end) to set the time axis limits explicitely
         `tuple_vrange_pcolor`: can be either:
             - None to use the default log range [-3.0, 1.0]
             - a tuple of float to set the log range explicitely
-
-        `plt_show`: bool flag, wether to show the figure or not
-
+        `plt_show`: bool flag
+            Whether to show the figure or not
         `fignamesave`: can be either:
             - None to not save the figure
-            - a valid filename string or path ending in .png or .pdf to save
-            the figure to disk
-
-        `field`: string, the xr_trajan_in field to use as the 1D spectrum data;
-        by default, this is the "processed_elevation_energy_spectrum", but
-        one could also set "elevation_energy_spectrum" to plot also the bins
-        with low frequency noise.
-
-        `nseconds_gap`: float, number of seconds between 2 consecutive
-        spectra for one instrument above which we consider that there is a
-        data loss that should be filled with NaN. This is to avoid "stretching"
-        neighboring spectra over long times if an instrument gets offline.
+            - a valid filename string or path ending in .png or .pdf to save the figure to disk
+        `field`: string
+            the xr_trajan_in field to use as the 1D spectrum data;
+            by default, this is the "processed_elevation_energy_spectrum", but
+            one could also set "elevation_energy_spectrum" to plot also the bins
+            with low frequency noise.
+        `nseconds_gap`: float
+            Number of seconds between 2 consecutive
+            spectra for one instrument above which we consider that there is a
+            data loss that should be filled with NaN. This is to avoid "stretching"
+            neighboring spectra over long times if an instrument gets offline.
     """
 
     if tuple_date_start_end is not None:

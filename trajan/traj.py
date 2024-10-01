@@ -166,13 +166,10 @@ class Traj:
         Transform coordinates in this datasets coordinate system to `to_crs` coordinate system.
 
         Args:
-
             to_crs: `pyproj.CRS`.
-
             x, y: Coordinates in `self` CRS.
 
         Returns:
-
             xn, yn: Coordinates in `to_crs`.
         """
         t = pyproj.Transformer.from_crs(self.crs, to_crs, always_xy=True)
@@ -183,13 +180,10 @@ class Traj:
         Transform coordinates in `from_crs` coordinate system to this datasets coordinate system.
 
         Args:
-
             from_crs: `pyproj.CRS`.
-
             x, y: Coordinates in `from_crs` CRS.
 
         Returns:
-
             xn, yn: Coordinates in this datasets CRS.
         """
         t = pyproj.Transformer.from_crs(from_crs, self.crs, always_xy=True)
@@ -269,12 +263,10 @@ class Traj:
     @abstractmethod
     def is_1d(self):
         """Returns True if dataset is 1D, i.e. time is a 1D coordinate variable."""
-        pass
 
     @abstractmethod
     def is_2d(self):
         """Returns True if dataset is 2D, i.e. time is a 2D variable and not a coordinate variable."""
-        pass
 
     def assign_cf_attrs(self,
                         creator_name=None,
@@ -495,15 +487,15 @@ class Traj:
         """Interpolate dataset to a regular time interval or a different grid.
 
         Args:
+            `times`: array or str
+                Target time interval, can be either:
+                    - an array of times, or
+                    - a string "freq" specifying a Pandas daterange (e.g. 'h', '6h, 'D'...) suitable for `pd.date_range`.
 
-            `times`: Target time interval, can be either:
-                - an array of times, or
-                - a string "freq" specifying a Pandas daterange (e.g. 'h', '6h, 'D'...) suitable for `pd.date_range`.
-
-            `timedime`: Name of new time dimension. The default is to use the same name as previously.
+            `timedime`: str
+                Name of new time dimension. The default is to use the same name as previously.
 
         Returns:
-
             A new dataset interpolated to the target times. The dataset will be 1D (i.e. gridded) and the time dimension will be named `time`.
         """
 
