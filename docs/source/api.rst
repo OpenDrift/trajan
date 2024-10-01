@@ -94,8 +94,6 @@ Attributes
     Dataset.traj.tlon
     Dataset.traj.tlat
     Dataset.traj.crs
-    Dataset.traj.is_1d
-    Dataset.traj.is_2d
 
 .. _dsmeth:
 
@@ -121,6 +119,8 @@ Methods
     Dataset.traj.get_area_convex_hull
     Dataset.traj.gridtime
     Dataset.traj.seltime
+    Dataset.traj.is_1d
+    Dataset.traj.is_2d
 
 .. currentmodule:: trajan
 

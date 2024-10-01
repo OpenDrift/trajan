@@ -33,17 +33,16 @@ def from_dataframe(df: pd.DataFrame,
     Construct a CF-compliant trajectory dataset from a `pd.DataFrame` of positions.
 
     Args:
-
-        `lon`: name of column containing longitudes.
-
-        `lat`: name of column containing latitudes.
-
-        `time`: name of column containing timestamps (parsable by pandas).
-
-        `name`: name of column to be used for drifter names.
+        `lon`: str
+            Name of column containing longitudes.
+        `lat`: str
+            Name of column containing latitudes.
+        `time`: str
+            Name of column containing timestamps (parsable by pandas).
+        `name`: str
+            Name of column to be used for drifter names.
 
     Returns:
-
         `ds`: a CF-compliant trajectory `xarray.Dataset`.
 
 
@@ -155,7 +154,8 @@ def trajectory_dict_to_dataset(trajectory_dict,
                                global_attributes=None):
     """Create a CF-compatible trajectory file from dictionary of drifter positions
 
-    Trajectory_dict shall have the following structure:
+    Trajectory_dict shall have the following structure::
+
         {'buoy1_name': {
             time0: {'lon': lon0, 'lat': lat0, 'variable1': var1_0, ... 'variableM': varM_0},
             time1: {'lon': lon1, 'lat': lat1, 'variable1': var1_1, ... 'variableM': varM_1},
@@ -163,6 +163,7 @@ def trajectory_dict_to_dataset(trajectory_dict,
             timeN: {'lon': lonN, 'lat': latN, 'variable1': var1_N, ... 'variableM': varM_N}},
         {'buoy2_name': {
             ...
+
     """
 
     if variable_attributes is None:
