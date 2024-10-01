@@ -84,6 +84,7 @@ autodoc_default_options = {
     "members": True,
     "undoc-members": True,
     "private-members": True,
+    "show-inheritance": True,
 }
 napoleon_use_param = True
 napoleon_use_rtype = True
