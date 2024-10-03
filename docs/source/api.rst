@@ -110,6 +110,7 @@ Methods
     Dataset.traj.assign_cf_attrs
     Dataset.traj.index_of_last
     Dataset.traj.speed
+    Dataset.traj.time_to_next
     Dataset.traj.distance_to
     Dataset.traj.distance_to_next
     Dataset.traj.azimuth_to_next
