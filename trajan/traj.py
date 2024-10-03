@@ -330,15 +330,21 @@ class Traj:
         return np.ma.notmasked_edges(np.ma.masked_invalid(self.ds.lon.values),
                                      axis=1)[1][1]
 
+    @abstractmethod
     def speed(self):
         """Returns the speed [m/s] along trajectories"""
-        pass
+        distance = self.distance_to_next()
+        timedelta_seconds = self.time_to_next() / np.timedelta64(1, 's')
 
-    def time_to_next(self):
+        return distance / timedelta_seconds
+
+    @abstractmethod
+    def time_to_next(self) -> pd.Timedelta:
         """Returns the timedelta between time steps"""
         pass
 
-    def velocity_spectrum(self):
+    @abstractmethod
+    def velocity_spectrum(self) -> xr.DataArray:
         pass
 
     # def rotary_spectrum(self):
@@ -510,6 +516,7 @@ class Traj:
         """ Select observations in time window between `t0` and `t1` (inclusive). """
 
 
+    @abstractmethod
     @__require_obsdim__
     def skill(self, other, method='liu-weissberg', **kwargs) -> xr.DataArray:
         """
@@ -590,4 +597,3 @@ class Traj:
                 method:   liu-weissberg
 
         """
-        pass

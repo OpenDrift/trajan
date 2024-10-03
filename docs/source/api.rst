@@ -114,7 +114,9 @@ Methods
     Dataset.traj.distance_to
     Dataset.traj.distance_to_next
     Dataset.traj.azimuth_to_next
+    Dataset.traj.skill
     Dataset.traj.velocity_components
+    Dataset.traj.velocity_spectrum
     Dataset.traj.convex_hull
     Dataset.traj.convex_hull_contains_point
     Dataset.traj.get_area_convex_hull

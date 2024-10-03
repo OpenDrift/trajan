@@ -34,12 +34,6 @@ class Traj1d(Traj):
         time_step = self.ds.time[1] - self.ds.time[0]
         return time_step
 
-    def speed(self):
-        distance = self.distance_to_next()
-        timedelta_seconds = self.time_to_next() / np.timedelta64(1, 's')
-
-        return distance / timedelta_seconds
-
     def velocity_spectrum(self):
 
         if self.ds.sizes['trajectory'] > 1:
