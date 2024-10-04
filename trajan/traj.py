@@ -99,13 +99,13 @@ class Traj:
     @property
     def tx(self):
         """
-        Trajectory x coordinates (usually longitude).
+        Trajectory x coordinates (usually longitude) - test.
 
-        .. seealso::
-
-            * :py:attr:`~xarray.Dataset.traj.tlon`
-            * :py:attr:`~xarray.Dataset.traj.ty`
+        See Also
+        --------
+        tlon, ty
         """
+
         return detect_tx_dim(self.ds)
 
     @property
@@ -113,10 +113,9 @@ class Traj:
         """
         Trajectory y coordinates (usually latitude).
 
-        .. seealso::
-
-            * :py:attr:`~xarray.Dataset.traj.tlat`
-            * :py:attr:`~xarray.Dataset.traj.tx`
+        See Also
+        --------
+        tlat, tx
         """
         if 'lat' in self.ds:
             return self.ds.lat
@@ -146,7 +145,7 @@ class Traj:
                 return X
 
     @property
-    def tlat(self):
+    def tlat(self) -> xr.DataArray:
         """
         Retrieve the trajectories in geographic coordinates (latitudes).
         """
@@ -165,12 +164,17 @@ class Traj:
         """
         Transform coordinates in this datasets coordinate system to `to_crs` coordinate system.
 
-        Args:
-            to_crs: `pyproj.CRS`.
-            x, y: Coordinates in `self` CRS.
+        Parameters
+        ----------
+        to_crs : pyproj.CRS
 
-        Returns:
-            xn, yn: Coordinates in `to_crs`.
+        x, y : arrays
+            Coordinates in `self` CRS
+
+        Returns
+        -------
+        xn, yn : arrays
+            Coordinates in `to_crs`
         """
         t = pyproj.Transformer.from_crs(self.crs, to_crs, always_xy=True)
         return t.transform(x, y)
@@ -179,12 +183,17 @@ class Traj:
         """
         Transform coordinates in `from_crs` coordinate system to this datasets coordinate system.
 
-        Args:
-            from_crs: `pyproj.CRS`.
-            x, y: Coordinates in `from_crs` CRS.
+        Parameters
+        ----------
+        from_crs : `pyproj.CRS`
 
-        Returns:
-            xn, yn: Coordinates in this datasets CRS.
+        x, y : arrays
+            Coordinates in `from_crs` CRS
+
+        Returns
+        -------
+        xn, yn : arrays
+            Coordinates in this datasets CRS
         """
         t = pyproj.Transformer.from_crs(from_crs, self.crs, always_xy=True)
         return t.transform(x, y)
@@ -192,7 +201,7 @@ class Traj:
     @property
     def crs(self) -> pyproj.CRS:
         """
-        Retrieve the Proj.4 CRS from the CF-defined grid-mapping in the dataset.
+        Retrieve the pyproj.CRS object from the CF-defined grid-mapping in the dataset.
         """
         if len(self.ds.cf.grid_mapping_names) == 0:
             logger.debug(
@@ -212,9 +221,17 @@ class Traj:
             logger.debug(f'Constructing CRS from grid_mapping: {gm}')
             return pyproj.CRS.from_cf(gm.attrs)
 
-    def set_crs(self, crs):
+    def set_crs(self, crs) -> xr.Dataset:
         """
         Returns a new dataset with the CF-supported grid-mapping / projection set to `crs`.
+
+        Parameters
+        ----------
+        crs: pyproj.CRS
+
+        Returns
+        -------
+        updated dataset
 
         .. warning::
 
@@ -331,8 +348,22 @@ class Traj:
                                      axis=1)[1][1]
 
     @abstractmethod
-    def speed(self):
-        """Returns the speed [m/s] along trajectories"""
+    def speed(self) -> xr.DataArray:
+        """Returns the speed [m/s] along trajectories
+
+        Calculates the speed by dividing the distance between two points
+        along trajectory by the corresponding time step.
+
+        Returns
+        -------
+        xarray.DataArray
+            Same dimensions as original dataset, since last value is repeated along time dimension
+
+        See Also
+        --------
+        distance_to_next, time_to_next
+
+        """
         distance = self.distance_to_next()
         timedelta_seconds = self.time_to_next() / np.timedelta64(1, 's')
 
@@ -340,7 +371,17 @@ class Traj:
 
     @abstractmethod
     def time_to_next(self) -> pd.Timedelta:
-        """Returns the timedelta between time steps"""
+        """Returns the timedelta between time steps
+
+        Returns
+        -------
+        xarray.DataArray
+            Scalar timedelta for 1D objects, and DataArray of same size as input for 2D objects         
+
+        See Also
+        --------
+        distance_to_next, speed
+        """
         pass
 
     @abstractmethod
@@ -350,9 +391,24 @@ class Traj:
     # def rotary_spectrum(self):
     #     pass
 
-    def distance_to(self, other):
+    def distance_to(self, other) -> xr.Dataset:
         """
         Distance between trajectories or a single point.
+
+        Parameters
+        ----------
+        other : xarray.DataSet
+            Other dataset to which distance is calculated
+
+        Returns
+        -------
+        xarray.Dataset
+            Same dimensions as original dataset
+
+        See Also
+        --------
+        distance_to_next
+
         """
 
         other = other.broadcast_like(self.ds)
@@ -382,7 +438,17 @@ class Traj:
     def distance_to_next(self):
         """Returns distance in m from one position to the next
 
-           Last time is repeated for last position (which has no next position)
+        Last time is repeated for last position (which has no next position)
+
+        Returns
+        -------
+        xarray.DataArray
+            Same dimensions as original dataset, since last value is repeated along time dimension
+
+        See Also
+        --------
+        time_to_next, speed
+
         """
 
         lon = self.ds.lon
@@ -501,16 +567,19 @@ class Traj:
     def gridtime(self, times, timedim = None) -> xr.Dataset:
         """Interpolate dataset to a regular time interval or a different grid.
 
-        Args:
-            `times`: array or str
-                Target time interval, can be either:
-                    - an array of times, or
-                    - a string "freq" specifying a Pandas daterange (e.g. 'h', '6h, 'D'...) suitable for `pd.date_range`.
+        Parameters
+        ----------
+        times : array or str
+            Target time interval, can be either:
+                - an array of times, or
+                - a string specifying a Pandas daterange (e.g. 'h', '6h, 'D'...) suitable for `pd.date_range`.
 
-            `timedime`: str
-                Name of new time dimension. The default is to use the same name as previously.
+        timedim : str
+            Name of new time dimension. The default is to use the same name as previously.
 
-        Returns:
+        Returns
+        -------
+        Dataset
             A new dataset interpolated to the target times. The dataset will be 1D (i.e. gridded) and the time dimension will be named `time`.
         """
 
@@ -525,17 +594,19 @@ class Traj:
         """
         Compare the skill score between this trajectory and `other`.
 
-        Args:
+        Parameters
+        ----------
 
-            other: Another trajectory dataset.
+        other: Another trajectory dataset.
 
-            method: skill-score method, currently only liu-weissberg. See :mod:`trajan.skill`.
+        method: skill-score method, currently only liu-weissberg. See :mod:`trajan.skill`.
 
-            **kwargs: passed on to the skill-score method.
+        **kwargs: passed on to the skill-score method.
 
-        Returns:
+        Returns
+        -------
 
-            skill: The skill-score in the same dimensions as this dataset.
+        skill: The skill-score in the same dimensions as this dataset.
 
         .. note::
 
