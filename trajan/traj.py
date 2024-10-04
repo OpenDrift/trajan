@@ -446,8 +446,11 @@ class Traj:
 
         from scipy.spatial import ConvexHull
 
-        lon = self.ds.lon.where(self.ds.status == 0)
-        lat = self.ds.lat.where(self.ds.status == 0)
+        lon = self.ds.lon
+        lat = self.ds.lat
+        if 'status' in self.ds.variables:
+            lon = lon.where(self.ds.status == 0)
+            lat = lat.where(self.ds.status == 0)
         fin = np.isfinite(lat + lon)
         if np.sum(fin) <= 3:
             return None
