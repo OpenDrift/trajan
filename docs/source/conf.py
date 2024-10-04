@@ -50,7 +50,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
     'sphinx_gallery.gen_gallery',
-    # 'numpydoc',
+    'numpydoc',
     'matplotlib.sphinxext.plot_directive',
 ]
 
@@ -90,7 +90,7 @@ napoleon_use_rtype = True
 
 # numpydoc_show_class_members = False
 # Report warnings for all validation checks except the ones listed after "all"
-# numpydoc_validation_checks = {"all", "ES01", "EX01", "SA01", "SA04"}
+numpydoc_validation_checks = {"all", "ES01", "EX01", "SA01", "SA04"}
 # don't report on objects that match any of these regex
 numpydoc_validation_exclude = {
     r"\.__repr__$",
