@@ -40,27 +40,34 @@ sphinx_gallery_conf = {
 }
 
 extensions = [
+    #"sphinxcontrib.mermaid",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.napoleon",
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
-    # 'autoapi.extension',
+    'autoapi.extension',
     'sphinx.ext.autosummary',
     'sphinx_autosummary_accessors',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
     'sphinx_gallery.gen_gallery',
-    'numpydoc',
+    #'numpydoc',
     'matplotlib.sphinxext.plot_directive',
 ]
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
+    'numpy': ('https://numpy.org/doc/stable', None),
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy', None),
+    'cftime': ('https://unidata.github.io/cftime', None),
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
-    "xarray": ("https://xarray.pydata.org/en/stable/", None),
-    "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
+    'xarray': ('https://xarray.pydata.org/en/stable/', None),
+    'pandas': ("https://pandas.pydata.org/pandas-docs/stable", None),
 }
-intersphinx_disabled_domains = ['std']
+#intersphinx_disabled_domains = ['std']
 
 templates_path = ["_templates", sphinx_autosummary_accessors.templates_path]
 
@@ -77,16 +84,22 @@ html_theme_options = {
 }
 
 autosummary_generate = True
-
-autodoc_typehints = "description"
+autodoc_typehints = "none"
 autodoc_typehints_description_target = "documented"
 autodoc_default_options = {
     "members": True,
     "undoc-members": True,
     "private-members": True,
 }
-napoleon_use_param = True
-napoleon_use_rtype = True
+
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_use_param = False
+napoleon_use_rtype = False
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+        'str': ':class:`string <str>`',
+        } 
 
 # numpydoc_show_class_members = False
 # Report warnings for all validation checks except the ones listed after "all"
