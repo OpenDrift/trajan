@@ -3,7 +3,7 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 import logging
-from .traj import Traj, __require_obsdim__
+from .traj import Traj
 from . import skill
 
 logger = logging.getLogger(__name__)
@@ -18,9 +18,7 @@ class Traj1d(Traj):
         super().__init__(ds, obsdim, timedim)
 
     def timestep(self):
-        """
-        Time step between observations in seconds.
-        """
+        """Time step between observations in seconds."""
         return ((self.ds.time[1] - self.ds.time[0]) /
                 np.timedelta64(1, 's')).values
 
@@ -85,7 +83,6 @@ class Traj1d(Traj):
         plt.xlim([0, 30])
         plt.show()
 
-    @__require_obsdim__
     def skill(self, other, method='liu-weissberg', **kwargs):
         if self.ds.sizes['trajectory'] != other.sizes['trajectory']:
             raise ValueError(
@@ -129,11 +126,9 @@ class Traj1d(Traj):
                             coords={'trajectory': self.ds.trajectory},
                             attrs={'method': method})
 
-    @__require_obsdim__
     def seltime(self, t0=None, t1=None):
         return self.ds.sel({self.timedim: slice(t0, t1)})
 
-    @__require_obsdim__
     def gridtime(self, times, timedim=None, round=True):
         if isinstance(times, str) or isinstance(
                 times, pd.Timedelta):  # Make time series with given interval
