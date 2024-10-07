@@ -3,9 +3,21 @@ import numpy as np
 import pandas as pd
 import logging
 
-from .traj import Traj, __require_obsdim__
+from .traj import Traj
 
 logger = logging.getLogger(__name__)
+
+
+def __require_obsdim__(f):
+    """This decorator is for methods of Traj that require a time or obs dimension to work."""
+
+    def wrapper(*args, **kwargs):
+        if args[0].obsdim is None:
+            raise ValueError(f'{f} requires an obs or time dimension')
+        return f(*args, **kwargs)
+
+    return wrapper
+
 
 
 class Traj2d(Traj):
@@ -25,7 +37,7 @@ class Traj2d(Traj):
         return td
 
     def time_to_next(self):
-        """Returns time from one position to the next
+        """Return time from one position to the next.
 
            Returned datatype is np.timedelta64
            Last time is repeated for last position (which has no next position)
@@ -45,7 +57,7 @@ class Traj2d(Traj):
         return True
 
     def insert_nan_where(self, condition):
-        """Insert NaN-values in trajectories after given positions, shifting rest of trajectory"""
+        """Insert NaN-values in trajectories after given positions, shifting rest of trajectory."""
 
         index_of_last = self.index_of_last()
         num_inserts = condition.sum(dim='obs')
@@ -102,7 +114,7 @@ class Traj2d(Traj):
         return nd
 
     def drop_where(self, condition):
-        """Remove positions where condition is True, shifting rest of trajectory"""
+        """Remove positions where condition is True, shifting rest of trajectory."""
 
         trajs = []
         newlen = 0

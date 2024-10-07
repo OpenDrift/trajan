@@ -39,17 +39,6 @@ def detect_time_dim(ds, obsdim):
 
     raise ValueError("no time dimension detected")
 
-def __require_obsdim__(f):
-    """
-    This decorator is for methods of Traj that require a time or obs dimension to work.
-    """
-
-    def wrapper(*args, **kwargs):
-        if args[0].obsdim is None:
-            raise ValueError(f'{f} requires an obs or time dimension')
-        return f(*args, **kwargs)
-
-    return wrapper
 
 class Traj:
     ds: xr.Dataset
@@ -343,13 +332,13 @@ class Traj:
         return ds
 
     def index_of_last(self):
-        """Find index of last valid position along each trajectory"""
+        """Find index of last valid position along each trajectory."""
         return np.ma.notmasked_edges(np.ma.masked_invalid(self.ds.lon.values),
                                      axis=1)[1][1]
 
     @abstractmethod
     def speed(self) -> xr.DataArray:
-        """Returns the speed [m/s] along trajectories
+        """Returns the speed [m/s] along trajectories.
 
         Calculates the speed by dividing the distance between two points
         along trajectory by the corresponding time step.
@@ -371,7 +360,7 @@ class Traj:
 
     @abstractmethod
     def time_to_next(self) -> pd.Timedelta:
-        """Returns the timedelta between time steps
+        """Returns the timedelta between time steps.
 
         Returns
         -------
@@ -434,9 +423,8 @@ class Traj:
 
         return ds
 
-    @__require_obsdim__
     def distance_to_next(self):
-        """Returns distance in m from one position to the next
+        """Returns distance in m from one position to the next.
 
         Last time is repeated for last position (which has no next position)
 
@@ -467,9 +455,8 @@ class Traj:
                              dim=self.obsdim)  # repeating last time step to
         return distance
 
-    @__require_obsdim__
     def azimuth_to_next(self):
-        """Returns azimution travel direction in degrees from one position to the next
+        """Returns azimution travel direction in degrees from one position to the next.
 
            Last time is repeated for last position (which has no next position)
         """
@@ -495,7 +482,7 @@ class Traj:
         return azimuth_forward
 
     def velocity_components(self):
-        """Returns velocity components [m/s] from one position to the next
+        """Returns velocity components [m/s] from one position to the next.
 
            Last time is repeated for last position (which has no next position)
         """
@@ -508,7 +495,13 @@ class Traj:
         return u, v
 
     def convex_hull(self):
-        """Returns the scipy convex hull for all particles, in geographical coordinates"""
+        """Return the scipy convex hull for all particles, in geographical coordinates.
+
+        Returns
+        -------
+        scipy.spatial.ConvexHull
+            Convex Hull around all positions of given Dataset.
+        """
 
         from scipy.spatial import ConvexHull
 
@@ -528,7 +521,18 @@ class Traj:
         return ConvexHull(points)
 
     def convex_hull_contains_point(self, lon, lat):
-        """Returns True if given point is within the scipy convex hull for all particles"""
+        """Return True if given point is within the scipy convex hull for all particles.
+
+        Parameters
+        ----------
+        lon, lat    scalars
+            longitude and latitude [degrees] of a position.
+
+        Returns
+        -------
+        bool
+            True if convex hull of positions in cataset contains given position.
+        """
         from matplotlib.patches import Polygon
 
         hull = self.ds.traj.convex_hull()
@@ -539,7 +543,7 @@ class Traj:
         return p.contains_points(point)[0]
 
     def get_area_convex_hull(self):
-        """Returns the area [m2] of the convex hull spanned by all particles"""
+        """Return the area [m2] of the convex hull spanned by all particles."""
 
         from scipy.spatial import ConvexHull
 
@@ -589,7 +593,6 @@ class Traj:
 
 
     @abstractmethod
-    @__require_obsdim__
     def skill(self, other, method='liu-weissberg', **kwargs) -> xr.DataArray:
         """
         Compare the skill score between this trajectory and `other`.
@@ -618,32 +621,26 @@ class Traj:
             The datasets must have the same number of trajectories. If you wish to compare a single trajectory to many others, duplicate it along the trajectory dimension to match the trajectory dimension of the other. See further down for an example.
 
 
-        .. testcode::
+        Examples
+        --------
 
-            import xarray as xr
-            import trajan as _
-            import lzma
+        >>> import xarray as xr
+        >>> import trajan as _
+        >>> import lzma
+        >>> b = lzma.open('examples/barents.nc.xz')
+        >>> ds = xr.open_dataset(b)
+        >>> other = ds.copy()
+        >>> ds = ds.traj.gridtime('1h')
+        >>> other = other.traj.gridtime(ds.time)
+        >>> skill = ds.traj.skill(other)
 
-            b = lzma.open('examples/barents.nc.xz')
-            ds = xr.open_dataset(b)
-
-            other = ds.copy()
-
-            ds = ds.traj.gridtime('1H')
-
-            other = other.traj.gridtime(ds.time)
-            skill = ds.traj.skill(other)
-
-            print(skill)
-
-        .. testoutput::
-
-            <xarray.DataArray 'Skill-score' (trajectory: 2)>
-            array([1., 1.], dtype=float32)
-            Coordinates:
-              * trajectory  (trajectory) int64 0 1
-            Attributes:
-                method:   liu-weissberg
+        >>> print(skill)
+        <xarray.DataArray 'Skill-score' (trajectory: 2)> Size: 8B
+        array([1., 1.], dtype=float32)
+        Coordinates:
+          * trajectory  (trajectory) int64 16B 0 1
+        Attributes:
+            method:   liu-weissberg
 
 
         If you need to broadcast a dataset with a single drifter to one with many you can use `xarray.broadcast` or `xarray.Dataset.broadcast_like`:
