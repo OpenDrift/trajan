@@ -642,7 +642,7 @@ class Traj:
         Attributes:
             method:   liu-weissberg
 
-        If you need to broadcast a dataset with a single drifter to one with many you can use :meth:`xarray.broadcast` or `xarray.Dataset.broadcast_like`:
+        If you need to broadcast a dataset with a single drifter to one with many you can use `xarray.broadcast` or `xarray.Dataset.broadcast_like`:
 
         .. note::
 
