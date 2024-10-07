@@ -593,33 +593,33 @@ class Traj:
 
 
     @abstractmethod
-    def skill(self, other, method='liu-weissberg', **kwargs) -> xr.DataArray:
+    def skill(self, other, method='liu-weissberg', **kwargs) -> xr.Dataset:
         """
         Compare the skill score between this trajectory and `other`.
 
         Parameters
         ----------
 
-        other: Another trajectory dataset.
+        other : Dataset
+            Another trajectory dataset.
 
-        method: skill-score method, currently only liu-weissberg. See :mod:`trajan.skill`.
+        method : str
+            skill-score method, currently only liu-weissberg.
 
-        **kwargs: passed on to the skill-score method.
+        **kwargs :
+            Passed on to the skill-score method.
 
         Returns
         -------
 
-        skill: The skill-score in the same dimensions as this dataset.
+        skill : :class:`xarray.Dataset`
+            The skill-score in the same dimensions as this dataset.
 
-        .. note::
+        Notes
+        -----
+        The datasets must be sampled (or have observations) at approximately the same timesteps. Consider using :meth:`gridtime` to interpolate one of the datasets to the other.
 
-            The datasets must be sampled (or have observations) at approximately the same timesteps. Consider using :meth:`trajan.traj2d.gridtime` to interpolate one of the datasets to the other.
-
-
-        .. note::
-
-            The datasets must have the same number of trajectories. If you wish to compare a single trajectory to many others, duplicate it along the trajectory dimension to match the trajectory dimension of the other. See further down for an example.
-
+        The datasets must have the same number of trajectories. If you wish to compare a single trajectory to many others, duplicate it along the trajectory dimension to match the trajectory dimension of the other. See further down for an example.
 
         Examples
         --------
@@ -634,14 +634,13 @@ class Traj:
         >>> other = other.traj.gridtime(ds.time)
         >>> skill = ds.traj.skill(other)
 
-        >>> print(skill)
-        <xarray.DataArray 'Skill-score' (trajectory: 2)> Size: 8B
+        >>> skill
+        <xarray.DataArray 'Skillscore' (trajectory: 2)> Size: 8B
         array([1., 1.], dtype=float32)
         Coordinates:
           * trajectory  (trajectory) int64 16B 0 1
         Attributes:
             method:   liu-weissberg
-
 
         If you need to broadcast a dataset with a single drifter to one with many you can use `xarray.broadcast` or `xarray.Dataset.broadcast_like`:
 
@@ -649,22 +648,15 @@ class Traj:
 
             If the other dataset has any other dimensions, on any other variables, you need to exclude those when broadcasting.
 
-        .. testcode::
+        >>> b0 = ds.isel(trajectory=0) # `b0` now only has a single drifter (no trajectory dimension)
+        >>> b0 = b0.broadcast_like(ds)
+        >>> skill = b0.traj.skill(ds)
 
-            b0 = ds.isel(trajectory=0) # `b0` now only has a single drifter (no trajectory dimension)
-
-            b0 = b0.broadcast_like(ds)
-            skill = b0.traj.skill(ds)
-
-            print(skill)
-
-        .. testoutput::
-
-            <xarray.DataArray 'Skill-score' (trajectory: 2)>
-            array([1.        , 0.60894716], dtype=float32)
-            Coordinates:
-              * trajectory  (trajectory) int64 0 1
-            Attributes:
-                method:   liu-weissberg
-
+        >>> skill
+        <xarray.DataArray 'Skillscore' (trajectory: 2)> Size: 8B
+        array([1.      , 0.608058], dtype=float32)
+        Coordinates:
+          * trajectory  (trajectory) int64 16B 0 1
+        Attributes:
+            method:   liu-weissberg
         """

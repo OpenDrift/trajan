@@ -122,7 +122,7 @@ class Traj1d(Traj):
                 raise ValueError(f"Unknown skill-score method: {method}.")
 
         return xr.DataArray(s,
-                            name='Skill-score',
+                            name='Skillscore',
                             coords={'trajectory': self.ds.trajectory},
                             attrs={'method': method})
 
