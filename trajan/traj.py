@@ -280,12 +280,22 @@ class Traj:
         return ds
 
     @abstractmethod
-    def is_1d(self):
-        """Returns True if dataset is 1D, i.e. time is a 1D coordinate variable."""
+    def is_1d(self) -> bool:
+        """Returns True if dataset is 1D, i.e. time is a 1D coordinate variable.
+
+        Returns
+        -------
+        bool
+        """
 
     @abstractmethod
-    def is_2d(self):
-        """Returns True if dataset is 2D, i.e. time is a 2D variable and not a coordinate variable."""
+    def is_2d(self) -> bool:
+        """Returns True if dataset is 2D, i.e. time is a 2D variable and not a coordinate variable.
+
+        Returns
+        -------
+        bool
+        """
 
     def assign_cf_attrs(self,
                         creator_name=None,
@@ -396,8 +406,8 @@ class Traj:
 
         Returns
         -------
-        xarray.DataArray
-            Scalar timedelta for 1D objects, and DataArray of same size as input for 2D objects         
+        DataArray
+            Scalar timedelta for 1D objects (fixed timestep), and DataArray of same size as input for 2D objects         
 
         See Also
         --------
@@ -418,13 +428,18 @@ class Traj:
 
         Parameters
         ----------
-        other : xarray.DataSet
+        other : Dataset
             Other dataset to which distance is calculated
 
         Returns
         -------
-        xarray.Dataset
-            Same dimensions as original dataset
+        Dataset
+            Same dimensions as original dataset, containing three DataArrays from pyproj.geod.inv:
+              distance : distance [meters]
+
+              az_fwd : forward azimuth angle [degrees]
+
+              az_bwd : backward azimuth angle [degrees]
 
         See Also
         --------
@@ -456,18 +471,18 @@ class Traj:
         return ds
 
     def distance_to_next(self):
-        """Returns distance in m from one position to the next.
+        """Returns distance in meters from one position to the next along trajectories.
 
-        Last time is repeated for last position (which has no next position)
+        Last time is repeated for last position (which has no next position).
 
         Returns
         -------
-        xarray.DataArray
-            Same dimensions as original dataset, since last value is repeated along time dimension
+        DataArray
+            Same dimensions as original Dataset, since last value is repeated along time dimension.
 
         See Also
         --------
-        time_to_next, speed
+        azimuth_to_next, time_to_next, speed
 
         """
 
@@ -490,7 +505,16 @@ class Traj:
     def azimuth_to_next(self):
         """Returns azimution travel direction in degrees from one position to the next.
 
-           Last time is repeated for last position (which has no next position)
+        Last time is repeated for last position (which has no next position).
+
+        Returns
+        -------
+        DataArray
+            Same dimensions as original Dataset, since last value is repeated along time dimension.
+
+        See Also
+        --------
+        distance_to_next, time_to_next, speed
         """
 
         # TODO: method is almost duplicate of "distance_to_next" above
@@ -516,7 +540,12 @@ class Traj:
     def velocity_components(self):
         """Returns velocity components [m/s] from one position to the next.
 
-           Last time is repeated for last position (which has no next position)
+        Last time is repeated for last position (which has no next position)
+
+        Returns
+        -------
+        (u, v) : array_like
+            East and north components of velocities at given position along trajectories.
         """
         speed = self.speed()
         azimuth = self.azimuth_to_next()
@@ -557,7 +586,7 @@ class Traj:
 
         Parameters
         ----------
-        lon, lat    scalars
+        lon, lat  :  scalar
             longitude and latitude [degrees] of a position.
 
         Returns
@@ -575,7 +604,13 @@ class Traj:
         return p.contains_points(point)[0]
 
     def get_area_convex_hull(self):
-        """Return the area [m2] of the convex hull spanned by all particles."""
+        """Return the area [m2] of the convex hull spanned by all positions.
+
+        Returns
+        -------
+        scalar
+            Area [m2] of convex hull around all positions.
+        """
 
         from scipy.spatial import ConvexHull
 
@@ -621,7 +656,13 @@ class Traj:
 
     @abstractmethod
     def seltime(self, t0=None, t1=None) -> xr.Dataset:
-        """ Select observations in time window between `t0` and `t1` (inclusive). """
+        """ Select observations in time window between `t0` and `t1` (inclusive).
+
+        Parameters
+        ----------
+        t0, t1 : numpy.datetime64
+            Test
+        """
 
 
     @abstractmethod
