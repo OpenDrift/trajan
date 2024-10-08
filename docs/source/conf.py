@@ -21,7 +21,7 @@ autoapi_type = 'python'
 autoapi_dirs = [ '../../trajan' ]
 autoapi_keep_files = False  # set to True when debugging autoapi generated files
 autoapi_python_class_content = 'both'
-autodoc_typehints = 'description'
+autodoc_typehints = 'none'
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning,
@@ -64,6 +64,7 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy', None),
     'cftime': ('https://unidata.github.io/cftime', None),
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
+    'pyproj': ('https://pyproj4.github.io/pyproj/stable/', None),
     'xarray': ('https://xarray.pydata.org/en/stable/', None),
     'pandas': ("https://pandas.pydata.org/pandas-docs/stable", None),
 }
@@ -95,7 +96,7 @@ autodoc_default_options = {
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_use_param = False
-napoleon_use_ivar = True
+napoleon_use_ivar = False
 napoleon_use_rtype = False
 napoleon_preprocess_types = True
 napoleon_type_aliases = {
