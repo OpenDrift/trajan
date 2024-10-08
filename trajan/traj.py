@@ -88,7 +88,7 @@ class Traj:
     @property
     def tx(self):
         """
-        Trajectory x coordinates (usually longitude) - test.
+        Trajectory x coordinates (usually longitude).
 
         See Also
         --------
@@ -121,6 +121,10 @@ class Traj:
     def tlon(self):
         """
         Retrieve the trajectories in geographic coordinates (longitudes).
+
+        See Also
+        --------
+        tx, tlat
         """
         if self.crs.is_geographic:
             return self.tx
@@ -137,6 +141,10 @@ class Traj:
     def tlat(self) -> xr.DataArray:
         """
         Retrieve the trajectories in geographic coordinates (latitudes).
+
+        See Also
+        --------
+        ty, tlon
         """
         if self.crs.is_geographic:
             return self.ty
@@ -155,14 +163,14 @@ class Traj:
 
         Parameters
         ----------
-        to_crs : pyproj.CRS
+        to_crs : pyproj.crs.CRS
 
-        x, y : arrays
+        x, y : array-like
             Coordinates in `self` CRS
 
         Returns
         -------
-        xn, yn : arrays
+        xn, yn : array-like
             Coordinates in `to_crs`
         """
         t = pyproj.Transformer.from_crs(self.crs, to_crs, always_xy=True)
@@ -174,23 +182,27 @@ class Traj:
 
         Parameters
         ----------
-        from_crs : `pyproj.CRS`
+        from_crs : pyproj.crs.CRS
 
-        x, y : arrays
-            Coordinates in `from_crs` CRS
+        x, y : array-like
+            Coordinates in from_crs CRS
 
         Returns
         -------
-        xn, yn : arrays
+        xn, yn : array-like
             Coordinates in this datasets CRS
         """
         t = pyproj.Transformer.from_crs(from_crs, self.crs, always_xy=True)
         return t.transform(x, y)
 
     @property
-    def crs(self) -> pyproj.CRS:
+    def crs(self) -> pyproj.crs.CRS:
         """
-        Retrieve the pyproj.CRS object from the CF-defined grid-mapping in the dataset.
+        Retrieve the pyproj.crs.CRS object from the CF-defined grid-mapping in the dataset.
+
+        Returns
+        -------
+        pyproj.crs.CRS
         """
         if len(self.ds.cf.grid_mapping_names) == 0:
             logger.debug(
@@ -208,7 +220,7 @@ class Traj:
         else:
             gm = self.ds.cf['grid_mapping']
             logger.debug(f'Constructing CRS from grid_mapping: {gm}')
-            return pyproj.CRS.from_cf(gm.attrs)
+            return pyproj.crs.CRS.from_cf(gm.attrs)
 
     def set_crs(self, crs) -> xr.Dataset:
         """
@@ -216,15 +228,16 @@ class Traj:
 
         Parameters
         ----------
-        crs: pyproj.CRS
+        crs : pyproj.crs.CRS
 
         Returns
         -------
-        updated dataset
+        Dataset
+            Updated dataset
 
-        .. warning::
-
-            This does not transform the coordinates, make sure that `crs` is matching the data in the dataset.
+        Warning
+        -------
+        This does not transform the coordinates, make sure that `crs` is matching the data in the dataset.
         """
 
         # TODO: Ideally this would be handled by cf-xarray or rio-xarray.
@@ -282,6 +295,19 @@ class Traj:
                         **kwargs) -> xr.Dataset:
         """
         Return a new dataset with CF-standard and common attributes set.
+
+        Parameters
+        ----------
+        *kwargs
+            Attribute names and values
+
+        Returns
+        -------
+        Dataset
+            Updated dataset with provided attributes, in addition to several CF standard attributes,
+            including Conventions, featureType, geospatial_lat_min etc.
+             
+
         """
         ds = self.ds.copy(deep=True)
 
@@ -332,7 +358,13 @@ class Traj:
         return ds
 
     def index_of_last(self):
-        """Find index of last valid position along each trajectory."""
+        """Find index of last valid position along each trajectory.
+
+        Returns
+        -------
+        array-like
+            Array of the index of the last valid position along each trajectory.
+        """
         return np.ma.notmasked_edges(np.ma.masked_invalid(self.ds.lon.values),
                                      axis=1)[1][1]
 
@@ -612,7 +644,7 @@ class Traj:
         Returns
         -------
 
-        skill : :class:`xarray.Dataset`
+        skill : Dataset
             The skill-score in the same dimensions as this dataset.
 
         Notes
