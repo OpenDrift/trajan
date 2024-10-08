@@ -104,7 +104,6 @@ napoleon_type_aliases = {
     "sequence": ":term:`sequence`",
     "iterable": ":term:`iterable`",
     "callable": ":py:func:`callable`",
-    "dict_like": ":term:`dict-like <mapping>`",
     "dict-like": ":term:`dict-like <mapping>`",
     "path-like": ":term:`path-like <path-like object>`",
     "mapping": ":term:`mapping`",
