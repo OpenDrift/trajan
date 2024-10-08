@@ -53,7 +53,7 @@ jobs:
     if: "startsWith(github.ref, 'refs/tags/')"
     needs: [ tests ]
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: wheels
       - uses: conda-incubator/setup-miniconda@v2
@@ -66,5 +66,5 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
-          pip install --upgrade twine
+          pip install --upgrade typing-extensions twine
           twine upload --skip-existing *
