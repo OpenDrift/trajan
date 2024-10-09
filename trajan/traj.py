@@ -308,15 +308,27 @@ class Traj:
 
         Parameters
         ----------
-        *kwargs
-            Attribute names and values
+        creator_name : string
+            Creator of dataset (optional).
+
+        creator_email : string
+            Creator email (optional).
+
+        title : string
+            Title of dataset (optional).
+
+        summary : string
+            Description of dataset (optional).
+
+        *kwargs : dict
+            Additional attribute key and values (optional).
 
         Returns
         -------
         Dataset
             Updated dataset with provided attributes, in addition to several CF standard attributes,
             including Conventions, featureType, geospatial_lat_min etc.
-             
+
 
         """
         ds = self.ds.copy(deep=True)
@@ -407,7 +419,7 @@ class Traj:
         Returns
         -------
         DataArray
-            Scalar timedelta for 1D objects (fixed timestep), and DataArray of same size as input for 2D objects         
+            Scalar timedelta for 1D objects (fixed timestep), and DataArray of same size as input for 2D objects
 
         See Also
         --------
