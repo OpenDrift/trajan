@@ -134,29 +134,7 @@ class Traj2d(Traj):
         return xr.concat(trajs, dim='trajectory')
 
     @__require_obsdim__
-    def condense_obs(self):
-        """
-        Move all observations to the first index, so that the observation
-        dimension is reduced to a minimum. When creating ragged arrays the
-        observations from consecutive trajectories start at the observation
-        index after the previous, causing a very long observation dimension.
-
-        Original:
-
-        .............. Observations --->
-        trajectory 1: | t01 | t02 | t03 | t04 | t05 | nan | nan | nan | nan |
-        trajectory 2: | nan | nan | nan | nan | nan | t11 | t12 | t13 | t14 |
-
-        After condensing:
-
-        .............. Observations --->
-        trajectory 1: | t01 | t02 | t03 | t04 | t05 |
-        trajectory 2: | t11 | t12 | t13 | t14 | nan |
-
-        Returns:
-
-            A new Dataset with observations condensed.
-        """
+    def condense_obs(self) -> xr.Dataset:
 
         on = self.ds.sizes[self.obsdim]
         logger.debug(f'Condensing {on} observations.')
