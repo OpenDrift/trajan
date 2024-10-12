@@ -31,6 +31,15 @@ jobs:
             bash
             powershell
           extra-specs: python=${{ matrix.python-version }}
+
+
+      - name: Cache cartopy maps
+        id: cache-cartopy
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/cartopy
+          key: cartopy-maps
+
       - name: Run tests
         run: |
           pytest -vs --log-cli-level=debug

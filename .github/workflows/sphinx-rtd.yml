@@ -46,6 +46,13 @@ jobs:
         run: |
           micromamba install -f docs/requirements.txt
 
+      - name: Cache cartopy maps
+        id: cache-cartopy
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/cartopy
+          key: cartopy-maps
+
       - name: Build docs with sphinx
         run: |
           cd docs
