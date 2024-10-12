@@ -124,6 +124,7 @@ Methods
     Dataset.traj.seltime
     Dataset.traj.is_1d
     Dataset.traj.is_2d
+    Dataset.traj.condense_obs
 
 .. currentmodule:: trajan
 
