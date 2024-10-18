@@ -1,6 +1,9 @@
 """
 Trajan API
 """
+
+import importlib.metadata
+
 import collections
 import numpy as np
 import xarray as xr
@@ -13,6 +16,9 @@ from . import skill as _
 from . import readers as _
 
 logger = logging.getLogger(__name__)
+
+__version__ = importlib.metadata.version("trajan")
+
 
 def read_csv(f, **kwargs):
     """
