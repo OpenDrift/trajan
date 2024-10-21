@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 from .traj import Traj
 from .traj1d import Traj1d
 from .traj2d import Traj2d
+from .ragged import ContiguousRagged
 
 
 def detect_tx_dim(ds):
