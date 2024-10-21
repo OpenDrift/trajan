@@ -1,6 +1,7 @@
 from .traj2d import Traj2d
 
 import numpy as np
+import xarray as xr
 
 import logging
 
@@ -10,18 +11,23 @@ logger = logging.getLogger(__name__)
 class ContiguousRagged(Traj2d):
     """An unstructured dataset, where each trajectory may have observations at different times, and all the data for the different trajectories are stored in single arrays with one dimension, contiguously, one trajectory after the other. Typically from a collection of drifters. This class convert continous ragged datasets into 2d datasets, so that the Traj2d methods can be leveraged."""
     def __init__(self, ds, obsdim, timecoord, trajectorycoord, rowsizevar):
-        ds_converted_to_traj2d = _convert_to_Traj2d(ds, obsdim, timecoord, trajectorycoord, rowsizevar)
+        ds_converted_to_traj2d = self._convert_to_Traj2d(ds, obsdim, timecoord, trajectorycoord, rowsizevar)
         super().__init__(ds_converted_to_traj2d, "obs", "time")
 
 
-    def _convert_to_Traj2d(ds, obsdim, timecoord, trajectorycoord, rowsizevar):
-        nbr_trajectories = len(ds.trajectorycoord)
+    def _convert_to_Traj2d(self, ds, obsdim, timecoord, trajectorycoord, rowsizevar):
+        print(f"{ds = }")
+        print(f"{obsdim = }")
+        print(f"{timecoord = }")
+        print(f"{trajectorycoord = }")
+        print(f"{rowsizevar = }")
+        nbr_trajectories = len(ds[trajectorycoord])
 
         # find the longest trajectory
-        longest_trajectory = np.max(ds.rowsizevar.to_numpy())
+        longest_trajectory = np.max(ds[rowsizevar].to_numpy())
 
         # find the array of instruments
-        array_instruments = ds.trajectorycoord.to_numpy()
+        array_instruments = ds[trajectorycoord].to_numpy()
 
         # generate the empty array of time, lat, lon per instrument
         array_time = np.full(
@@ -35,7 +41,7 @@ class ContiguousRagged(Traj2d):
 
         # fill with the data
         start_index = 0
-        for crrt_index, crrt_rowsize in enumerate(ds.rowsizevar.to_numpy()):
+        for crrt_index, crrt_rowsize in enumerate(ds[rowsizevar].to_numpy()):
             end_index = start_index + crrt_rowsize
 
             array_time[crrt_index, :crrt_rowsize] = ds.time[start_index:end_index]
