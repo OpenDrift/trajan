@@ -32,7 +32,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--doctest-modules"
+addopts = "--benchmark-disable --doctest-modules"
 testpaths = [
   "tests",
   "trajan",
