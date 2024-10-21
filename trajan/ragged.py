@@ -10,48 +10,44 @@ logger = logging.getLogger(__name__)
 
 class ContiguousRagged(Traj2d):
     """An unstructured dataset, where each trajectory may have observations at different times, and all the data for the different trajectories are stored in single arrays with one dimension, contiguously, one trajectory after the other. Typically from a collection of drifters. This class convert continous ragged datasets into 2d datasets, so that the Traj2d methods can be leveraged."""
+
     def __init__(self, ds, obsdim, timecoord, trajectorycoord, rowsizevar):
         ds_converted_to_traj2d = self._convert_to_Traj2d(ds, obsdim, timecoord, trajectorycoord, rowsizevar)
         super().__init__(ds_converted_to_traj2d, "obs", "time")
 
 
     def _convert_to_Traj2d(self, ds, obsdim, timecoord, trajectorycoord, rowsizevar):
-        print(f"{ds = }")
-        print(f"{obsdim = }")
-        print(f"{timecoord = }")
-        print(f"{trajectorycoord = }")
-        print(f"{rowsizevar = }")
+        """This actually converts a contiguous ragged xarray Dataset into an xarray Dataset that follows the Traj2d conventions."""
+        global_attrs = ds.attrs
+
         nbr_trajectories = len(ds[trajectorycoord])
 
         # find the longest trajectory
         longest_trajectory = np.max(ds[rowsizevar].to_numpy())
+    
+        # generate the xarray in trajan format
 
-        # find the array of instruments
+        # the trajectory dimension special case (as it is a different kind, and has a different dim than other variables)
+
         array_instruments = ds[trajectorycoord].to_numpy()
 
-        # generate the empty array of time, lat, lon per instrument
+        # the time var (special case as it is of a different type)
+
         array_time = np.full(
             (nbr_trajectories, longest_trajectory),
             np.datetime64('nat'),
             dtype='datetime64[ns]'
         )
 
-        array_lat = np.full((nbr_trajectories, longest_trajectory), np.nan)
-        array_lon = np.full((nbr_trajectories, longest_trajectory), np.nan)
-
-        # fill with the data
         start_index = 0
         for crrt_index, crrt_rowsize in enumerate(ds[rowsizevar].to_numpy()):
             end_index = start_index + crrt_rowsize
-
-            array_time[crrt_index, :crrt_rowsize] = ds.time[start_index:end_index]
-            array_lat[crrt_index, :crrt_rowsize] = ds.latitude[start_index:end_index]
-            array_lon[crrt_index, :crrt_rowsize] = ds.longitude[start_index:end_index]
-
+            array_time[crrt_index, :crrt_rowsize] = ds[timecoord][start_index:end_index]
             start_index = end_index
-    
-        # generate the xarray in trajan format
-        # TODO: convert key variables by hand; other variables: convert all of them automatically
+
+        # it seems that we need to build the "backbone" of the Dataset independently first
+        # (I have tried to put everything in a dict spec and build the Dataset in one go as it felt more elegant, but it did not work)
+
         ds_converted_to_traj2d = xr.Dataset(
             {
                 # meta vars
@@ -73,28 +69,52 @@ class ContiguousRagged(Traj2d):
                                      "standard_name": "time",
                                      "long_name": "Time for the GNSS position records.",
                     }),
-                #
-                'lat':
-                xr.DataArray(dims=["trajectory", "obs"],
-                             data=array_lat,
-                             attrs={
-                                 "_FillValue": "NaN",
-                                 "standard_name": "latitude",
-                                 "units": "degree_north",
-                }),
-                #
-                'lon':
-                xr.DataArray(dims=["trajectory", "obs"],
-                             data=array_lon,
-                             attrs={
-                                 "_FillValue": "NaN",
-                                 "standard_name": "longitude",
-                                 "units": "degree_east",
-                }),
-            }
-        )
+                }
+            )
 
-        # %%
-        # TODO: perfect forwarding of the other attributes?
+        # now add all "normal" variables
+        # NOTE: for now, we only consider scalar vars; if we want to consider more complex vars (e.g., spectra), this will need updated
+        # NOTE: such an update would typically need to look at the dims of the variable, and if there are additional dims to obsdim, create a higer dim variable
+
+        for crrt_data_var in ds.data_vars:
+            attrs = ds[crrt_data_var].attrs
+
+            if crrt_data_var == rowsizevar:
+                continue
+
+            if len(ds[crrt_data_var].dims) != 1 or ds[crrt_data_var].dims[0] != obsdim:
+                raise ValueError(f"data_vars element {crrt_data_var} has dims {ds[crrt_data_var].dims}, expected {(obsdim,)}")
+
+            crrt_var = np.full((nbr_trajectories, longest_trajectory), np.nan)
+
+            start_index = 0
+
+            for crrt_index, crrt_rowsize in enumerate(ds[rowsizevar].to_numpy()):
+                end_index = start_index + crrt_rowsize
+
+                crrt_var[crrt_index, :crrt_rowsize] = ds[crrt_data_var][start_index:end_index]
+
+                start_index = end_index
+
+            # somehow, the renaming to lat and lon is not called; need to do this by hand for now
+            # NOTE: maybe there is a better way to call the renaming to lat and lon which is inherited from some other trajan function or class, but if so I am not sure how
+            # NOTE: for now, not renaming here was creating a crash for example when plotting (no attribute lon)
+
+            if crrt_data_var == "longitude":
+                crrt_data_var = "lon"
+
+            if crrt_data_var == "latitude":
+                crrt_data_var = "lat"
+
+            ds_converted_to_traj2d[crrt_data_var] = \
+                xr.DataArray(dims=["trajectory", "obs"],
+                             data=crrt_var,
+                             attrs=attrs)
+
+        # copy initial global attributes
+        ds_converted_to_traj2d = ds_converted_to_traj2d.assign_attrs(global_attrs)
+        ds_converted_to_traj2d = ds_converted_to_traj2d.assign_attrs(
+            trajan_modified="this was initially a contiguous ragged Dataset, which was converted to a Traj2d dataset by trajan"
+        )
 
         return ds_converted_to_traj2d
