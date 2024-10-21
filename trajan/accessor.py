@@ -48,82 +48,79 @@ class TrajA(Traj):
 
         tx = detect_tx_dim(ds)
 
-        if len(tx.dims) == 2:
-            # we have a ds where 2D arrays are used to store data, this is either Traj1d or Traj2d
-            if 'obs' in tx.dims:
-                obsdim = 'obs'
-                timedim = detect_time_dim(ds, obsdim)
-
-            elif 'time' in tx.dims:
-                obsdim = 'time'
-                timedim = 'time'
-
-            else:
-                for d in tx.dims:
-                    if not ds[d].attrs.get(
-                            'cf_role',
-                            None) == 'trajectory_id' and not 'traj' in d:
-
-                        obsdim = d
-                        timedim = detect_time_dim(ds, obsdim)
-
-                        break
-
-                if obsdim is None:
-                    logger.warning('No time or obs dimension detected.')
-
-            logger.debug(
-                f"2D storage dataset; detected obs-dim: {obsdim}, detected time-dim: {timedim}.")
-
-            if obsdim is None:
-                ocls = Traj1d
-
-            elif len(ds[timedim].shape) <= 1:
-                logger.debug('Detected structured (1D) trajectory dataset')
-                ocls = Traj1d
-
-            elif len(ds[timedim].shape) == 2:
-                logger.debug('Detected un-structured (2D) trajectory dataset')
-                ocls = Traj2d
-
-            else:
-                raise ValueError(
-                    f'Time dimension has shape greater than 2: {ds["timedim"].shape}'
-                )
-
-            return ocls(ds, obsdim, timedim)
-
-        elif len(tx.dims) == 1:
+        # if we have a 1D dims, this is most likely some contiguous data
+        # there may be a few exceptions though, so be ready to default to the classical 2D parser below
+        if len(tx.dims) == 1:
             # only support ContiguousRagged for now
             ocls = ContiguousRagged
             
             # we have a dataset where data are stored in 1D array
             if "index" in tx.dims:
                 obsdim = "index"
+
+                if "time" in ds.coords:
+                    timecoord = "time"
+                else:
+                    raise ValueError("cannot find timecoord in 1D-array dataset")
+
+                if "trajectory" in ds.coords:
+                    trajectorycoord = "trajectory"
+                else:
+                    raise ValueError("cannot find trajectorycoord in 1D-array dataset")
+
+                if "rowsize" in ds.data_vars:
+                    rowsizevar = "rowsize"
+                else:
+                    raise ValueError("cannot find rowsizevar in 1D-array dataset")
+
+                logger.debug(
+                    f"1D storage dataset; detected: {obsdim = }, {timecoord = }, {trajectorycoord = }, {rowsizevar}"
+                )
+
+                return ocls(ds, obsdim, timecoord, trajectorycoord, rowsizevar)
             else:
-                raise ValueError("cannot find obsdim in 1D-array dataset")
+                logging.warning(f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual")
 
-            if "time" in ds.coords:
-                timecoord = "time"
-            else:
-                raise ValueError("cannot find timecoord in 1D-array dataset")
+        # we have a ds where 2D arrays are used to store data, this is either Traj1d or Traj2d
+        if 'obs' in tx.dims:
+            obsdim = 'obs'
+            timedim = detect_time_dim(ds, obsdim)
 
-            if "trajectory" in ds.coords:
-                trajectorycoord = "trajectory"
-            else:
-                raise ValueError("cannot find trajectorycoord in 1D-array dataset")
-
-            if "rowsize" in ds.data_vars:
-                rowsizevar = "rowsize"
-            else:
-                raise ValueError("cannot find rowsizevar in 1D-array dataset")
-
-            logger.debug(
-                f"1D storage dataset; detected: {obsdim = }, {timecoord = }, {trajectorycoord = }, {rowsizevar}"
-            )
-
-            return ocls(ds, obsdim, timecoord, trajectorycoord, rowsizevar)
+        elif 'time' in tx.dims:
+            obsdim = 'time'
+            timedim = 'time'
 
         else:
-            raise ValueError(f"This xarray dataset format is unknown to trajan; {len(tx.dims) = }")
+            for d in tx.dims:
+                if not ds[d].attrs.get(
+                        'cf_role',
+                        None) == 'trajectory_id' and not 'traj' in d:
 
+                    obsdim = d
+                    timedim = detect_time_dim(ds, obsdim)
+
+                    break
+
+            if obsdim is None:
+                logger.warning('No time or obs dimension detected.')
+
+        logger.debug(
+            f"2D storage dataset; detected obs-dim: {obsdim}, detected time-dim: {timedim}.")
+
+        if obsdim is None:
+            ocls = Traj1d
+
+        elif len(ds[timedim].shape) <= 1:
+            logger.debug('Detected structured (1D) trajectory dataset')
+            ocls = Traj1d
+
+        elif len(ds[timedim].shape) == 2:
+            logger.debug('Detected un-structured (2D) trajectory dataset')
+            ocls = Traj2d
+
+        else:
+            raise ValueError(
+                f'Time dimension has shape greater than 2: {ds["timedim"].shape}'
+            )
+
+        return ocls(ds, obsdim, timedim)
