@@ -57,7 +57,7 @@ class TrajA(Traj):
         if len(tx.dims) == 1:
             # only support ContiguousRagged for now
             ocls = ContiguousRagged
-            
+
             # we have a dataset where data are stored in 1D array
             # NOTE: this is probably not standard; something to point to the CF conventions?
             # NOTE: for now, there is no discovery of the "index" dim, this is hardcorded; any way to do better?
@@ -108,6 +108,10 @@ class TrajA(Traj):
             obsdim = 'obs'
             timedim = detect_time_dim(ds, obsdim)
 
+        elif 'index' in tx.dims:
+            obsdim = 'obs'
+            timedim = detect_time_dim(ds, obsdim)
+
         elif 'time' in tx.dims:
             obsdim = 'time'
             timedim = 'time'
@@ -127,10 +131,12 @@ class TrajA(Traj):
                 logger.warning('No time or obs dimension detected.')
 
         logger.debug(
-            f"2D storage dataset; detected obs-dim: {obsdim}, detected time-dim: {timedim}.")
+            f"Detected obs-dim: {obsdim}, detected time-dim: {timedim}.")
 
         if obsdim is None:
             ocls = Traj1d
+
+        elif len(tx.dims) == 1:
 
         elif len(ds[timedim].shape) <= 1:
             logger.debug('Detected structured (1D) trajectory dataset')
