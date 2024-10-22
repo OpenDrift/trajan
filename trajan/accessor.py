@@ -1,6 +1,9 @@
 import xarray as xr
 import logging
 
+# recommended by cf-xarray
+xr.set_options(keep_attrs=True)
+
 logger = logging.getLogger(__name__)
 
 from .traj import Traj
@@ -55,6 +58,7 @@ class TrajA(Traj):
             ocls = ContiguousRagged
             
             # we have a dataset where data are stored in 1D array
+            # NOTE: this is probably not standard; something to point to the CF conventions?
             if "index" in tx.dims:
                 obsdim = "index"
 
@@ -63,11 +67,9 @@ class TrajA(Traj):
                 else:
                     raise ValueError("cannot find timecoord in 1D-array dataset")
 
-                if "trajectory" in ds.coords:
-                    trajectorycoord = "trajectory"
-                else:
-                    raise ValueError("cannot find trajectorycoord in 1D-array dataset")
+                trajectorycoord = ds.cf["trajectory_id"].name
 
+                # NOTE: this is probably not standard; something to point to the CF conventions?
                 if "rowsize" in ds.data_vars:
                     rowsizevar = "rowsize"
                 else:
@@ -78,10 +80,12 @@ class TrajA(Traj):
                 )
 
                 return ocls(ds, obsdim, timecoord, trajectorycoord, rowsizevar)
+
             else:
-                logging.warning(f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual")
+                logging.warning(f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual; try to parse with Traj1d or Traj2d")
 
         # we have a ds where 2D arrays are used to store data, this is either Traj1d or Traj2d
+        # there may also be some slightly unusual cases where these Traj1d and Traj2d classes will be used on data with 1D arrays
         if 'obs' in tx.dims:
             obsdim = 'obs'
             timedim = detect_time_dim(ds, obsdim)
