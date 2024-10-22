@@ -62,10 +62,17 @@ class TrajA(Traj):
             if "index" in tx.dims:
                 obsdim = "index"
 
-                if "time" in ds.coords:
-                    timecoord = "time"
+                # find all variables with standard_name "time"
+                with_standard_name_time = ds.cf[["time"]]
+                # find the list of these that have the ("index",) dimension
+                with_standard_name_time_and_dim_index = \
+                    [with_standard_name_time[var].name for var in with_standard_name_time.coords \
+                                                       if with_standard_name_time[var].dims == ("index",)]
+                # if there is more than one such, this is ambiguoys
+                if len(with_standard_name_time_and_dim_index) == 1:
+                    timecoord = with_standard_name_time_and_dim_index[0]
                 else:
-                    raise ValueError("cannot find timecoord in 1D-array dataset")
+                    raise ValueError(f"cannot deduce the timecoord; we have the following candidates for timecoord: {with_standard_name_time_and_dim_index = }")
 
                 trajectorycoord = ds.cf["trajectory_id"].name
 
