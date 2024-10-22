@@ -1,5 +1,6 @@
 import xarray as xr
 import logging
+import numpy as np
 
 # recommended by cf-xarray
 xr.set_options(keep_attrs=True)
@@ -59,9 +60,11 @@ class TrajA(Traj):
             
             # we have a dataset where data are stored in 1D array
             # NOTE: this is probably not standard; something to point to the CF conventions?
+            # NOTE: for now, there is no discovery of the "index" dim, this is hardcorded; any way to do better?
             if "index" in tx.dims:
                 obsdim = "index"
 
+                # discover the timecoord variable name #######################
                 # find all variables with standard_name "time"
                 with_standard_name_time = ds.cf[["time"]]
                 # find the list of these that have the ("index",) dimension
@@ -72,15 +75,23 @@ class TrajA(Traj):
                 if len(with_standard_name_time_and_dim_index) == 1:
                     timecoord = with_standard_name_time_and_dim_index[0]
                 else:
-                    raise ValueError(f"cannot deduce the timecoord; we have the following candidates for timecoord: {with_standard_name_time_and_dim_index = }")
+                    raise ValueError(f"cannot deduce the timecoord; we have the following candidates: {with_standard_name_time_and_dim_index = }")
 
+                # discover the trajectorycoord variable name #################
                 trajectorycoord = ds.cf["trajectory_id"].name
 
-                # NOTE: this is probably not standard; something to point to the CF conventions?
-                if "rowsize" in ds.data_vars:
-                    rowsizevar = "rowsize"
+                # discover the "rowsize" variable name #######################
+                # NOTE: this is probably not standard; something to point to the CF conventions? should we need a standard_name for this, instead of the following heuristics?
+                # find all variables with the ("trajectory", ) dimension
+                with_dim_trajectory = \
+                    [ds.data_vars[var].name for var in ds.data_vars if ds[var].dims == ("trajectory",)]
+                if len(with_dim_trajectory) == 1:
+                    rowsizevar = with_dim_trajectory[0]
                 else:
-                    raise ValueError("cannot find rowsizevar in 1D-array dataset")
+                    raise ValueError(f"cannot deduce rowsizevar; we have the following candidates: {with_dim_trajectory = }")
+                # sanity check
+                if not np.sum(ds[rowsizevar].to_numpy()) == len(ds[obsdim]):
+                    raise ValueError("mismatch between the index length and the sum of the deduced trajectory lengths")
 
                 logger.debug(
                     f"1D storage dataset; detected: {obsdim = }, {timecoord = }, {trajectorycoord = }, {rowsizevar}"
