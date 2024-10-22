@@ -1,4 +1,5 @@
-from .traj2d import Traj2d
+from .traj import Traj
+from .plot import Plot
 
 import numpy as np
 import xarray as xr
@@ -7,8 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
-class ContiguousRagged(Traj2d):
+class ContiguousRagged(Traj):
     """An unstructured dataset, where each trajectory may have observations at different times, and all the data for the different trajectories are stored in single arrays with one dimension, contiguously, one trajectory after the other. Typically from a collection of drifters. This class convert continous ragged datasets into 2d datasets, so that the Traj2d methods can be leveraged."""
 
     trajdim: str
@@ -132,3 +132,14 @@ class ContiguousRagged(Traj2d):
         )
 
         return ds_converted_to_traj2d
+
+    @property
+    def plot(self) -> Plot:
+        return self.to_2d().traj.plot
+
+    def timestep(self, average=np.median):
+        return self.to_2d().timestep(average)
+
+    def gridtime(self, times, timedim=None, round=True):
+        return self.to_2d().gridtime(times, timedim, round)
+

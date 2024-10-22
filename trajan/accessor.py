@@ -136,8 +136,6 @@ class TrajA(Traj):
         if obsdim is None:
             ocls = Traj1d
 
-        elif len(tx.dims) == 1:
-
         elif len(ds[timedim].shape) <= 1:
             logger.debug('Detected structured (1D) trajectory dataset')
             ocls = Traj1d

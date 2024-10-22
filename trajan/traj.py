@@ -771,3 +771,8 @@ class Traj:
             A new Dataset with observations condensed.
         """
 
+    @abstractmethod
+    def to_2d(self) -> xr.Dataset:
+        """
+        Convert dataset into a 2D dataset from.
+        """
