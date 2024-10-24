@@ -138,8 +138,8 @@ class ContiguousRagged(Traj):
         return self.to_2d().traj.plot
 
     def timestep(self, average=np.median):
-        return self.to_2d().timestep(average)
+        return self.to_2d().traj.timestep(average)
 
     def gridtime(self, times, timedim=None, round=True):
-        return self.to_2d().gridtime(times, timedim, round)
+        return self.to_2d().traj.gridtime(times, timedim, round)
 
