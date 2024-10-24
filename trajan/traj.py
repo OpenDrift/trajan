@@ -674,6 +674,12 @@ class Traj:
         ----------
         t0, t1 : numpy.datetime64
 
+        Returns
+        -------
+
+        ds : Dataset
+            A dataset with the selected indexes in each trajectory.
+
         See also
         --------
         iseltime, sel, isel
@@ -688,6 +694,73 @@ class Traj:
         ----------
         i : index, list of indexes or a slice.
 
+
+        Returns
+        -------
+
+        ds : Dataset
+            A dataset with the selected indexes in each trajectory.
+
+
+        Example
+        -------
+
+        Select the first and last element in each trajectory in a dataset of
+        unstructured observations:
+
+        >>> import xarray as xr
+        >>> import trajan as _
+        >>> import lzma
+        >>> b = lzma.open('examples/barents.nc.xz')
+        >>> ds = xr.open_dataset(b)
+        >>> print(ds)
+        <xarray.Dataset> Size: 110kB
+        Dimensions:        (trajectory: 2, obs: 2287)
+        Dimensions without coordinates: trajectory, obs
+        Data variables:
+            lon            (trajectory, obs) float64 37kB ...
+            lat            (trajectory, obs) float64 37kB ...
+            time           (trajectory, obs) datetime64[ns] 37kB ...
+            drifter_names  (trajectory) <U16 128B ...
+        Attributes: (12/13)
+            Conventions:          CF-1.10
+            featureType:          trajectory
+            geospatial_lat_min:   74.5454462
+            geospatial_lat_max:   77.4774768
+            geospatial_lon_min:   17.2058074
+            geospatial_lon_max:   29.8523485
+            ...                   ...
+            time_coverage_end:    2022-11-23T13:30:28
+            creator_email:        gauteh@met.no, knutfd@met.no
+            creator_name:         Gaute Hope and Knut Frode Dagestad
+            creator_url:          https://github.com/OpenDrift/opendrift
+            summary:              Two drifters in the Barents Sea. One stranded at Ho...
+            title:                Barents Sea drifters
+
+        >>> ds = ds.traj.iseltime([0, -1])
+        >>> print(ds)
+        <xarray.Dataset> Size: 224B
+        Dimensions:        (trajectory: 2, obs: 2)
+        Dimensions without coordinates: trajectory, obs
+        Data variables:
+            lon            (trajectory, obs) float64 32B 29.85 25.11 27.82 21.15
+            lat            (trajectory, obs) float64 32B 77.3 76.57 77.11 74.58
+            time           (trajectory, obs) datetime64[ns] 32B 2022-10-07T00:00:38 ....
+            drifter_names  (trajectory) <U16 128B 'UIB-2022-TILL-01' 'UIB-2022-TILL-02'
+        Attributes: (12/13)
+            Conventions:          CF-1.10
+            featureType:          trajectory
+            geospatial_lat_min:   74.5454462
+            geospatial_lat_max:   77.4774768
+            geospatial_lon_min:   17.2058074
+            geospatial_lon_max:   29.8523485
+            ...                   ...
+            time_coverage_end:    2022-11-23T13:30:28
+            creator_email:        gauteh@met.no, knutfd@met.no
+            creator_name:         Gaute Hope and Knut Frode Dagestad
+            creator_url:          https://github.com/OpenDrift/opendrift
+            summary:              Two drifters in the Barents Sea. One stranded at Ho...
+            title:                Barents Sea drifters
 
         See also
         --------

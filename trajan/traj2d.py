@@ -19,7 +19,6 @@ def __require_obsdim__(f):
     return wrapper
 
 
-
 class Traj2d(Traj):
     """
     A unstructured dataset, where each trajectory may have observations at different times. Typically from a collection of drifters.
@@ -195,13 +194,20 @@ class Traj2d(Traj):
         return self.ds.where(np.logical_and(self.ds[self.timedim] >= t0,
                                             self.ds[self.timedim] <= t1),
                              drop=True)
+
     @__require_obsdim__
     def iseltime(self, i):
+
         def select(t):
-            ii = np.argwhere(~pd.isna(t[self.timedim]))
+            ii = np.argwhere(~pd.isna(t[self.timedim]).squeeze())
             ii = ii[i].squeeze()
 
-            return t.isel({self.obsdim : ii})
+            o = t.isel({self.obsdim: ii})
+
+            if self.obsdim in o.dims:
+                return o
+            else:
+                return o.expand_dims(self.obsdim)
 
         return self.ds.groupby('trajectory').map(select)
 

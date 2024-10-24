@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def test_seltime(barents):
     print(barents)
 
@@ -24,20 +25,21 @@ def test_iseltime(barents):
     print(barents)
     # print(list(barents.groupby('trajectory')))
 
-    ds = barents.traj.iseltime(0).expand_dims('obs')
+    ds = barents.traj.iseltime(0)
     assert ds.time.min(skipna=True) == barents.time.min(skipna=True)
+    print(ds)
 
     assert ds.dims['obs'] == 1
     assert np.all(~pd.isna(ds.time))
 
     print(ds)
-    ds = barents.traj.iseltime(-1).expand_dims('obs')
+    ds = barents.traj.iseltime(-1)
     assert ds.time.max(skipna=True) == barents.time.max(skipna=True)
     print(ds)
     assert ds.dims['obs'] == 1
     assert np.all(~pd.isna(ds.time))
 
-    ds = barents.traj.iseltime(slice(0,2))
+    ds = barents.traj.iseltime(slice(0, 2))
     print(ds)
     assert ds.dims['obs'] == 2
     assert np.all(~pd.isna(ds.time))
