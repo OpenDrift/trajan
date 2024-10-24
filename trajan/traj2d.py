@@ -188,6 +188,11 @@ class Traj2d(Traj):
 
     @__require_obsdim__
     def seltime(self, t0=None, t1=None):
+        if t0 is None:
+            t0 = np.nanmin(self.ds[self.timedim].values.ravel())
+        if t1 is None:
+            t1 = np.nanmax(self.ds[self.timedim].values.ravel())
+
         t0 = pd.to_datetime(t0)
         t1 = pd.to_datetime(t1)
 
