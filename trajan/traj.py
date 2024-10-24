@@ -18,6 +18,7 @@ from .animation import Animation
 
 logger = logging.getLogger(__name__)
 
+
 def detect_tx_dim(ds):
     if 'lon' in ds:
         return ds.lon
@@ -61,7 +62,6 @@ class Traj:
         self.__gcrs__ = pyproj.CRS.from_epsg(4326)
         self.obsdim = obsdim
         self.timedim = timedim
-
 
     @property
     def plot(self) -> Plot:
@@ -354,12 +354,12 @@ class Traj:
             np.nanmax(self.tlon),
             'time_coverage_start':
             pd.to_datetime(
-                np.nanmin(ds['time'].values[
-                    ds['time'].values != np.datetime64('NaT')])).isoformat(),
+                np.nanmin(ds['time'].values[ds['time'].values != np.datetime64(
+                    'NaT')])).isoformat(),
             'time_coverage_end':
             pd.to_datetime(
-                np.nanmax(ds['time'].values[
-                    ds['time'].values != np.datetime64('NaT')])).isoformat(),
+                np.nanmax(ds['time'].values[ds['time'].values != np.datetime64(
+                    'NaT')])).isoformat(),
         })
 
         if creator_name:
@@ -647,7 +647,7 @@ class Traj:
         return np.array(hull.volume)  # volume=area for 2D as here
 
     @abstractmethod
-    def gridtime(self, times, timedim = None) -> xr.Dataset:
+    def gridtime(self, times, timedim=None) -> xr.Dataset:
         """Interpolate dataset to a regular time interval or a different grid.
 
         Parameters
@@ -668,14 +668,31 @@ class Traj:
 
     @abstractmethod
     def seltime(self, t0=None, t1=None) -> xr.Dataset:
-        """ Select observations in time window between `t0` and `t1` (inclusive).
+        """Select observations in time window between `t0` and `t1` (inclusive). For 1D datasets prefer to use `xarray.Dataset.sel`.
 
         Parameters
         ----------
         t0, t1 : numpy.datetime64
-            Test
+
+        See also
+        --------
+        iseltime, sel, isel
         """
 
+    @abstractmethod
+    def iseltime(self, i) -> xr.Dataset:
+        """Select observations by index (of non-nan, time, observation) across
+        trajectories. For 1D datasets prefer to use `xarray.Dataset.isel`.
+
+        Parameters
+        ----------
+        i : index, list of indexes or a slice.
+
+
+        See also
+        --------
+        seltime, sel, isel
+        """
 
     @abstractmethod
     def skill(self, other, method='liu-weissberg', **kwargs) -> xr.Dataset:

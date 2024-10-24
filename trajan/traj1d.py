@@ -129,6 +129,9 @@ class Traj1d(Traj):
     def seltime(self, t0=None, t1=None):
         return self.ds.sel({self.timedim: slice(t0, t1)})
 
+    def iseltime(self, i):
+        return self.ds.isel({self.timedim: i})
+
     def gridtime(self, times, timedim=None, round=True):
         if isinstance(times, str) or isinstance(
                 times, pd.Timedelta):  # Make time series with given interval

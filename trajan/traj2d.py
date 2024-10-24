@@ -195,6 +195,15 @@ class Traj2d(Traj):
         return self.ds.where(np.logical_and(self.ds[self.timedim] >= t0,
                                             self.ds[self.timedim] <= t1),
                              drop=True)
+    @__require_obsdim__
+    def iseltime(self, i):
+        def select(t):
+            ii = np.argwhere(~pd.isna(t[self.timedim]))
+            ii = ii[i].squeeze()
+
+            return t.isel({self.obsdim : ii})
+
+        return self.ds.groupby('trajectory').map(select)
 
     @__require_obsdim__
     def gridtime(self, times, timedim=None, round=True):
