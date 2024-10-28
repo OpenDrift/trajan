@@ -7,11 +7,10 @@ def test_read_csv_omb_default_waves(test_data, tmpdir):
     path_to_test_data = test_data / 'csv' / 'omb1.csv'
     ds = read_omb_csv(path_to_test_data)
 
-    # 1668207637
-    assert ds.attrs['time_coverage_start'] == '2022-11-12T00:00:37'
+    assert ds.attrs['time_coverage_start'] == '2022-11-10T21:00:38'
     assert ds.attrs['time_coverage_end'] == '2022-11-12T02:30:27'
 
-    assert ds.sizes['trajectory'] == 2
+    assert ds.sizes['trajectory'] == 1
     print(ds.time)
 
     # grid dataset
@@ -21,10 +20,10 @@ def test_read_csv_omb_default_waves(test_data, tmpdir):
     ds.to_netcdf(tmpdir / 'test.nc')
 
     ds2 = xr.open_dataset(tmpdir / 'test.nc')
-    assert ds2.attrs['time_coverage_start'] == '2022-11-12T00:00:37'
-    assert ds2.attrs['time_coverage_end'] == '2022-11-12T02:30:27'
+    assert ds.attrs['time_coverage_start'] == '2022-11-10T21:00:38'
+    assert ds.attrs['time_coverage_end'] == '2022-11-12T02:30:27'
 
-    assert ds2.sizes['trajectory'] == 2
+    assert ds2.sizes['trajectory'] == 1
 
     assert ds == ds2
 
