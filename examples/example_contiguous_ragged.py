@@ -32,7 +32,7 @@ plt.show()
 # it is possible to get a 2d-array dataset version using trajan:
 
 # compare:
-print(f"{xr_data.traj.ds = }")
+print(f"{xr_data = }")
 
 # with:
 xr_data_as_2darray = xr_data.traj.to_2d()
