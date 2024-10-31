@@ -29,9 +29,17 @@ plt.show()
 
 # %%
 
-# this is because, under the hood, trajan is generating a Traj2D non ragged dataset that follows the usual trajan conventions
+# it is possible to get a 2d-array dataset version using trajan:
 
-xr_data.traj.ds
+# compare:
+print(f"{xr_data = }")
+
+# with:
+xr_data_as_2darray = xr_data.traj.to_2d()
+print(f"{xr_data_as_2darray = }")
+
+# naturally, the 2darray version can be dumped to disk if you want:
+xr_data_as_2darray.to_netcdf("./xr_spotter_bulk_test_data_as_2darray.nc")
 
 # %%
 
