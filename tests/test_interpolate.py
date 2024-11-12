@@ -77,8 +77,8 @@ def test_interpolate_non_floats(drifter_csv):
     dc = ta.read_csv(drifter_csv, name='Device', time='Time', lon='Longitude', lat='Latitude')
     dcg = dc.traj.gridtime('1h')
 
-    assert 'time' in dcg.dims
-    assert 'trajectory' in dcg.dims
+    assert 'time' in dcg.sizes
+    assert 'trajectory' in dcg.sizes
 
     print(dc, dcg)
 

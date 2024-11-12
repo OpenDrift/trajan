@@ -69,11 +69,9 @@ class Traj:
         output += 'TrajAn info:\n'
         output += '------------\n'
         output += f'{self.ds.sizes["trajectory"]} trajectories\n'
-        if self.timedim in self.ds.sizes:
-            output += f'{self.ds.sizes[self.timedim]} timesteps\n'
-        else:
-            logger.warning(f'self.timedim ({self.timedim}) is not an existing dimension!\n')
         if 'time' in self.ds.variables:
+            if self.timedim in self.ds.sizes:
+                output += f'{self.ds.sizes[self.timedim]} timesteps\n'
             try:
                 timestep = self.timestep()
                 timestep = timedelta(seconds=int(timestep))
