@@ -64,23 +64,17 @@ class Traj:
         self.obsdim = obsdim
         self.timedim = timedim
 
-    def num_timesteps(self):
+    def __repr__(self):
+        output = '=======================\n'
+        output += 'TrajAn info:\n'
+        output += '------------\n'
+        output += f'{self.ds.sizes["trajectory"]} trajectories\n'
         if self.timedim in self.ds.sizes:
             timedim = self.timedim
         else:
             logger.warning(f'self.timedim ({self.timedim}) is not an existing dimension! Using instead "obs".')
             timedim = 'obs'
-        return self.ds.sizes[timedim]
-
-    def num_trajectories(self):
-        return self.ds.sizes['trajectory']
-
-    def __repr__(self):
-        output = '=======================\n'
-        output += 'TrajAn info:\n'
-        output += '------------\n'
-        output += f'{self.num_trajectories()} trajectories\n'
-        output += f'{self.num_timesteps()} timesteps\n'
+        output += f'{self.ds.sizes[timedim]} timesteps\n'
         try:
             timestep = self.timestep()
             timestep = timedelta(seconds=int(timestep))
