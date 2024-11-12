@@ -6,6 +6,7 @@ https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions
 """
 
 from abc import abstractmethod
+from datetime import timedelta
 import pyproj
 import numpy as np
 import xarray as xr
@@ -62,6 +63,37 @@ class Traj:
         self.__gcrs__ = pyproj.CRS.from_epsg(4326)
         self.obsdim = obsdim
         self.timedim = timedim
+
+    def __repr__(self):
+        output = '=======================\n'
+        output += 'TrajAn info:\n'
+        output += '------------\n'
+        output += f'{self.ds.sizes["trajectory"]} trajectories\n'
+        if 'time' in self.ds.variables:
+            if self.timedim in self.ds.sizes:
+                output += f'{self.ds.sizes[self.timedim]} timesteps\n'
+            try:
+                timestep = self.timestep()
+                timestep = timedelta(seconds=int(timestep))
+            except:
+                timestep = '[self.timestep returns error]'  # TODO
+            output += f'Timestep:       {timestep}\n'
+            start_time = self.ds.time.min().data
+            end_time = self.ds.time.max().data
+            output += f'Time coverage:  {start_time} - {end_time}\n'
+        else:
+            output += f'Dataset has no time dimension'
+        output += f'Longitude span: {self.tx.min().data} to {self.tx.max().data}\n'
+        output += f'Latitude span:  {self.ty.min().data} to {self.ty.max().data}\n'
+        output += 'Variables:\n'
+        for var in self.ds.variables:
+            if var not in ['trajectory', 'obs']:
+                output += f'    {var}'
+                if 'standard_name' in self.ds[var].attrs:
+                    output += f'  [{self.ds[var].standard_name}]'
+                output += '\n'
+        output += '=======================\n'
+        return output
 
     @property
     def plot(self) -> Plot:

@@ -29,17 +29,17 @@ def test_iseltime(barents):
     assert ds.time.min(skipna=True) == barents.time.min(skipna=True)
     print(ds)
 
-    assert ds.dims['obs'] == 1
+    assert ds.sizes['obs'] == 1
     assert np.all(~pd.isna(ds.time))
 
     print(ds)
     ds = barents.traj.iseltime(-1)
     assert ds.time.max(skipna=True) == barents.time.max(skipna=True)
     print(ds)
-    assert ds.dims['obs'] == 1
+    assert ds.sizes['obs'] == 1
     assert np.all(~pd.isna(ds.time))
 
     ds = barents.traj.iseltime(slice(0, 2))
     print(ds)
-    assert ds.dims['obs'] == 2
+    assert ds.sizes['obs'] == 2
     assert np.all(~pd.isna(ds.time))
