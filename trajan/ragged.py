@@ -19,7 +19,7 @@ class ContiguousRagged(Traj):
         self.rowvar = rowsizevar
         super().__init__(ds, obsdim, timedim)
 
-    def to_2d(self):
+    def to_2d(self, obsdim='obs'):
         """This actually converts a contiguous ragged xarray Dataset into an xarray Dataset that follows the Traj2d conventions."""
         global_attrs = self.ds.attrs
 
@@ -70,7 +70,7 @@ class ContiguousRagged(Traj):
 
             # trajectory vars
             'time':
-            xr.DataArray(dims=["trajectory", "obs"],
+            xr.DataArray(dims=["trajectory", obsdim],
                          data=array_time,
                          attrs={
                              "standard_name": "time",
@@ -119,7 +119,7 @@ class ContiguousRagged(Traj):
                 crrt_data_var = "lat"
 
             ds_converted_to_traj2d[crrt_data_var] = \
-                xr.DataArray(dims=["trajectory", "obs"],
+                xr.DataArray(dims=["trajectory", obsdim],
                              data=crrt_var,
                              attrs=attrs)
 
