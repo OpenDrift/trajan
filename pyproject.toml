@@ -7,6 +7,7 @@ license = "GPLv2"
 
 [tool.poetry.scripts]
 trajanshow = "trajan.scripts.trajanshow:main"
+trajaninfo = "trajan.scripts.trajaninfo:main"
 
 [tool.poetry.dependencies]
 python = "^3.8"
