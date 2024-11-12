@@ -911,6 +911,13 @@ class Traj:
         """
 
     @abstractmethod
+    def to_1d(self) -> xr.Dataset:
+        """
+        Convert dataset into a 1D dataset from. This is only possible if the
+        dataset has a single trajectory.
+        """
+
+    @abstractmethod
     def to_2d(self, obs_dim='obs') -> xr.Dataset:
         """
         Convert dataset into a 2D dataset from.
