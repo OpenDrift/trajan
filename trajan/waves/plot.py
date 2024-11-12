@@ -21,23 +21,6 @@ class Plot:
 
     def __init__(self, ds):
         self.ds = ds
-        self.gcrs = ccrs.PlateCarree()
-
-    def set_up_map(self, **kwargs):
-        """
-        Set up axes for plotting.
-
-        Args:
-
-            ax: An existing axes to use.
-
-        Returns:
-
-            An matplotlib axes with a Cartopy projection.
-
-        """
-        ax = kwargs.get('ax', plt.axes())
-        return ax
 
     def __call__(self, *args, **kwargs):
         if self.ds.attrs['standard_name'] == 'sea_surface_wave_variance_spectral_density':
@@ -69,8 +52,10 @@ class Plot:
         """
         vrange = kwargs.pop('vrange', None)
         nseconds_gap = kwargs.pop('nseconds_gap', 6 * 3600)
-
-        ax = self.set_up_map(**kwargs)
+        try:
+            ax = kwargs.pop('ax')
+        except:
+            ax = plt.axes()
 
         if vrange is None:
             vmin_pcolor = -3.0
