@@ -862,7 +862,7 @@ class Traj:
         """
 
     @abstractmethod
-    def to_2d(self) -> xr.Dataset:
+    def to_2d(self, obsdim='obs') -> xr.Dataset:
         """
         Convert dataset into a 2D dataset from.
         """

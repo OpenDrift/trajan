@@ -28,6 +28,17 @@ class Traj1d(Traj):
     def is_2d(self):
         return False
 
+    def to_2d(self, obsdim='obs'):
+        ds = self.ds.copy()
+        time = ds[self.timedim].rename({
+            self.timedim: obsdim
+        }).expand_dims(dim={'trajectory': ds.sizes['trajectory']})
+        ds = ds.rename({self.timedim: obsdim})
+        ds[self.timedim] = time
+        ds[obsdim] = np.arange(0, ds.sizes[obsdim])
+
+        return ds
+
     def time_to_next(self):
         time_step = self.ds.time[1] - self.ds.time[0]
         return time_step
