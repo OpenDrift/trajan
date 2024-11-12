@@ -52,9 +52,14 @@ class Plot:
         """
         vrange = kwargs.pop('vrange', None)
         nseconds_gap = kwargs.pop('nseconds_gap', 6 * 3600)
-        try:
+
+        # TODO: is there a better solution for the following?
+        # NOTE: we would rather like to do something simpler, like:
+        # ax = kwargs.pop('ax', plt.axes())
+        # NOTE: but it seems that calling plt.axes() durinig arg evaluation messes things up, so doing instead:
+        if 'ax' in kwargs:
             ax = kwargs.pop('ax')
-        except:
+        else:
             ax = plt.axes()
 
         if vrange is None:
