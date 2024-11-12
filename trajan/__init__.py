@@ -15,6 +15,8 @@ from . import traj as _
 from . import skill as _
 from . import readers as _
 
+from . import waves as _
+
 logger = logging.getLogger(__name__)
 
 __version__ = importlib.metadata.version("trajan")
