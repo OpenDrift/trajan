@@ -70,20 +70,21 @@ class Traj:
         output += '------------\n'
         output += f'{self.ds.sizes["trajectory"]} trajectories\n'
         if self.timedim in self.ds.sizes:
-            timedim = self.timedim
+            output += f'{self.ds.sizes[self.timedim]} timesteps\n'
         else:
-            logger.warning(f'self.timedim ({self.timedim}) is not an existing dimension! Using instead "obs".')
-            timedim = 'obs'
-        output += f'{self.ds.sizes[timedim]} timesteps\n'
-        try:
-            timestep = self.timestep()
-            timestep = timedelta(seconds=int(timestep))
-        except:
-            timestep = '[self.timestep returns error]'  # TODO
-        output += f'Timestep:       {timestep}\n'
-        start_time = self.ds.time.min().data
-        end_time = self.ds.time.max().data
-        output += f'Time coverage:  {start_time} - {end_time}\n'
+            logger.warning(f'self.timedim ({self.timedim}) is not an existing dimension!\n')
+        if 'time' in self.ds.variables:
+            try:
+                timestep = self.timestep()
+                timestep = timedelta(seconds=int(timestep))
+            except:
+                timestep = '[self.timestep returns error]'  # TODO
+            output += f'Timestep:       {timestep}\n'
+            start_time = self.ds.time.min().data
+            end_time = self.ds.time.max().data
+            output += f'Time coverage:  {start_time} - {end_time}\n'
+        else:
+            output += f'Dataset has no time dimension'
         output += f'Longitude span: {self.tx.min().data} to {self.tx.max().data}\n'
         output += f'Latitude span:  {self.ty.min().data} to {self.ty.max().data}\n'
         output += 'Variables:\n'
