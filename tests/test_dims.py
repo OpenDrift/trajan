@@ -5,7 +5,6 @@ import xarray as xr
 import pandas as pd
 
 def test_no_time_dim(barents):
-    print(barents)
     b = barents.drop_vars('drifter_names')
     b = b.isel(trajectory=0).mean(dim='obs')
     assert 'time' not in b.variables
