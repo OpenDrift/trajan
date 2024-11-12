@@ -38,6 +38,9 @@ class Traj1d(Traj):
 
         return ds
 
+    def to_1d(self):
+        return self.ds.copy()
+
     def time_to_next(self):
         time_step = self.ds.time[1] - self.ds.time[0]
         return time_step
