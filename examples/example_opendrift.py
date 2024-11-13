@@ -21,7 +21,11 @@ with lzma.open('openoil.nc.xz') as oil:
     ds = ds.where(ds.status>=0)  # only active particles
 
 #%%
-# Displaying a basic plot of trajectories
+# Displaying some basic information about this dataset
+print(ds.traj)
+
+#%%
+# Making a basic plot of trajectories
 ds.traj.plot()
 plt.title('Basic trajectory plot')
 plt.show()

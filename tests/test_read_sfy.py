@@ -8,8 +8,8 @@ def test_interpret_sfy(test_data):
     ds = xr.open_dataset(test_data / 'bug32.nc')
     print(ds)
 
-    assert ds.traj.obsdim == 'package'
-    assert ds.traj.timedim == 'position_time'
+    assert ds.traj.obs_dim == 'package'
+    assert ds.traj.time_varname == 'position_time'
 
     assert ds.traj.is_2d()
 

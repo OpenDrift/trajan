@@ -7,32 +7,20 @@ xr.set_options(keep_attrs=True)
 
 logger = logging.getLogger(__name__)
 
-from .traj import Traj
+from .traj import Traj, detect_tx_variable
 from .traj1d import Traj1d
 from .traj2d import Traj2d
 from .ragged import ContiguousRagged
 
 
-def detect_tx_dim(ds):
-    if 'lon' in ds:
-        return ds.lon
-    elif 'longitude' in ds:
-        return ds.longitude
-    elif 'x' in ds:
-        return ds.x
-    elif 'X' in ds:
-        return ds.X
-    else:
-        raise ValueError("Could not determine x / lon variable")
-
-
-def detect_time_dim(ds, obsdim):
-    logger.debug(f'Detecting time-dimension for "{obsdim}"..')
+def detect_time_variable(ds, obs_dim):
+    logger.debug(f'Detecting time-variable for "{obs_dim}"..')
+    # TODO: should use cf-xarray here
     for v in ds.variables:
-        if obsdim in ds[v].dims and 'time' in v:
+        if obs_dim in ds[v].dims and 'time' in v:
             return v
 
-    raise ValueError("no time dimension detected")
+    raise ValueError("No time variable detected")
 
 
 @xr.register_dataset_accessor("traj")
@@ -47,10 +35,10 @@ class TrajA(Traj):
             ds = ds.expand_dims({'trajectory': 1})
             ds['trajectory'].attrs['cf_role'] = 'trajectory_id'
 
-        obsdim = None
-        timedim = None
+        obs_dim = None
+        time_varname = None
 
-        tx = detect_tx_dim(ds)
+        tx = detect_tx_variable(ds)
 
         # if we have a 1D dims, this is most likely some contiguous data
         # there may be a few exceptions though, so be ready to default to the classical 2D parser below
@@ -62,7 +50,7 @@ class TrajA(Traj):
             # NOTE: this is probably not standard; something to point to the CF conventions?
             # NOTE: for now, there is no discovery of the "index" dim, this is hardcorded; any way to do better?
             if "index" in tx.dims:
-                obsdim = "index"
+                obs_dim = "index"
 
                 # discover the timecoord variable name #######################
                 # find all variables with standard_name "time"
@@ -90,14 +78,14 @@ class TrajA(Traj):
                 else:
                     raise ValueError(f"cannot deduce rowsizevar; we have the following candidates: {with_dim_trajectory = }")
                 # sanity check
-                if not np.sum(ds[rowsizevar].to_numpy()) == len(ds[obsdim]):
+                if not np.sum(ds[rowsizevar].to_numpy()) == len(ds[obs_dim]):
                     raise ValueError("mismatch between the index length and the sum of the deduced trajectory lengths")
 
                 logger.debug(
-                    f"1D storage dataset; detected: {obsdim = }, {timecoord = }, {trajectorycoord = }, {rowsizevar}"
+                    f"1D storage dataset; detected: {obs_dim = }, {timecoord = }, {trajectorycoord = }, {rowsizevar}"
                 )
 
-                return ocls(ds, obsdim, timecoord, trajectorycoord, rowsizevar)
+                return ocls(ds, obs_dim, timecoord, trajectorycoord, rowsizevar)
 
             else:
                 logging.warning(f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual; try to parse with Traj1d or Traj2d")
@@ -105,16 +93,16 @@ class TrajA(Traj):
         # we have a ds where 2D arrays are used to store data, this is either Traj1d or Traj2d
         # there may also be some slightly unusual cases where these Traj1d and Traj2d classes will be used on data with 1D arrays
         if 'obs' in tx.dims:
-            obsdim = 'obs'
-            timedim = detect_time_dim(ds, obsdim)
+            obs_dim = 'obs'
+            time_varname = detect_time_variable(ds, obs_dim)
 
         elif 'index' in tx.dims:
-            obsdim = 'obs'
-            timedim = detect_time_dim(ds, obsdim)
+            obs_dim = 'obs'
+            time_varname = detect_time_variable(ds, obs_dim)
 
         elif 'time' in tx.dims:
-            obsdim = 'time'
-            timedim = 'time'
+            obs_dim = 'time'
+            time_varname = 'time'
 
         else:
             for d in tx.dims:
@@ -122,31 +110,31 @@ class TrajA(Traj):
                         'cf_role',
                         None) == 'trajectory_id' and not 'traj' in d:
 
-                    obsdim = d
-                    timedim = detect_time_dim(ds, obsdim)
+                    obs_dim = d
+                    time_varname = detect_time_variable(ds, obs_dim)
 
                     break
 
-            if obsdim is None:
+            if obs_dim is None:
                 logger.warning('No time or obs dimension detected.')
 
         logger.debug(
-            f"Detected obs-dim: {obsdim}, detected time-dim: {timedim}.")
+            f"Detected obs-dim: {obs_dim}, detected time-variable: {time_varname}.")
 
-        if obsdim is None:
+        if obs_dim is None:
             ocls = Traj1d
 
-        elif len(ds[timedim].shape) <= 1:
+        elif len(ds[time_varname].shape) <= 1:
             logger.debug('Detected structured (1D) trajectory dataset')
             ocls = Traj1d
 
-        elif len(ds[timedim].shape) == 2:
+        elif len(ds[time_varname].shape) == 2:
             logger.debug('Detected un-structured (2D) trajectory dataset')
             ocls = Traj2d
 
         else:
             raise ValueError(
-                f'Time dimension has shape greater than 2: {ds["timedim"].shape}'
+                f'Time variable has more than two dimensions: {ds[time_varname].shape}'
             )
 
-        return ocls(ds, obsdim, timedim)
+        return ocls(ds, obs_dim, time_varname)
