@@ -14,8 +14,8 @@ class Traj1d(Traj):
     A structured dataset, where each trajectory is always given at the same times. Typically the output from a model or from a gridded dataset.
     """
 
-    def __init__(self, ds, obsdim, timedim):
-        super().__init__(ds, obsdim, timedim)
+    def __init__(self, ds, obs_dimname, time_varname):
+        super().__init__(ds, obs_dimname, time_varname)
 
     def timestep(self):
         """Time step between observations in seconds."""
@@ -28,14 +28,14 @@ class Traj1d(Traj):
     def is_2d(self):
         return False
 
-    def to_2d(self, obsdim='obs'):
+    def to_2d(self, obs_dimname='obs'):
         ds = self.ds.copy()
-        time = ds[self.timedim].rename({
-            self.timedim: obsdim
+        time = ds[self.time_varname].rename({
+            self.time_varname: obs_dimname
         }).expand_dims(dim={'trajectory': ds.sizes['trajectory']})
-        ds = ds.rename({self.timedim: obsdim})
-        ds[self.timedim] = time
-        ds[obsdim] = np.arange(0, ds.sizes[obsdim])
+        ds = ds.rename({self.time_varname: obs_dimname})
+        ds[self.time_varname] = time
+        ds[obs_dimname] = np.arange(0, ds.sizes[obs_dimname])
 
         return ds
 
@@ -101,8 +101,8 @@ class Traj1d(Traj):
             )
 
         diff = np.max(
-            np.abs((self.ds[self.obsdim] -
-                    other[other.traj.obsdim]).astype('timedelta64[s]').astype(
+            np.abs((self.ds[self.obs_dimname] -
+                    other[other.traj.obs_dimname]).astype('timedelta64[s]').astype(
                         np.float64)))
 
         if not np.isclose(diff, 0):
@@ -112,11 +112,11 @@ class Traj1d(Traj):
 
         s = np.zeros((self.ds.sizes['trajectory']), dtype=np.float32)
 
-        # ds = self.ds.dropna(dim=self.obsdim)
-        # other = other.dropna(dim=other.traj.obsdim)
+        # ds = self.ds.dropna(dim=self.obs_dimname)
+        # other = other.dropna(dim=other.traj.obs_dimname)
 
-        ds = self.ds.transpose('trajectory', self.obsdim, ...)
-        other = other.transpose('trajectory', other.traj.obsdim, ...)
+        ds = self.ds.transpose('trajectory', self.obs_dimname, ...)
+        other = other.transpose('trajectory', other.traj.obs_dimname, ...)
 
         lon0 = ds.traj.tlon
         lat0 = ds.traj.tlat
@@ -138,12 +138,12 @@ class Traj1d(Traj):
                             attrs={'method': method})
 
     def seltime(self, t0=None, t1=None):
-        return self.ds.sel({self.timedim: slice(t0, t1)})
+        return self.ds.sel({self.time_varname: slice(t0, t1)})
 
     def iseltime(self, i):
-        return self.ds.isel({self.timedim: i})
+        return self.ds.isel({self.time_varname: i})
 
-    def gridtime(self, times, timedim=None, round=True):
+    def gridtime(self, times, time_varname=None, round=True):
         if isinstance(times, str) or isinstance(
                 times, pd.Timedelta):  # Make time series with given interval
             if round is True:
@@ -161,27 +161,27 @@ class Traj1d(Traj):
         if not isinstance(times, np.ndarray):
             times = times.to_numpy()
 
-        timedim = self.timedim if timedim is None else timedim
+        time_varname = self.time_varname if time_varname is None else time_varname
 
         ds = self.ds
 
-        if self.obsdim != timedim:
+        if self.obs_dimname != time_varname:
             ds = ds.rename({
-                self.obsdim: timedim
-            }).set_index({timedim: timedim})
+                self.obs_dimname: time_varname
+            }).set_index({time_varname: time_varname})
 
-        _, ui = np.unique(ds[timedim], return_index=True)
+        _, ui = np.unique(ds[time_varname], return_index=True)
 
-        if len(ui) != len(self.ds[timedim]):
+        if len(ui) != len(self.ds[time_varname]):
             logger.warning('non-unique time points, dropping time-duplicates')
 
-        ds = ds.isel({timedim: ui})
-        ds = ds.isel({timedim: np.where(~pd.isna(ds[timedim].values))[0]})
+        ds = ds.isel({time_varname: ui})
+        ds = ds.isel({time_varname: np.where(~pd.isna(ds[time_varname].values))[0]})
 
-        if ds.sizes[timedim] > 0:
-            ds = ds.interp({timedim: times})
+        if ds.sizes[time_varname] > 0:
+            ds = ds.interp({time_varname: times})
         else:
-            logger.warning(f"time dimension ({timedim}) is zero size")
+            logger.warning(f"time dimension ({time_varname}) is zero size")
 
         if not 'trajectory' in ds.dims:
             ds = ds.expand_dims('trajectory')

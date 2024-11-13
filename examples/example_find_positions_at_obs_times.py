@@ -25,7 +25,7 @@ print(ds)
 def gridwaves(tds):
     t = tds[['lat', 'lon',
              'time']].traj.gridtime(tds['time_waves_imu'].squeeze())
-    return t.traj.to_2d(obsdim='obs_waves_imu')
+    return t.traj.to_2d(obs_dimname='obs_waves_imu')
 
 
 dsw = ds.groupby('trajectory').map(gridwaves)

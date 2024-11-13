@@ -33,10 +33,10 @@ def detect_tx_dim(ds):
         raise ValueError("Could not determine x / lon variable")
 
 
-def detect_time_dim(ds, obsdim):
-    logger.debug(f'Detecting time-dimension for "{obsdim}"..')
+def detect_time_dim(ds, obs_dimname):
+    logger.debug(f'Detecting time-dimension for "{obs_dimname}"..')
     for v in ds.variables:
-        if obsdim in ds[v].dims and 'time' in v:
+        if obs_dimname in ds[v].dims and 'time' in v:
             return v
 
     raise ValueError("no time dimension detected")
@@ -50,19 +50,13 @@ class Traj:
 
     __gcrs__: pyproj.CRS
 
-    obsdim: str
-    """
-    Name of the dimension along which observations are taken. Usually either `obs` or `time`.
-    """
-    timedim: str
-
-    def __init__(self, ds, obsdim, timedim):
+    def __init__(self, ds, obs_dimname, time_varname):
         self.ds = ds
         self.__plot__ = None
         self.__animate__ = None
         self.__gcrs__ = pyproj.CRS.from_epsg(4326)
-        self.obsdim = obsdim
-        self.timedim = timedim
+        self.obs_dimname = obs_dimname  # dimension along which time increases
+        self.time_varname = time_varname
 
     def __repr__(self):
         output = '=======================\n'
@@ -70,8 +64,10 @@ class Traj:
         output += '------------\n'
         output += f'{self.ds.sizes["trajectory"]} trajectories\n'
         if 'time' in self.ds.variables:
-            if self.timedim in self.ds.sizes:
-                output += f'{self.ds.sizes[self.timedim]} timesteps\n'
+            if self.time_varname in self.ds.sizes:
+                output += f'{self.ds.sizes[self.time_varname]} timesteps'
+                timevar = self.ds[self.time_varname]
+                output += f'    {timevar.name}{list(timevar.sizes)} ({len(timevar.sizes)}D)\n'
             try:
                 timestep = self.timestep()
                 timestep = timedelta(seconds=int(timestep))
@@ -532,18 +528,18 @@ class Traj:
 
         lon = self.ds.lon
         lat = self.ds.lat
-        lenobs = self.ds.sizes[self.obsdim]
-        lonfrom = lon.isel({self.obsdim: slice(0, lenobs - 1)})
-        latfrom = lat.isel({self.obsdim: slice(0, lenobs - 1)})
-        lonto = lon.isel({self.obsdim: slice(1, lenobs)})
-        latto = lat.isel({self.obsdim: slice(1, lenobs)})
+        lenobs = self.ds.sizes[self.obs_dimname]
+        lonfrom = lon.isel({self.obs_dimname: slice(0, lenobs - 1)})
+        latfrom = lat.isel({self.obs_dimname: slice(0, lenobs - 1)})
+        lonto = lon.isel({self.obs_dimname: slice(1, lenobs)})
+        latto = lat.isel({self.obs_dimname: slice(1, lenobs)})
         geod = pyproj.Geod(ellps='WGS84')
         azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto,
                                                  latto)
 
         distance = xr.DataArray(distance, coords=lonfrom.coords, dims=lon.dims)
-        distance = xr.concat((distance, distance.isel({self.obsdim: -1})),
-                             dim=self.obsdim)  # repeating last time step to
+        distance = xr.concat((distance, distance.isel({self.obs_dimname: -1})),
+                             dim=self.obs_dimname)  # repeating last time step to
         return distance
 
     def azimuth_to_next(self):
@@ -564,11 +560,11 @@ class Traj:
         # TODO: method is almost duplicate of "distance_to_next" above
         lon = self.ds.lon
         lat = self.ds.lat
-        lenobs = self.ds.dims[self.obsdim]
-        lonfrom = lon.isel({self.obsdim: slice(0, lenobs - 1)})
-        latfrom = lat.isel({self.obsdim: slice(0, lenobs - 1)})
-        lonto = lon.isel({self.obsdim: slice(1, lenobs)})
-        latto = lat.isel({self.obsdim: slice(1, lenobs)})
+        lenobs = self.ds.dims[self.obs_dimname]
+        lonfrom = lon.isel({self.obs_dimname: slice(0, lenobs - 1)})
+        latfrom = lat.isel({self.obs_dimname: slice(0, lenobs - 1)})
+        lonto = lon.isel({self.obs_dimname: slice(1, lenobs)})
+        latto = lat.isel({self.obs_dimname: slice(1, lenobs)})
         geod = pyproj.Geod(ellps='WGS84')
         azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto,
                                                  latto)
@@ -577,8 +573,8 @@ class Traj:
                                        coords=lonfrom.coords,
                                        dims=lon.dims)
         azimuth_forward = xr.concat(
-            (azimuth_forward, azimuth_forward.isel({self.obsdim: -1})),
-            dim=self.obsdim)  # repeating last time step to
+            (azimuth_forward, azimuth_forward.isel({self.obs_dimname: -1})),
+            dim=self.obs_dimname)  # repeating last time step to
         return azimuth_forward
 
     def velocity_components(self):
@@ -679,7 +675,7 @@ class Traj:
         return np.array(hull.volume)  # volume=area for 2D as here
 
     @abstractmethod
-    def gridtime(self, times, timedim=None) -> xr.Dataset:
+    def gridtime(self, times, time_varname=None) -> xr.Dataset:
         """Interpolate dataset to a regular time interval or a different grid.
 
         Parameters
@@ -689,7 +685,7 @@ class Traj:
                 - an array of times, or
                 - a string specifying a Pandas daterange (e.g. 'h', '6h, 'D'...) suitable for `pd.date_range`.
 
-        timedim : str
+        time_varname : str
             Name of new time dimension. The default is to use the same name as previously.
 
         Returns
@@ -894,7 +890,7 @@ class Traj:
         """
 
     @abstractmethod
-    def to_2d(self, obsdim='obs') -> xr.Dataset:
+    def to_2d(self, obs_dimname='obs') -> xr.Dataset:
         """
         Convert dataset into a 2D dataset from.
         """

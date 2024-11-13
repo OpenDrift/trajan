@@ -8,11 +8,11 @@ from .traj import Traj
 logger = logging.getLogger(__name__)
 
 
-def __require_obsdim__(f):
+def __require_obs_dimname__(f):
     """This decorator is for methods of Traj that require a time or obs dimension to work."""
 
     def wrapper(*args, **kwargs):
-        if args[0].obsdim is None:
+        if args[0].obs_dimname is None:
             raise ValueError(f'{f} requires an obs or time dimension')
         return f(*args, **kwargs)
 
@@ -24,8 +24,8 @@ class Traj2d(Traj):
     A unstructured dataset, where each trajectory may have observations at different times. Typically from a collection of drifters.
     """
 
-    def __init__(self, ds, obsdim, timedim):
-        super().__init__(ds, obsdim, timedim)
+    def __init__(self, ds, obs_dimname, time_varname):
+        super().__init__(ds, obs_dimname, time_varname)
 
     def timestep(self, average=np.nanmedian):
         """
@@ -132,30 +132,30 @@ class Traj2d(Traj):
 
         return xr.concat(trajs, dim='trajectory')
 
-    @__require_obsdim__
+    @__require_obs_dimname__
     def condense_obs(self) -> xr.Dataset:
 
-        on = self.ds.sizes[self.obsdim]
+        on = self.ds.sizes[self.obs_dimname]
         logger.debug(f'Condensing {on} observations.')
 
         ds = self.ds.copy(deep=True)
 
         # The observation coordinate will be re-written
-        ds = ds.drop_vars([self.obsdim])
+        ds = ds.drop_vars([self.obs_dimname])
 
-        assert self.obsdim in ds[
-            self.timedim].dims, "observation not a coordinate of time variable"
+        assert self.obs_dimname in ds[
+            self.time_varname].dims, "observation not a coordinate of time variable"
 
         # Move all observations for each trajectory to starting row
         maxN = 0
         for ti in range(len(ds.trajectory)):
             obsvars = [
-                var for var in ds.variables if self.obsdim in ds[var].dims
+                var for var in ds.variables if self.obs_dimname in ds[var].dims
             ]
             iv = np.full(on, False)
             for var in obsvars:
                 ivv = ~pd.isnull(
-                    ds[self.timedim][ti, :])  # valid times in this trajectory.
+                    ds[self.time_varname][ti, :])  # valid times in this trajectory.
                 iv = np.logical_or(iv, ivv)
 
             N = np.count_nonzero(iv)
@@ -178,46 +178,46 @@ class Traj2d(Traj):
                 # ), "Varying number of valid observations within same trajectory."
 
         logger.debug(f'Condensed observations from: {on} to {maxN}')
-        ds = ds.isel({self.obsdim: slice(0, maxN)})
+        ds = ds.isel({self.obs_dimname: slice(0, maxN)})
 
         # Write new observation coordinate.
         obs = np.arange(0, maxN)
-        ds = ds.assign_coords({self.obsdim: obs})
+        ds = ds.assign_coords({self.obs_dimname: obs})
 
         return ds
 
-    @__require_obsdim__
+    @__require_obs_dimname__
     def seltime(self, t0=None, t1=None):
         if t0 is None:
-            t0 = np.nanmin(self.ds[self.timedim].values.ravel())
+            t0 = np.nanmin(self.ds[self.time_varname].values.ravel())
         if t1 is None:
-            t1 = np.nanmax(self.ds[self.timedim].values.ravel())
+            t1 = np.nanmax(self.ds[self.time_varname].values.ravel())
 
         t0 = pd.to_datetime(t0)
         t1 = pd.to_datetime(t1)
 
-        return self.ds.where(np.logical_and(self.ds[self.timedim] >= t0,
-                                            self.ds[self.timedim] <= t1),
+        return self.ds.where(np.logical_and(self.ds[self.time_varname] >= t0,
+                                            self.ds[self.time_varname] <= t1),
                              drop=True)
 
-    @__require_obsdim__
+    @__require_obs_dimname__
     def iseltime(self, i):
 
         def select(t):
-            ii = np.argwhere(~pd.isna(t[self.timedim]).squeeze())
+            ii = np.argwhere(~pd.isna(t[self.time_varname]).squeeze())
             ii = ii[i].squeeze()
 
-            o = t.isel({self.obsdim: ii})
+            o = t.isel({self.obs_dimname: ii})
 
-            if self.obsdim in o.dims:
+            if self.obs_dimname in o.dims:
                 return o
             else:
-                return o.expand_dims(self.obsdim)
+                return o.expand_dims(self.obs_dimname)
 
         return self.ds.groupby('trajectory').map(select)
 
-    @__require_obsdim__
-    def gridtime(self, times, timedim=None, round=True):
+    @__require_obs_dimname__
+    def gridtime(self, times, time_varname=None, round=True):
         if isinstance(times, str) or isinstance(
                 times, pd.Timedelta):  # Make time series with given interval
             if round is True:
@@ -235,27 +235,27 @@ class Traj2d(Traj):
         if not isinstance(times, np.ndarray):
             times = times.to_numpy()
 
-        timedim = self.timedim if timedim is None else timedim
+        time_varname = self.time_varname if time_varname is None else time_varname
 
         d = None
 
         for t in range(self.ds.sizes['trajectory']):
             dt = self.ds.isel(trajectory=t) \
-                        .dropna(self.obsdim, how='all')
+                        .dropna(self.obs_dimname, how='all')
 
-            dt = dt.assign_coords({self.obsdim : dt[self.timedim].values }) \
-                   .drop_vars(self.timedim) \
-                   .rename({self.obsdim : timedim}) \
-                   .set_index({timedim: timedim})
+            dt = dt.assign_coords({self.obs_dimname : dt[self.time_varname].values }) \
+                   .drop_vars(self.time_varname) \
+                   .rename({self.obs_dimname : time_varname}) \
+                   .set_index({time_varname: time_varname})
 
-            _, ui = np.unique(dt[timedim], return_index=True)
-            dt = dt.isel({timedim: ui})
-            dt = dt.isel({timedim: np.where(~pd.isna(dt[timedim].values))[0]})
+            _, ui = np.unique(dt[time_varname], return_index=True)
+            dt = dt.isel({time_varname: ui})
+            dt = dt.isel({time_varname: np.where(~pd.isna(dt[time_varname].values))[0]})
 
-            if dt.sizes[timedim] > 0:
-                dt = dt.interp({timedim: times})
+            if dt.sizes[time_varname] > 0:
+                dt = dt.interp({time_varname: times})
             else:
-                logger.warning(f"time dimension ({timedim}) is zero size")
+                logger.warning(f"time dimension ({time_varname}) is zero size")
 
             if d is None:
                 d = dt.expand_dims('trajectory')
