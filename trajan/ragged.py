@@ -14,12 +14,12 @@ class ContiguousRagged(Traj):
     trajdim: str
     rowvar: str
 
-    def __init__(self, ds, obs_dimname, time_varname, trajectorycoord, rowsizevar):
+    def __init__(self, ds, obs_dim, time_varname, trajectorycoord, rowsizevar):
         self.trajdim = trajectorycoord
         self.rowvar = rowsizevar
-        super().__init__(ds, obs_dimname, time_varname)
+        super().__init__(ds, obs_dim, time_varname)
 
-    def to_2d(self, obs_dimname='obs'):
+    def to_2d(self, obs_dim='obs'):
         """This actually converts a contiguous ragged xarray Dataset into an xarray Dataset that follows the Traj2d conventions."""
         global_attrs = self.ds.attrs
 
@@ -70,7 +70,7 @@ class ContiguousRagged(Traj):
 
             # trajectory vars
             'time':
-            xr.DataArray(dims=["trajectory", obs_dimname],
+            xr.DataArray(dims=["trajectory", obs_dim],
                          data=array_time,
                          attrs={
                              "standard_name": "time",
@@ -81,7 +81,7 @@ class ContiguousRagged(Traj):
 
         # now add all "normal" variables
         # NOTE: for now, we only consider scalar vars; if we want to consider more complex vars (e.g., spectra), this will need updated
-        # NOTE: such an update would typically need to look at the dims of the variable, and if there are additional dims to obs_dimname, create a higer dim variable
+        # NOTE: such an update would typically need to look at the dims of the variable, and if there are additional dims to obs_dim, create a higer dim variable
 
         for crrt_data_var in self.ds.data_vars:
             attrs = self.ds[crrt_data_var].attrs
@@ -90,9 +90,9 @@ class ContiguousRagged(Traj):
                 continue
 
             if len(self.ds[crrt_data_var].dims
-                   ) != 1 or self.ds[crrt_data_var].dims[0] != self.obs_dimname:
+                   ) != 1 or self.ds[crrt_data_var].dims[0] != self.obs_dim:
                 raise ValueError(
-                    f"data_vars element {crrt_data_var} has dims {self.ds[crrt_data_var].dims}, expected {(self.obs_dimname,)}"
+                    f"data_vars element {crrt_data_var} has dims {self.ds[crrt_data_var].dims}, expected {(self.obs_dim,)}"
                 )
 
             crrt_var = np.full((nbr_trajectories, longest_trajectory), np.nan)
@@ -119,7 +119,7 @@ class ContiguousRagged(Traj):
                 crrt_data_var = "lat"
 
             ds_converted_to_traj2d[crrt_data_var] = \
-                xr.DataArray(dims=["trajectory", obs_dimname],
+                xr.DataArray(dims=["trajectory", obs_dim],
                              data=crrt_var,
                              attrs=attrs)
 

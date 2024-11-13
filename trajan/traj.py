@@ -33,10 +33,10 @@ def detect_tx_dim(ds):
         raise ValueError("Could not determine x / lon variable")
 
 
-def detect_time_dim(ds, obs_dimname):
-    logger.debug(f'Detecting time-dimension for "{obs_dimname}"..')
+def detect_time_dim(ds, obs_dim):
+    logger.debug(f'Detecting time-dimension for "{obs_dim}"..')
     for v in ds.variables:
-        if obs_dimname in ds[v].dims and 'time' in v:
+        if obs_dim in ds[v].dims and 'time' in v:
             return v
 
     raise ValueError("no time dimension detected")
@@ -50,12 +50,12 @@ class Traj:
 
     __gcrs__: pyproj.CRS
 
-    def __init__(self, ds, obs_dimname, time_varname):
+    def __init__(self, ds, obs_dim, time_varname):
         self.ds = ds
         self.__plot__ = None
         self.__animate__ = None
         self.__gcrs__ = pyproj.CRS.from_epsg(4326)
-        self.obs_dimname = obs_dimname  # dimension along which time increases
+        self.obs_dim = obs_dim  # dimension along which time increases
         self.time_varname = time_varname
 
     def __repr__(self):
@@ -528,18 +528,18 @@ class Traj:
 
         lon = self.ds.lon
         lat = self.ds.lat
-        lenobs = self.ds.sizes[self.obs_dimname]
-        lonfrom = lon.isel({self.obs_dimname: slice(0, lenobs - 1)})
-        latfrom = lat.isel({self.obs_dimname: slice(0, lenobs - 1)})
-        lonto = lon.isel({self.obs_dimname: slice(1, lenobs)})
-        latto = lat.isel({self.obs_dimname: slice(1, lenobs)})
+        lenobs = self.ds.sizes[self.obs_dim]
+        lonfrom = lon.isel({self.obs_dim: slice(0, lenobs - 1)})
+        latfrom = lat.isel({self.obs_dim: slice(0, lenobs - 1)})
+        lonto = lon.isel({self.obs_dim: slice(1, lenobs)})
+        latto = lat.isel({self.obs_dim: slice(1, lenobs)})
         geod = pyproj.Geod(ellps='WGS84')
         azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto,
                                                  latto)
 
         distance = xr.DataArray(distance, coords=lonfrom.coords, dims=lon.dims)
-        distance = xr.concat((distance, distance.isel({self.obs_dimname: -1})),
-                             dim=self.obs_dimname)  # repeating last time step to
+        distance = xr.concat((distance, distance.isel({self.obs_dim: -1})),
+                             dim=self.obs_dim)  # repeating last time step to
         return distance
 
     def azimuth_to_next(self):
@@ -560,11 +560,11 @@ class Traj:
         # TODO: method is almost duplicate of "distance_to_next" above
         lon = self.ds.lon
         lat = self.ds.lat
-        lenobs = self.ds.dims[self.obs_dimname]
-        lonfrom = lon.isel({self.obs_dimname: slice(0, lenobs - 1)})
-        latfrom = lat.isel({self.obs_dimname: slice(0, lenobs - 1)})
-        lonto = lon.isel({self.obs_dimname: slice(1, lenobs)})
-        latto = lat.isel({self.obs_dimname: slice(1, lenobs)})
+        lenobs = self.ds.dims[self.obs_dim]
+        lonfrom = lon.isel({self.obs_dim: slice(0, lenobs - 1)})
+        latfrom = lat.isel({self.obs_dim: slice(0, lenobs - 1)})
+        lonto = lon.isel({self.obs_dim: slice(1, lenobs)})
+        latto = lat.isel({self.obs_dim: slice(1, lenobs)})
         geod = pyproj.Geod(ellps='WGS84')
         azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto,
                                                  latto)
@@ -573,8 +573,8 @@ class Traj:
                                        coords=lonfrom.coords,
                                        dims=lon.dims)
         azimuth_forward = xr.concat(
-            (azimuth_forward, azimuth_forward.isel({self.obs_dimname: -1})),
-            dim=self.obs_dimname)  # repeating last time step to
+            (azimuth_forward, azimuth_forward.isel({self.obs_dim: -1})),
+            dim=self.obs_dim)  # repeating last time step to
         return azimuth_forward
 
     def velocity_components(self):
@@ -890,7 +890,7 @@ class Traj:
         """
 
     @abstractmethod
-    def to_2d(self, obs_dimname='obs') -> xr.Dataset:
+    def to_2d(self, obs_dim='obs') -> xr.Dataset:
         """
         Convert dataset into a 2D dataset from.
         """

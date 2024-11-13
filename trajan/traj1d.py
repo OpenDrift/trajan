@@ -14,8 +14,8 @@ class Traj1d(Traj):
     A structured dataset, where each trajectory is always given at the same times. Typically the output from a model or from a gridded dataset.
     """
 
-    def __init__(self, ds, obs_dimname, time_varname):
-        super().__init__(ds, obs_dimname, time_varname)
+    def __init__(self, ds, obs_dim, time_varname):
+        super().__init__(ds, obs_dim, time_varname)
 
     def timestep(self):
         """Time step between observations in seconds."""
@@ -28,14 +28,14 @@ class Traj1d(Traj):
     def is_2d(self):
         return False
 
-    def to_2d(self, obs_dimname='obs'):
+    def to_2d(self, obs_dim='obs'):
         ds = self.ds.copy()
         time = ds[self.time_varname].rename({
-            self.time_varname: obs_dimname
+            self.time_varname: obs_dim
         }).expand_dims(dim={'trajectory': ds.sizes['trajectory']})
-        ds = ds.rename({self.time_varname: obs_dimname})
+        ds = ds.rename({self.time_varname: obs_dim})
         ds[self.time_varname] = time
-        ds[obs_dimname] = np.arange(0, ds.sizes[obs_dimname])
+        ds[obs_dim] = np.arange(0, ds.sizes[obs_dim])
 
         return ds
 
@@ -101,8 +101,8 @@ class Traj1d(Traj):
             )
 
         diff = np.max(
-            np.abs((self.ds[self.obs_dimname] -
-                    other[other.traj.obs_dimname]).astype('timedelta64[s]').astype(
+            np.abs((self.ds[self.obs_dim] -
+                    other[other.traj.obs_dim]).astype('timedelta64[s]').astype(
                         np.float64)))
 
         if not np.isclose(diff, 0):
@@ -112,11 +112,11 @@ class Traj1d(Traj):
 
         s = np.zeros((self.ds.sizes['trajectory']), dtype=np.float32)
 
-        # ds = self.ds.dropna(dim=self.obs_dimname)
-        # other = other.dropna(dim=other.traj.obs_dimname)
+        # ds = self.ds.dropna(dim=self.obs_dim)
+        # other = other.dropna(dim=other.traj.obs_dim)
 
-        ds = self.ds.transpose('trajectory', self.obs_dimname, ...)
-        other = other.transpose('trajectory', other.traj.obs_dimname, ...)
+        ds = self.ds.transpose('trajectory', self.obs_dim, ...)
+        other = other.transpose('trajectory', other.traj.obs_dim, ...)
 
         lon0 = ds.traj.tlon
         lat0 = ds.traj.tlat
@@ -165,9 +165,9 @@ class Traj1d(Traj):
 
         ds = self.ds
 
-        if self.obs_dimname != time_varname:
+        if self.obs_dim != time_varname:
             ds = ds.rename({
-                self.obs_dimname: time_varname
+                self.obs_dim: time_varname
             }).set_index({time_varname: time_varname})
 
         _, ui = np.unique(ds[time_varname], return_index=True)
