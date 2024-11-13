@@ -1,6 +1,5 @@
 import numpy as np
 import xarray as xr
-import numpy as np
 import pandas as pd
 import logging
 from .traj import Traj
@@ -38,6 +37,9 @@ class Traj1d(Traj):
         ds[obsdim] = np.arange(0, ds.sizes[obsdim])
 
         return ds
+
+    def to_1d(self):
+        return self.ds.copy()
 
     def time_to_next(self):
         time_step = self.ds.time[1] - self.ds.time[0]
@@ -183,7 +185,7 @@ class Traj1d(Traj):
         else:
             logger.warning(f"time dimension ({timedim}) is zero size")
 
-        if not 'trajectory' in ds.dims:
+        if 'trajectory' not in ds.dims:
             ds = ds.expand_dims('trajectory')
 
         return ds

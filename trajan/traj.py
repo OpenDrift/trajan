@@ -699,6 +699,21 @@ class Traj:
         """
 
     @abstractmethod
+    def gridobs(self, times) -> xr.Dataset:
+        """Interpolate dataset to observation times.
+
+        Parameters
+        ----------
+        times : DataArray (trajectory, obs)
+            A time variable with the target times for each trajectory.
+
+        Returns
+        -------
+        Dataset
+            A new dataset interpolated to the target times. The dataset will be 2D (i.e. observational).
+        """
+
+    @abstractmethod
     def seltime(self, t0=None, t1=None) -> xr.Dataset:
         """Select observations in time window between `t0` and `t1` (inclusive). For 1D datasets prefer to use `xarray.Dataset.sel`.
 
@@ -891,6 +906,13 @@ class Traj:
         Returns:
 
             A new Dataset with observations condensed.
+        """
+
+    @abstractmethod
+    def to_1d(self) -> xr.Dataset:
+        """
+        Convert dataset into a 1D dataset from. This is only possible if the
+        dataset has a single trajectory.
         """
 
     @abstractmethod
