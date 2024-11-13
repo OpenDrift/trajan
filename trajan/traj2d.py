@@ -42,11 +42,11 @@ class Traj2d(Traj):
            Last time is repeated for last position (which has no next position)
         """
         time = self.ds.time
-        lenobs = self.ds.sizes['obs']
+        lenobs = self.ds.sizes[self.obs_dim]
         td = time.isel(obs=slice(1, lenobs)) - time.isel(
             obs=slice(0, lenobs - 1))
         td = xr.concat((td, td.isel(obs=-1)),
-                       dim='obs')  # repeating last time step
+                       dim=self.obs_dim)  # repeating last time step
         return td
 
     def is_1d(self):
@@ -59,7 +59,7 @@ class Traj2d(Traj):
         """Insert NaN-values in trajectories after given positions, shifting rest of trajectory."""
 
         index_of_last = self.index_of_last()
-        num_inserts = condition.sum(dim='obs')
+        num_inserts = condition.sum(dim=self.obs_dim)
         max_obs = (index_of_last + num_inserts).max().values
 
         # Create new empty dataset with extended obs dimension
@@ -68,13 +68,13 @@ class Traj2d(Traj):
             coords={
                 'trajectory':
                 (["trajectory"], range(self.ds.sizes['trajectory'])),
-                'obs': (['obs'], range(max_obs))  # Longest trajectory
+                self.obs_dim: ([self.obs_dim], range(max_obs))  # Longest trajectory
             },
             attrs=self.ds.attrs)
 
         # Add extended variables
         for varname, var in self.ds.data_vars.items():
-            if 'obs' not in var.dims:
+            if self.obs_dim not in var.dims:
                 nd[varname] = var
                 continue
             # Create empty dataarray to hold interpolated values for given variable
@@ -104,11 +104,11 @@ class Traj2d(Traj):
 
                 newdata = newdata[slice(0, max_obs -
                                         1)]  # truncating, should be checked
-                da[{'trajectory': t, 'obs': slice(0, len(newdata))}] = newdata
+                da[{'trajectory': t, self.obs_dim: slice(0, len(newdata))}] = newdata
 
             nd[varname] = da.astype(var.dtype)
 
-        nd = nd.drop_vars(('obs', 'trajectory'))  # Remove coordinates
+        nd = nd.drop_vars((self.obs_dim, 'trajectory'))  # Remove coordinates
 
         return nd
 
@@ -121,12 +121,12 @@ class Traj2d(Traj):
             new = self.ds.isel(trajectory=i).drop_sel(obs=np.where(
                 condition.isel(
                     trajectory=i))[0])  # Dropping from given trajectory
-            newlen = max(newlen, new.sizes['obs'])
+            newlen = max(newlen, new.sizes[self.obs_dim])
             trajs.append(new)
 
         # Ensure all trajectories have equal length, by padding with NaN at end
         trajs = [
-            t.pad(pad_width={'obs': (0, newlen - t.sizes['obs'])})
+            t.pad(pad_width={self.obs_dim: (0, newlen - t.sizes[self.obs_dim])})
             for t in trajs
         ]
 

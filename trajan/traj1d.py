@@ -181,7 +181,7 @@ class Traj1d(Traj):
         if ds.sizes[time_varname] > 0:
             ds = ds.interp({time_varname: times})
         else:
-            logger.warning(f"time dimension ({time_varname}) is zero size")
+            logger.warning(f"time variable ({time_varname}) has zero size")
 
         if not 'trajectory' in ds.dims:
             ds = ds.expand_dims('trajectory')

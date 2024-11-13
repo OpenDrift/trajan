@@ -69,12 +69,12 @@ class Traj:
             end_time = self.ds.time.max().data
             output += f'Time coverage:  {start_time} - {end_time}\n'
         else:
-            output += f'Dataset has no time dimension'
+            output += f'Dataset has no time variable'
         output += f'Longitude span: {self.tx.min().data} to {self.tx.max().data}\n'
         output += f'Latitude span:  {self.ty.min().data} to {self.ty.max().data}\n'
         output += 'Variables:\n'
         for var in self.ds.variables:
-            if var not in ['trajectory', 'obs']:
+            if var not in ['trajectory', self.obs_dim]:
                 output += f'    {var}'
                 if 'standard_name' in self.ds[var].attrs:
                     output += f'  [{self.ds[var].standard_name}]'
