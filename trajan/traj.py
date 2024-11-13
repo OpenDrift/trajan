@@ -20,7 +20,7 @@ from .animation import Animation
 logger = logging.getLogger(__name__)
 
 
-def detect_tx_dim(ds):
+def detect_tx_variable(ds):
     if 'lon' in ds:
         return ds.lon
     elif 'longitude' in ds:
@@ -31,15 +31,6 @@ def detect_tx_dim(ds):
         return ds.X
     else:
         raise ValueError("Could not determine x / lon variable")
-
-
-def detect_time_dim(ds, obs_dim):
-    logger.debug(f'Detecting time-dimension for "{obs_dim}"..')
-    for v in ds.variables:
-        if obs_dim in ds[v].dims and 'time' in v:
-            return v
-
-    raise ValueError("no time dimension detected")
 
 
 class Traj:
@@ -123,7 +114,7 @@ class Traj:
         tlon, ty
         """
 
-        return detect_tx_dim(self.ds)
+        return detect_tx_variable(self.ds)
 
     @property
     def ty(self):

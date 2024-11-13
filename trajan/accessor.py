@@ -7,32 +7,20 @@ xr.set_options(keep_attrs=True)
 
 logger = logging.getLogger(__name__)
 
-from .traj import Traj
+from .traj import Traj, detect_tx_variable
 from .traj1d import Traj1d
 from .traj2d import Traj2d
 from .ragged import ContiguousRagged
 
 
-def detect_tx_dim(ds):
-    if 'lon' in ds:
-        return ds.lon
-    elif 'longitude' in ds:
-        return ds.longitude
-    elif 'x' in ds:
-        return ds.x
-    elif 'X' in ds:
-        return ds.X
-    else:
-        raise ValueError("Could not determine x / lon variable")
-
-
-def detect_time_dim(ds, obs_dim):
-    logger.debug(f'Detecting time-dimension for "{obs_dim}"..')
+def detect_time_variable(ds, obs_dim):
+    logger.debug(f'Detecting time-variable for "{obs_dim}"..')
+    # TODO: should use cf-xarray here
     for v in ds.variables:
         if obs_dim in ds[v].dims and 'time' in v:
             return v
 
-    raise ValueError("no time dimension detected")
+    raise ValueError("No time variable detected")
 
 
 @xr.register_dataset_accessor("traj")
@@ -50,7 +38,7 @@ class TrajA(Traj):
         obs_dim = None
         time_varname = None
 
-        tx = detect_tx_dim(ds)
+        tx = detect_tx_variable(ds)
 
         # if we have a 1D dims, this is most likely some contiguous data
         # there may be a few exceptions though, so be ready to default to the classical 2D parser below
@@ -106,11 +94,11 @@ class TrajA(Traj):
         # there may also be some slightly unusual cases where these Traj1d and Traj2d classes will be used on data with 1D arrays
         if 'obs' in tx.dims:
             obs_dim = 'obs'
-            time_varname = detect_time_dim(ds, obs_dim)
+            time_varname = detect_time_variable(ds, obs_dim)
 
         elif 'index' in tx.dims:
             obs_dim = 'obs'
-            time_varname = detect_time_dim(ds, obs_dim)
+            time_varname = detect_time_variable(ds, obs_dim)
 
         elif 'time' in tx.dims:
             obs_dim = 'time'
@@ -123,7 +111,7 @@ class TrajA(Traj):
                         None) == 'trajectory_id' and not 'traj' in d:
 
                     obs_dim = d
-                    time_varname = detect_time_dim(ds, obs_dim)
+                    time_varname = detect_time_variable(ds, obs_dim)
 
                     break
 
