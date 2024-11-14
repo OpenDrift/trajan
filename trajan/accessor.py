@@ -22,18 +22,54 @@ def detect_time_variable(ds, obs_dim):
 
     raise ValueError("No time variable detected")
 
+def detect_trajectory_dim(ds):
+    logger.debug('Detecting trajectory dimension')
+    if 'trajectory_id' in ds.cf.cf_roles:  # This is the proper CF way
+        trajectory_var = ds.cf['trajectory_id']
+        if trajectory_var.name in trajectory_var.sizes:  # Check that this is a dimension
+            return trajectory_var.name
+        else:
+            if len(trajectory_var.dims) > 1:
+                logger.warning(f'trajectory_id is {trajectory_var.name}, but dimensions '
+                               'have other names: {str(list(trajectory_var.sizes))}')
+            elif len(trajectory_var.dims) == 1:  # Using the single dimension name
+                return list(trajectory_var.sizes)[0]
+            else:
+                logger.warning('Single trajectory, a trajectory dimension will be added')
+                return None
+
+    logger.warning('No trajectory_id attribute/variable found, trying to identify by name.')
+    tx = detect_tx_variable(ds)
+    for tdn in ['trajectory', 'traj']:  # Common names of trajectory dimension
+        if tdn in tx.dims:
+            return tdn
+
+    return None  # Did not succeed in detecting trajectory dimension
+
 
 @xr.register_dataset_accessor("traj")
 class TrajA(Traj):
     def __new__(cls, ds):
-        if 'traj' in ds.dims:
-            logger.info(
-                'Normalizing dimension name from "traj" to "trajectory".')
-            ds = ds.rename({'traj': 'trajectory'})
 
-        if 'trajectory' not in ds.dims:  # Add empty trajectory dimension, if single trajectory
-            ds = ds.expand_dims({'trajectory': 1})
-            ds['trajectory'].attrs['cf_role'] = 'trajectory_id'
+        trajectory_dim = detect_trajectory_dim(ds)
+
+        if trajectory_dim is None:
+            if 'trajectory_id' in ds.cf.cf_roles:
+                trajectory_id = ds.cf.cf_roles['trajectory_id']
+                if len(trajectory_id) > 1:
+                        raise ValueError(f'Dataset has several trajectory_id variables: {trajectory_id}')
+                else:
+                    trajectory_id = trajectory_id[0]
+                    logger.warning(f'Using trajectory_id variable name ({trajectory_id}) '
+                                   'as trajectory dimension name')
+                    trajectory_dim = trajectory_id
+                    ds = ds.set_coords(trajectory_dim)
+                    ds = ds.expand_dims(trajectory_dim, create_index_for_new_dim=False)
+            else:
+                logger.debug('Creating new trajectory dimension "trajectory"')
+                trajectory_dim = 'trajectory'
+                ds = ds.expand_dims({trajectory_dim: 1})
+                ds[trajectory_dim].attrs['cf_role'] = 'trajectory_id'
 
         obs_dim = None
         time_varname = None
@@ -65,8 +101,7 @@ class TrajA(Traj):
                 else:
                     raise ValueError(f"cannot deduce the timecoord; we have the following candidates: {with_standard_name_time_and_dim_index = }")
 
-                # discover the trajectorycoord variable name #################
-                trajectorycoord = ds.cf["trajectory_id"].name
+                # KFD TODO: the below detection should be generalized to dynamic dimension names
 
                 # discover the "rowsize" variable name #######################
                 # NOTE: this is probably not standard; something to point to the CF conventions? should we need a standard_name for this, instead of the following heuristics?
@@ -82,10 +117,10 @@ class TrajA(Traj):
                     raise ValueError("mismatch between the index length and the sum of the deduced trajectory lengths")
 
                 logger.debug(
-                    f"1D storage dataset; detected: {obs_dim = }, {timecoord = }, {trajectorycoord = }, {rowsizevar}"
+                    f"1D storage dataset; detected: {obs_dim = }, {timecoord = }, {trajectory_dim = }, {rowsizevar}"
                 )
 
-                return ocls(ds, obs_dim, timecoord, trajectorycoord, rowsizevar)
+                return ocls(ds, trajectory_dim, obs_dim, timecoord, rowsizevar)
 
             else:
                 logging.warning(f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual; try to parse with Traj1d or Traj2d")
@@ -137,4 +172,5 @@ class TrajA(Traj):
                 f'Time variable has more than two dimensions: {ds[time_varname].shape}'
             )
 
-        return ocls(ds, obs_dim, time_varname)
+        # TODO: The provided attributes could perhaps be added here before returning
+        return ocls(ds, trajectory_dim, obs_dim, time_varname)

@@ -41,11 +41,12 @@ class Traj:
 
     __gcrs__: pyproj.CRS
 
-    def __init__(self, ds, obs_dim, time_varname):
+    def __init__(self, ds, trajectory_dim, obs_dim, time_varname):
         self.ds = ds
         self.__plot__ = None
         self.__animate__ = None
         self.__gcrs__ = pyproj.CRS.from_epsg(4326)
+        self.trajectory_dim = trajectory_dim  # name of trajectory dimension
         self.obs_dim = obs_dim  # dimension along which time increases
         self.time_varname = time_varname
 
@@ -53,25 +54,27 @@ class Traj:
         output = '=======================\n'
         output += 'TrajAn info:\n'
         output += '------------\n'
-        output += f'{self.ds.sizes["trajectory"]} trajectories\n'
-        if 'time' in self.ds.variables:
-            if self.time_varname in self.ds.sizes:
-                output += f'{self.ds.sizes[self.time_varname]} timesteps'
-                timevar = self.ds[self.time_varname]
-                output += f'    {timevar.name}{list(timevar.sizes)} ({len(timevar.sizes)}D)\n'
+        if self.trajectory_dim is None:
+            output += 'Single trajectory (no trajectory dimension)\n'
+        else:
+            output += f'{self.ds.sizes[self.trajectory_dim]} trajectories  [trajectory_dim: {self.trajectory_dim}]\n'
+        if self.time_varname is not None:
+            output += f'{self.ds.sizes[self.obs_dim]} timesteps      [obs_dim: {self.obs_dim}]\n'
+            timevar = self.ds[self.time_varname]
+            output += f'Time variable:    {timevar.name}{list(timevar.sizes)}   ({len(timevar.sizes)}D)\n'
             try:
                 timestep = self.timestep()
                 timestep = timedelta(seconds=int(timestep))
             except:
                 timestep = '[self.timestep returns error]'  # TODO
             output += f'Timestep:       {timestep}\n'
-            start_time = self.ds.time.min().data
-            end_time = self.ds.time.max().data
+            start_time = self.ds.time.min(skipna=True).data
+            end_time = self.ds.time.max(skipna=True).data
             output += f'Time coverage:  {start_time} - {end_time}\n'
         else:
             output += f'Dataset has no time variable'
-        output += f'Longitude span: {self.tx.min().data} to {self.tx.max().data}\n'
-        output += f'Latitude span:  {self.ty.min().data} to {self.ty.max().data}\n'
+        output += f'Longitude span: {self.tx.min(skipna=True).data} to {self.tx.max(skipna=True).data}\n'
+        output += f'Latitude span:  {self.ty.min(skipna=True).data} to {self.ty.max(skipna=True).data}\n'
         output += 'Variables:\n'
         for var in self.ds.variables:
             if var not in ['trajectory', self.obs_dim]:
@@ -352,31 +355,23 @@ class Traj:
         """
         ds = self.ds.copy(deep=True)
 
-        ds['trajectory'] = ds['trajectory'].astype(str)
-        ds['trajectory'].attrs = {
+        ds[self.trajectory_dim] = ds[self.trajectory_dim].astype(str)
+        ds[self.trajectory_dim].attrs = {
             'cf_role': 'trajectory_id',
             'long_name': 'trajectory name'
         }
 
         ds = ds.assign_attrs({
-            'Conventions':
-            'CF-1.10',
-            'featureType':
-            'trajectory',
-            'geospatial_lat_min':
-            np.nanmin(self.tlat),
-            'geospatial_lat_max':
-            np.nanmax(self.tlat),
-            'geospatial_lon_min':
-            np.nanmin(self.tlon),
-            'geospatial_lon_max':
-            np.nanmax(self.tlon),
-            'time_coverage_start':
-            pd.to_datetime(
+            'Conventions': 'CF-1.10',
+            'featureType': 'trajectory',
+            'geospatial_lat_min': np.nanmin(self.tlat),
+            'geospatial_lat_max': np.nanmax(self.tlat),
+            'geospatial_lon_min': np.nanmin(self.tlon),
+            'geospatial_lon_max': np.nanmax(self.tlon),
+            'time_coverage_start': pd.to_datetime(
                 np.nanmin(ds['time'].values[ds['time'].values != np.datetime64(
                     'NaT')])).isoformat(),
-            'time_coverage_end':
-            pd.to_datetime(
+            'time_coverage_end': pd.to_datetime(
                 np.nanmax(ds['time'].values[ds['time'].values != np.datetime64(
                     'NaT')])).isoformat(),
         })
@@ -479,24 +474,25 @@ class Traj:
         """
 
         other = other.broadcast_like(self.ds)
+
         geod = pyproj.Geod(ellps='WGS84')
-        az_fwd, a2, distance = geod.inv(self.ds.traj.tlon, self.ds.traj.tlat,
+        az_fwd, a2, distance = geod.inv(self.tlon, self.tlat,
                                         other.traj.tlon, other.traj.tlat)
 
         ds = xr.Dataset()
         ds['distance'] = xr.DataArray(distance,
                                       name='distance',
-                                      coords=self.ds.traj.tlon.coords,
+                                      coords=self.tlon.coords,
                                       attrs={'units': 'm'})
 
         ds['az_fwd'] = xr.DataArray(az_fwd,
                                     name='forward azimuth',
-                                    coords=self.ds.traj.tlon.coords,
+                                    coords=self.tlon.coords,
                                     attrs={'units': 'degrees'})
 
         ds['az_bwd'] = xr.DataArray(a2,
                                     name='back azimuth',
-                                    coords=self.ds.traj.tlon.coords,
+                                    coords=self.tlon.coords,
                                     attrs={'units': 'degrees'})
 
         return ds
