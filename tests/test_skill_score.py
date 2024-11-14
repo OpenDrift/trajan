@@ -38,10 +38,10 @@ def test_barents_align(barents):
     b0 = barents.isel(trajectory=0)
 
     # assert b0.sizes['trajectory'] == 1
-    assert barents.sizes['trajectory'] == 2
+    assert barents.sizes[barents.traj.trajectory_dim] == 2
 
     (b01, _) = xr.broadcast(b0, barents)
-    b01 = b01.transpose('trajectory', ...)
+    b01 = b01.transpose(b01.traj.trajectory_dim, ...)
 
     np.testing.assert_allclose(b01.isel(trajectory=0).lon, barents.isel(trajectory=0).lon)
     np.testing.assert_allclose(b01.isel(trajectory=1).lon, barents.isel(trajectory=0).lon)

@@ -14,8 +14,8 @@ class Traj1d(Traj):
     A structured dataset, where each trajectory is always given at the same times. Typically the output from a model or from a gridded dataset.
     """
 
-    def __init__(self, ds, obs_dim, time_varname):
-        super().__init__(ds, obs_dim, time_varname)
+    def __init__(self, ds, trajectory_dim, obs_dim, time_varname):
+        super().__init__(ds, trajectory_dim, obs_dim, time_varname)
 
     def timestep(self):
         """Time step between observations in seconds."""
@@ -32,7 +32,8 @@ class Traj1d(Traj):
         ds = self.ds.copy()
         time = ds[self.time_varname].rename({
             self.time_varname: obs_dim
-        }).expand_dims(dim={'trajectory': ds.sizes['trajectory']})
+        }).expand_dims(dim={self.trajectory_dim: ds.sizes[self.trajectory_dim]})
+        # TODO should also add cf_role here
         ds = ds.rename({self.time_varname: obs_dim})
         ds[self.time_varname] = time
         ds[obs_dim] = np.arange(0, ds.sizes[obs_dim])
@@ -45,7 +46,7 @@ class Traj1d(Traj):
 
     def velocity_spectrum(self):
 
-        if self.ds.sizes['trajectory'] > 1:
+        if self.ds.sizes[self.trajectory_dim] > 1:
             raise ValueError(
                 'Spectrum can only be calculated for a single trajectory')
 
@@ -77,7 +78,7 @@ class Traj1d(Traj):
         ### TODO unfinished method
 
         from .tools import rotary_spectra
-        if self.ds.sizes['trajectory'] > 1:
+        if self.ds.sizes[self.trajectory_dim] > 1:
             raise ValueError(
                 'Spectrum can only be calculated for a single trajectory')
 
@@ -95,9 +96,9 @@ class Traj1d(Traj):
         plt.show()
 
     def skill(self, other, method='liu-weissberg', **kwargs):
-        if self.ds.sizes['trajectory'] != other.sizes['trajectory']:
+        if self.ds.sizes[self.trajectory_dim] != other.sizes[other.traj.trajectory_dim]:
             raise ValueError(
-                f"There must be the same number of trajectories in the two datasets that are compared. This dataset: {self.ds.sizes['trajectory']}, other: {other.sizes['trajectory']}."
+                f"There must be the same number of trajectories in the two datasets that are compared. This dataset: {self.ds.sizes[self.trajectory_dim]}, other: {other.sizes[other.traj.trajectory_dim]}."
             )
 
         diff = np.max(
@@ -110,31 +111,31 @@ class Traj1d(Traj):
                 f"The two datasets must have approximately equal time coordinates, maximum difference: {diff} seconds. Consider using `gridtime` to interpolate one of the datasets."
             )
 
-        s = np.zeros((self.ds.sizes['trajectory']), dtype=np.float32)
+        s = np.zeros((self.ds.sizes[self.trajectory_dim]), dtype=np.float32)
 
         # ds = self.ds.dropna(dim=self.obs_dim)
         # other = other.dropna(dim=other.traj.obs_dim)
 
-        ds = self.ds.transpose('trajectory', self.obs_dim, ...)
-        other = other.transpose('trajectory', other.traj.obs_dim, ...)
+        ds = self.ds.transpose(self.trajectory_dim, self.obs_dim, ...)
+        other = other.transpose(other.traj.trajectory_dim, other.traj.obs_dim, ...)
 
-        lon0 = ds.traj.tlon
+        lon0 = ds.traj.tlon  # TODO should be self.tlon ?
         lat0 = ds.traj.tlat
         lon1 = other.traj.tlon
         lat1 = other.traj.tlat
 
         for ti in range(0, len(s)):
             if method == 'liu-weissberg':
-                s[ti] = skill.liu_weissberg(lon0.isel(trajectory=ti),
-                                            lat0.isel(trajectory=ti),
-                                            lon1.isel(trajectory=ti),
-                                            lat1.isel(trajectory=ti), **kwargs)
+                s[ti] = skill.liu_weissberg(lon0.isel({self.trajectory_dim: ti}),
+                                            lat0.isel({self.trajectory_dim: ti}),
+                                            lon1.isel({self.trajectory_dim: ti}),
+                                            lat1.isel({self.trajectory_dim: ti}), **kwargs)
             else:
                 raise ValueError(f"Unknown skill-score method: {method}.")
 
         return xr.DataArray(s,
                             name='Skillscore',
-                            coords={'trajectory': self.ds.trajectory},
+                            coords={self.trajectory_dim: self.ds.trajectory},
                             attrs={'method': method})
 
     def seltime(self, t0=None, t1=None):

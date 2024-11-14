@@ -11,19 +11,17 @@ logger = logging.getLogger(__name__)
 class ContiguousRagged(Traj):
     """An unstructured dataset, where each trajectory may have observations at different times, and all the data for the different trajectories are stored in single arrays with one dimension, contiguously, one trajectory after the other. Typically from a collection of drifters. This class convert continous ragged datasets into 2d datasets, so that the Traj2d methods can be leveraged."""
 
-    trajdim: str
-    rowvar: str
+    rowvar: str  # TODO: Should have a more precise name than rowvar
 
-    def __init__(self, ds, obs_dim, time_varname, trajectorycoord, rowsizevar):
-        self.trajdim = trajectorycoord
+    def __init__(self, ds, trajectory_dim, obs_dim, time_varname, rowsizevar):
         self.rowvar = rowsizevar
-        super().__init__(ds, obs_dim, time_varname)
+        super().__init__(ds, trajectory_dim, obs_dim, time_varname)
 
     def to_2d(self, obs_dim='obs'):
         """This actually converts a contiguous ragged xarray Dataset into an xarray Dataset that follows the Traj2d conventions."""
         global_attrs = self.ds.attrs
 
-        nbr_trajectories = len(self.ds[self.trajdim])
+        nbr_trajectories = len(self.ds[self.trajectory_dim])
 
         # find the longest trajectory
         longest_trajectory = np.max(self.ds[self.rowvar].to_numpy())
@@ -32,7 +30,7 @@ class ContiguousRagged(Traj):
 
         # the trajectory dimension special case (as it is a different kind, and has a different dim than other variables)
 
-        array_instruments = self.ds[self.trajdim].to_numpy()
+        array_instruments = self.ds[self.trajectory_dim].to_numpy()
 
         # the time var (special case as it is of a different type)
 

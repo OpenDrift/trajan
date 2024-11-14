@@ -6,7 +6,7 @@ import pandas as pd
 
 def test_to2d(barents):
     # print(barents)
-    gr = barents.traj.gridtime('1H')
+    gr = barents.traj.gridtime('1h')
     # print(gr)
 
     assert gr.traj.is_1d()

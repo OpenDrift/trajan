@@ -24,8 +24,8 @@ class Traj2d(Traj):
     A unstructured dataset, where each trajectory may have observations at different times. Typically from a collection of drifters.
     """
 
-    def __init__(self, ds, obs_dim, time_varname):
-        super().__init__(ds, obs_dim, time_varname)
+    def __init__(self, ds, trajectory_dim, obs_dim, time_varname):
+        super().__init__(ds, trajectory_dim, obs_dim, time_varname)
 
     def timestep(self, average=np.nanmedian):
         """
@@ -63,11 +63,11 @@ class Traj2d(Traj):
         max_obs = (index_of_last + num_inserts).max().values
 
         # Create new empty dataset with extended obs dimension
-        trajcoord = range(self.ds.sizes['trajectory'])
+        trajcoord = range(self.ds.sizes[self.trajectory_dim])
         nd = xr.Dataset(
             coords={
-                'trajectory':
-                (["trajectory"], range(self.ds.sizes['trajectory'])),
+                self.trajectory_dim:
+                ([self.trajectory_dim], range(self.ds.sizes[self.trajectory_dim])),
                 self.obs_dim: ([self.obs_dim], range(max_obs))  # Longest trajectory
             },
             attrs=self.ds.attrs)
@@ -85,7 +85,7 @@ class Traj2d(Traj):
             )
 
             for t in range(
-                    self.ds.sizes['trajectory']):  # loop over trajectories
+                    self.ds.sizes[self.trajectory_dim]):  # loop over trajectories
                 numins = num_inserts[t]
                 olddata = var.isel(trajectory=t).values
                 wh = np.argwhere(condition.isel(trajectory=t).values) + 1
@@ -104,11 +104,11 @@ class Traj2d(Traj):
 
                 newdata = newdata[slice(0, max_obs -
                                         1)]  # truncating, should be checked
-                da[{'trajectory': t, self.obs_dim: slice(0, len(newdata))}] = newdata
+                da[{self.trajectory_dim: t, self.obs_dim: slice(0, len(newdata))}] = newdata
 
             nd[varname] = da.astype(var.dtype)
 
-        nd = nd.drop_vars((self.obs_dim, 'trajectory'))  # Remove coordinates
+        nd = nd.drop_vars((self.obs_dim, self.trajectory_dim))  # Remove coordinates
 
         return nd
 
@@ -117,7 +117,7 @@ class Traj2d(Traj):
 
         trajs = []
         newlen = 0
-        for i in range(self.ds.sizes['trajectory']):
+        for i in range(self.ds.sizes[self.trajectory_dim]):
             new = self.ds.isel(trajectory=i).drop_sel(obs=np.where(
                 condition.isel(
                     trajectory=i))[0])  # Dropping from given trajectory
@@ -130,7 +130,7 @@ class Traj2d(Traj):
             for t in trajs
         ]
 
-        return xr.concat(trajs, dim='trajectory')
+        return xr.concat(trajs, dim=self.trajectory_dim)
 
     @__require_obs_dim__
     def condense_obs(self) -> xr.Dataset:
@@ -214,7 +214,7 @@ class Traj2d(Traj):
             else:
                 return o.expand_dims(self.obs_dim)
 
-        return self.ds.groupby('trajectory').map(select)
+        return self.ds.groupby(self.trajectory_dim).map(select)
 
     @__require_obs_dim__
     def gridtime(self, times, time_varname=None, round=True):
@@ -239,7 +239,7 @@ class Traj2d(Traj):
 
         d = None
 
-        for t in range(self.ds.sizes['trajectory']):
+        for t in range(self.ds.sizes[self.trajectory_dim]):
             dt = self.ds.isel(trajectory=t) \
                         .dropna(self.obs_dim, how='all')
 
@@ -258,10 +258,10 @@ class Traj2d(Traj):
                 logger.warning(f"time dimension ({time_varname}) is zero size")
 
             if d is None:
-                d = dt.expand_dims('trajectory')
+                d = dt.expand_dims(self.trajectory_dim)
             else:
-                d = xr.concat((d, dt), "trajectory")
+                d = xr.concat((d, dt), self.trajectory_dim)
 
-        d = d.assign_coords({'trajectory': self.ds['trajectory']})
+        d = d.assign_coords({self.trajectory_dim: self.ds[self.trajectory_dim]})
 
         return d
