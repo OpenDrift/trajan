@@ -881,3 +881,32 @@ class Traj:
         """
         Convert dataset into a 2D dataset from.
         """
+
+    def crop(self, lonmin=-360, lonmax=360, latmin=-90, latmax=90, shape='not_yet_implemented'):
+        """
+        Remove parts of trajectories outside of given geographical bounds.
+
+        Parameters
+        ----------
+
+        lonmin : float
+            Minimum longitude
+
+        lonmin : float
+            Minimum longitude
+
+        lonmin : float
+            Minimum longitude
+
+        lonmin : float
+            Minimum longitude
+
+        Returns
+        -------
+
+        Dataset
+            A new Xarray Dataset containing only given area
+        """
+
+        return self.ds.where((self.tlon>lonmin) & (self.tlon<lonmax) &
+                             (self.tlat>latmin) & (self.tlat<latmax))
