@@ -26,6 +26,13 @@ ds.traj.plot()
 plt.show()
 
 #%%
+# Cropping to a smaller geographical area
+d_cropped = ds.traj.crop(lonmin=24, lonmax=28, latmin=76.5, latmax=77)
+d_cropped.traj.plot()
+plt.title('Cropped dataset')
+plt.show()
+
+#%%
 # The figure can be customized, combining functionality from Trajan, Xarray and Matplotlib
 ds.isel(trajectory=1).traj.plot(color='b', label=ds.trajectory[1].values,
                                 land='mask', margin=3)
