@@ -123,6 +123,8 @@ Methods
     Dataset.traj.gridtime
     Dataset.traj.seltime
     Dataset.traj.iseltime
+    Dataset.traj.crop
+    Dataset.traj.contained_in
     Dataset.traj.is_1d
     Dataset.traj.is_2d
     Dataset.traj.to_2d
