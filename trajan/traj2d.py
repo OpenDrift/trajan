@@ -67,8 +67,10 @@ class Traj2d(Traj):
         nd = xr.Dataset(
             coords={
                 self.trajectory_dim:
-                ([self.trajectory_dim], range(self.ds.sizes[self.trajectory_dim])),
-                self.obs_dim: ([self.obs_dim], range(max_obs))  # Longest trajectory
+                ([self.trajectory_dim],
+                 range(self.ds.sizes[self.trajectory_dim])),
+                self.obs_dim:
+                ([self.obs_dim], range(max_obs))  # Longest trajectory
             },
             attrs=self.ds.attrs)
 
@@ -84,8 +86,8 @@ class Traj2d(Traj):
                 attrs=var.attrs,
             )
 
-            for t in range(
-                    self.ds.sizes[self.trajectory_dim]):  # loop over trajectories
+            for t in range(self.ds.sizes[
+                    self.trajectory_dim]):  # loop over trajectories
                 numins = num_inserts[t]
                 olddata = var.isel(trajectory=t).values
                 wh = np.argwhere(condition.isel(trajectory=t).values) + 1
@@ -104,11 +106,15 @@ class Traj2d(Traj):
 
                 newdata = newdata[slice(0, max_obs -
                                         1)]  # truncating, should be checked
-                da[{self.trajectory_dim: t, self.obs_dim: slice(0, len(newdata))}] = newdata
+                da[{
+                    self.trajectory_dim: t,
+                    self.obs_dim: slice(0, len(newdata))
+                }] = newdata
 
             nd[varname] = da.astype(var.dtype)
 
-        nd = nd.drop_vars((self.obs_dim, self.trajectory_dim))  # Remove coordinates
+        nd = nd.drop_vars(
+            (self.obs_dim, self.trajectory_dim))  # Remove coordinates
 
         return nd
 
@@ -126,7 +132,8 @@ class Traj2d(Traj):
 
         # Ensure all trajectories have equal length, by padding with NaN at end
         trajs = [
-            t.pad(pad_width={self.obs_dim: (0, newlen - t.sizes[self.obs_dim])})
+            t.pad(
+                pad_width={self.obs_dim: (0, newlen - t.sizes[self.obs_dim])})
             for t in trajs
         ]
 
@@ -144,7 +151,8 @@ class Traj2d(Traj):
         ds = ds.drop_vars([self.obs_dim])
 
         assert self.obs_dim in ds[
-            self.time_varname].dims, "observation not a coordinate of time variable"
+            self.
+            time_varname].dims, "observation not a coordinate of time variable"
 
         # Move all observations for each trajectory to starting row
         maxN = 0
@@ -154,8 +162,8 @@ class Traj2d(Traj):
             ]
             iv = np.full(on, False)
             for var in obsvars:
-                ivv = ~pd.isnull(
-                    ds[self.time_varname][ti, :])  # valid times in this trajectory.
+                ivv = ~pd.isnull(ds[self.time_varname][
+                    ti, :])  # valid times in this trajectory.
                 iv = np.logical_or(iv, ivv)
 
             N = np.count_nonzero(iv)
@@ -240,7 +248,7 @@ class Traj2d(Traj):
         d = None
 
         for t in range(self.ds.sizes[self.trajectory_dim]):
-            dt = self.ds.isel(trajectory=t) \
+            dt = self.ds.isel({self.trajectory_dim : t}) \
                         .dropna(self.obs_dim, how='all')
 
             dt = dt.assign_coords({self.obs_dim : dt[self.time_varname].values }) \
@@ -250,7 +258,8 @@ class Traj2d(Traj):
 
             _, ui = np.unique(dt[time_varname], return_index=True)
             dt = dt.isel({time_varname: ui})
-            dt = dt.isel({time_varname: np.where(~pd.isna(dt[time_varname].values))[0]})
+            dt = dt.isel(
+                {time_varname: np.where(~pd.isna(dt[time_varname].values))[0]})
 
             if dt.sizes[time_varname] > 0:
                 dt = dt.interp({time_varname: times})
@@ -262,6 +271,7 @@ class Traj2d(Traj):
             else:
                 d = xr.concat((d, dt), self.trajectory_dim)
 
-        d = d.assign_coords({self.trajectory_dim: self.ds[self.trajectory_dim]})
+        d = d.assign_coords(
+            {self.trajectory_dim: self.ds[self.trajectory_dim]})
 
         return d
