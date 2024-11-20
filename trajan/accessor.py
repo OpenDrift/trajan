@@ -169,7 +169,7 @@ class TrajA(Traj):
 
         else:
             raise ValueError(
-                f'Time variable has more than two dimensions: {ds[time_varname].shape}'
+                    f'Time variable has more than two dimensions: {time_varname}: {ds[time_varname].shape} / {ds[time_varname].dims}'
             )
 
         # TODO: The provided attributes could perhaps be added here before returning
