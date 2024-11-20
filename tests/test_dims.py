@@ -12,3 +12,11 @@ def test_no_time_dim(barents):
     # can we use trajan without
 
     print(b.traj)
+
+def test_custom_dims(barents: xr.DataArray):
+    # b = barents.expand_dims('campaign')
+    b = barents.rename(trajectory='campaign')
+    print(b)
+
+    g = b.traj(trajectory_dim='campaign').gridtime('1H')
+    print(g)
