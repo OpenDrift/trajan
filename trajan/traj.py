@@ -362,16 +362,24 @@ class Traj:
         }
 
         ds = ds.assign_attrs({
-            'Conventions': 'CF-1.10',
-            'featureType': 'trajectory',
-            'geospatial_lat_min': np.nanmin(self.tlat),
-            'geospatial_lat_max': np.nanmax(self.tlat),
-            'geospatial_lon_min': np.nanmin(self.tlon),
-            'geospatial_lon_max': np.nanmax(self.tlon),
-            'time_coverage_start': pd.to_datetime(
+            'Conventions':
+            'CF-1.10',
+            'featureType':
+            'trajectory',
+            'geospatial_lat_min':
+            np.nanmin(self.tlat),
+            'geospatial_lat_max':
+            np.nanmax(self.tlat),
+            'geospatial_lon_min':
+            np.nanmin(self.tlon),
+            'geospatial_lon_max':
+            np.nanmax(self.tlon),
+            'time_coverage_start':
+            pd.to_datetime(
                 np.nanmin(ds['time'].values[ds['time'].values != np.datetime64(
                     'NaT')])).isoformat(),
-            'time_coverage_end': pd.to_datetime(
+            'time_coverage_end':
+            pd.to_datetime(
                 np.nanmax(ds['time'].values[ds['time'].values != np.datetime64(
                     'NaT')])).isoformat(),
         })
@@ -476,8 +484,8 @@ class Traj:
         other = other.broadcast_like(self.ds)
 
         geod = pyproj.Geod(ellps='WGS84')
-        az_fwd, a2, distance = geod.inv(self.tlon, self.tlat,
-                                        other.traj.tlon, other.traj.tlat)
+        az_fwd, a2, distance = geod.inv(self.tlon, self.tlat, other.traj.tlon,
+                                        other.traj.tlat)
 
         ds = xr.Dataset()
         ds['distance'] = xr.DataArray(distance,
@@ -496,6 +504,32 @@ class Traj:
                                     attrs={'units': 'degrees'})
 
         return ds
+
+    def length(self):
+        """Returns distance in meters of each trajectory.
+
+        Returns
+        -------
+        DataArray
+            With trajectories and lengths.
+
+        See Also
+        --------
+        distance_to_next
+        """
+
+        # TODO: remove isel if distance_to_next doesn't return last
+        # distance twice.
+        l = self.distance_to_next().isel({
+            self.obs_dim: slice(0, -1)
+        }).sum(dim=self.obs_dim, skipna=True)
+        l.name = 'length'
+        l = l.assign_attrs({
+            'unit': 'm',
+            'description': 'length of trajectory'
+        })
+
+        return l
 
     def distance_to_next(self):
         """Returns distance in meters from one position to the next along trajectories.
@@ -882,7 +916,12 @@ class Traj:
         Convert dataset into a 2D dataset from.
         """
 
-    def crop(self, lonmin=-360, lonmax=360, latmin=-90, latmax=90, shape='not_yet_implemented'):
+    def crop(self,
+             lonmin=-360,
+             lonmax=360,
+             latmin=-90,
+             latmax=90,
+             shape='not_yet_implemented'):
         """
         Remove parts of trajectories outside of given geographical bounds.
 
@@ -908,10 +947,15 @@ class Traj:
             A new Xarray Dataset containing only given area
         """
 
-        return self.ds.where((self.tlon>lonmin) & (self.tlon<lonmax) &
-                             (self.tlat>latmin) & (self.tlat<latmax))
+        return self.ds.where((self.tlon > lonmin) & (self.tlon < lonmax)
+                             & (self.tlat > latmin) & (self.tlat < latmax))
 
-    def contained_in(self, lonmin=-360, lonmax=360, latmin=-90, latmax=90, shape='not_yet_implemented'):
+    def contained_in(self,
+                     lonmin=-360,
+                     lonmax=360,
+                     latmin=-90,
+                     latmax=90,
+                     shape='not_yet_implemented'):
         """
         Return only trajectories fully within given geographical bounds.
 
@@ -937,9 +981,9 @@ class Traj:
             A new Xarray Dataset containing only the trajectories fully within given area.
         """
 
-        condition = ((self.tlon.min(dim=self.obs_dim)>lonmin) &
-                     (self.tlon.max(dim=self.obs_dim)<lonmax) &
-                     (self.tlat.min(dim=self.obs_dim)>latmin) &
-                     (self.tlat.max(dim=self.obs_dim)<latmax))
+        condition = ((self.tlon.min(dim=self.obs_dim) > lonmin) &
+                     (self.tlon.max(dim=self.obs_dim) < lonmax) &
+                     (self.tlat.min(dim=self.obs_dim) > latmin) &
+                     (self.tlat.max(dim=self.obs_dim) < latmax))
 
         return self.ds.isel({self.trajectory_dim: condition})
