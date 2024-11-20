@@ -224,6 +224,22 @@ class Traj2d(Traj):
 
         return self.ds.groupby(self.trajectory_dim).map(select)
 
+    def to_1d(self):
+        if self.ds.sizes[self.trajectory_dim] > 1:
+            raise ValueError(
+                "Can not convert a 2D dataset with multiple trajectories to 1D."
+            )
+        else:
+            ds = self.ds.copy()
+            ds = ds.dropna(self.obs_dim, how='all').rename({
+                self.obs_dim:
+                self.time_varname
+            }).set_coords(self.time_varname)
+            ds[self.time_varname] = ds[self.time_varname].squeeze(
+                self.trajectory_dim)
+
+            return ds
+
     @__require_obs_dim__
     def gridtime(self, times, time_varname=None, round=True):
         if isinstance(times, str) or isinstance(

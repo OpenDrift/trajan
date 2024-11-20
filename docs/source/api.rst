@@ -114,6 +114,7 @@ Methods
     Dataset.traj.distance_to
     Dataset.traj.distance_to_next
     Dataset.traj.azimuth_to_next
+    Dataset.traj.length
     Dataset.traj.skill
     Dataset.traj.velocity_components
     Dataset.traj.velocity_spectrum
@@ -127,6 +128,7 @@ Methods
     Dataset.traj.contained_in
     Dataset.traj.is_1d
     Dataset.traj.is_2d
+    Dataset.traj.to_1d
     Dataset.traj.to_2d
     Dataset.traj.condense_obs
 

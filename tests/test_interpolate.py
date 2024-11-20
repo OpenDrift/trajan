@@ -10,6 +10,7 @@ def test_interpolate_barents_hourly(barents):
     b = barents.traj.gridtime('1h')
     print(b)
 
+
 def test_interpolate_barents(barents, plot):
     """Interpolate subset of drifter time series to 6-hourly means"""
 
@@ -35,6 +36,7 @@ def test_interpolate_barents(barents, plot):
         plt.legend()
         plt.show()
 
+
 def test_distance(barents):
     barents = barents.traj.gridtime('1h')
     b0 = barents.isel(trajectory=0)
@@ -42,6 +44,23 @@ def test_distance(barents):
 
     d = b0.traj.distance_to(b1)
     print(d)
+
+
+def test_length(barents):
+    l = barents.traj.length()
+    print(l)
+
+    lg = barents.traj.gridtime('1H').traj.length()
+    print(lg)
+
+    np.testing.assert_allclose(l, lg, atol=20000)
+
+    bb = barents.isel(trajectory=0).traj.iseltime([0, -1]).traj.to_1d()
+    np.testing.assert_almost_equal(bb.traj.distance_to_next().isel(time=0),
+                                   bb.traj.length())
+
+    np.testing.assert_almost_equal(l, [394484.37231936, 1990989.5283971])
+
 
 def test_distance_single_point(barents):
     barents = barents.traj.gridtime('1h')
@@ -52,6 +71,7 @@ def test_distance_single_point(barents):
 
     d = barents.traj.distance_to(ds)
     print(d)
+
 
 def test_interpolate_1d_barents(barents):
     times = pd.date_range("2022-10-01", "2022-11-01", freq='6h')
@@ -73,14 +93,20 @@ def test_interpolate_1d_barents(barents):
 
     np.testing.assert_array_equal(times, b4.time)
 
+
 def test_interpolate_non_floats(drifter_csv):
-    dc = ta.read_csv(drifter_csv, name='Device', time='Time', lon='Longitude', lat='Latitude')
+    dc = ta.read_csv(drifter_csv,
+                     name='Device',
+                     time='Time',
+                     lon='Longitude',
+                     lat='Latitude')
     dcg = dc.traj.gridtime('1h')
 
     assert 'time' in dcg.sizes
     assert 'trajectory' in dcg.sizes
 
     print(dc, dcg)
+
 
 def test_interpolate_barents_between_trajs(barents):
     barents = barents.traj.gridtime('1h')
@@ -96,8 +122,8 @@ def test_speed(barents, plot):
     barents = barents.traj.insert_nan_where(
         barents.traj.time_to_next() > np.timedelta64(60, 'm'))
     barents = barents.traj.drop_where(
-        barents.traj.time_to_next() < np.timedelta64(
-            5, 'm'))  # Delete where timestep < 5 minutes
+        barents.traj.time_to_next()
+        < np.timedelta64(5, 'm'))  # Delete where timestep < 5 minutes
     speed = barents.traj.speed()
     speed = speed.where(speed > 0.01)  # Mask where drifter is on land
 
