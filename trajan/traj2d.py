@@ -231,10 +231,10 @@ class Traj2d(Traj):
             )
         else:
             ds = self.ds.copy()
-            ds = ds.dropna(self.obs_dim, how='all').rename({
-                self.obs_dim:
-                self.time_varname
-            }).set_coords(self.time_varname)
+            ds = ds.dropna(self.obs_dim, how='all')
+            ds = ds.assign_coords({self.obs_dim : ds[self.time_varname]})
+            ds = ds.drop_vars(self.time_varname).rename({self.obs_dim: self.time_varname})
+
             ds[self.time_varname] = ds[self.time_varname].squeeze(
                 self.trajectory_dim)
 
