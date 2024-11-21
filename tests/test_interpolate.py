@@ -153,6 +153,9 @@ def test_speed(barents, plot):
         plt.ylabel('Number')
         plt.show()
 
+def test_speed_2d(barents):
+    s = barents.traj.speed()
+    print(s)
 
 def test_insert_nan_where(barents, plot):
 

@@ -456,6 +456,7 @@ class Traj:
     # def rotary_spectrum(self):
     #     pass
 
+    @abstractmethod
     def distance_to(self, other) -> xr.Dataset:
         """
         Distance between trajectories or a single point.
@@ -480,30 +481,7 @@ class Traj:
         distance_to_next
 
         """
-
-        other = other.broadcast_like(self.ds)
-
-        geod = pyproj.Geod(ellps='WGS84')
-        az_fwd, a2, distance = geod.inv(self.tlon, self.tlat, other.traj.tlon,
-                                        other.traj.tlat)
-
-        ds = xr.Dataset()
-        ds['distance'] = xr.DataArray(distance,
-                                      name='distance',
-                                      coords=self.tlon.coords,
-                                      attrs={'units': 'm'})
-
-        ds['az_fwd'] = xr.DataArray(az_fwd,
-                                    name='forward azimuth',
-                                    coords=self.tlon.coords,
-                                    attrs={'units': 'degrees'})
-
-        ds['az_bwd'] = xr.DataArray(a2,
-                                    name='back azimuth',
-                                    coords=self.tlon.coords,
-                                    attrs={'units': 'degrees'})
-
-        return ds
+        pass
 
     def length(self):
         """Returns distance in meters of each trajectory.

@@ -3,6 +3,7 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 import logging
+import pyproj
 from .traj import Traj
 from . import skill
 
@@ -32,7 +33,8 @@ class Traj1d(Traj):
         ds = self.ds.copy()
         time = ds[self.time_varname].rename({
             self.time_varname: obs_dim
-        }).expand_dims(dim={self.trajectory_dim: ds.sizes[self.trajectory_dim]})
+        }).expand_dims(
+            dim={self.trajectory_dim: ds.sizes[self.trajectory_dim]})
         # TODO should also add cf_role here
         ds = ds.rename({self.time_varname: obs_dim})
         ds[self.time_varname] = time
@@ -99,7 +101,8 @@ class Traj1d(Traj):
         plt.show()
 
     def skill(self, other, method='liu-weissberg', **kwargs):
-        if self.ds.sizes[self.trajectory_dim] != other.sizes[other.traj.trajectory_dim]:
+        if self.ds.sizes[self.trajectory_dim] != other.sizes[
+                other.traj.trajectory_dim]:
             raise ValueError(
                 f"There must be the same number of trajectories in the two datasets that are compared. This dataset: {self.ds.sizes[self.trajectory_dim]}, other: {other.sizes[other.traj.trajectory_dim]}."
             )
@@ -120,7 +123,8 @@ class Traj1d(Traj):
         # other = other.dropna(dim=other.traj.obs_dim)
 
         ds = self.ds.transpose(self.trajectory_dim, self.obs_dim, ...)
-        other = other.transpose(other.traj.trajectory_dim, other.traj.obs_dim, ...)
+        other = other.transpose(other.traj.trajectory_dim, other.traj.obs_dim,
+                                ...)
 
         lon0 = ds.traj.tlon  # TODO should be self.tlon ?
         lat0 = ds.traj.tlat
@@ -129,10 +133,11 @@ class Traj1d(Traj):
 
         for ti in range(0, len(s)):
             if method == 'liu-weissberg':
-                s[ti] = skill.liu_weissberg(lon0.isel({self.trajectory_dim: ti}),
-                                            lat0.isel({self.trajectory_dim: ti}),
-                                            lon1.isel({self.trajectory_dim: ti}),
-                                            lat1.isel({self.trajectory_dim: ti}), **kwargs)
+                s[ti] = skill.liu_weissberg(
+                    lon0.isel({self.trajectory_dim: ti}),
+                    lat0.isel({self.trajectory_dim: ti}),
+                    lon1.isel({self.trajectory_dim: ti}),
+                    lat1.isel({self.trajectory_dim: ti}), **kwargs)
             else:
                 raise ValueError(f"Unknown skill-score method: {method}.")
 
@@ -146,6 +151,31 @@ class Traj1d(Traj):
 
     def iseltime(self, i):
         return self.ds.isel({self.time_varname: i})
+
+    def distance_to(self, other) -> xr.Dataset:
+        other = other.broadcast_like(self.ds)
+
+        geod = pyproj.Geod(ellps='WGS84')
+        az_fwd, a2, distance = geod.inv(self.tlon, self.tlat, other.traj.tlon,
+                                        other.traj.tlat)
+
+        ds = xr.Dataset()
+        ds['distance'] = xr.DataArray(distance,
+                                      name='distance',
+                                      coords=self.tlon.coords,
+                                      attrs={'units': 'm'})
+
+        ds['az_fwd'] = xr.DataArray(az_fwd,
+                                    name='forward azimuth',
+                                    coords=self.tlon.coords,
+                                    attrs={'units': 'degrees'})
+
+        ds['az_bwd'] = xr.DataArray(a2,
+                                    name='back azimuth',
+                                    coords=self.tlon.coords,
+                                    attrs={'units': 'degrees'})
+
+        return ds
 
     def gridtime(self, times, time_varname=None, round=True):
         if isinstance(times, str) or isinstance(
@@ -180,7 +210,8 @@ class Traj1d(Traj):
             logger.warning('non-unique time points, dropping time-duplicates')
 
         ds = ds.isel({time_varname: ui})
-        ds = ds.isel({time_varname: np.where(~pd.isna(ds[time_varname].values))[0]})
+        ds = ds.isel(
+            {time_varname: np.where(~pd.isna(ds[time_varname].values))[0]})
 
         if ds.sizes[time_varname] > 0:
             ds = ds.interp({time_varname: times})
