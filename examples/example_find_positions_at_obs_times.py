@@ -1,5 +1,5 @@
 """
-Finding the closeset or interpolated positions at given times (e.g. wave observations).
+Finding the closest or interpolated positions at given times (e.g. wave observations).
 =======================================================================================
 """
 
