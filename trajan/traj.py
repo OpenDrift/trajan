@@ -972,3 +972,22 @@ class Traj:
                      (self.tlat.max(dim=self.obs_dim) < latmax))
 
         return self.ds.isel({self.trajectory_dim: condition})
+
+    def normalize(self,
+                 creator_name=None,
+                 creator_email=None,
+                 title=None,
+                 summary=None,
+                 **kwargs) -> xr.Dataset:
+
+        # apply assign_cf_attrs
+        self.assign_cf_attrs(self,
+            creator_name=None,
+            creator_email=None,
+            title=None,
+            summary=None)
+
+        # TODO: diagnostize other possible issues
+
+        # TODO: fix role attributes
+        
