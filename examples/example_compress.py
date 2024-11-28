@@ -20,7 +20,7 @@ xr_buoys = read_omb_csv(path_to_test_data)
 xr_buoys.to_netcdf("no_compression.nc")
 
 # on my machine, this is around 33MB
-!ls -lh no_compression.nc
+print("ls -lh no_compression.nc\n-rw-rw-r-- 1 jeanr jeanr 33M nov.  28 14:59 no_compression.nc")
 
 # %%
 
@@ -59,6 +59,6 @@ for var in encoding:
 xr_buoys.to_netcdf("trajectory_compression.nc", encoding=encoding)
 
 # on my machine, this is around 5.6MB
-!ls -lh trajectory_compression.nc
+print("!ls -lh trajectory_compression.nc\n-rw-rw-r-- 1 jeanr jeanr 5,6M nov.  28 15:01 trajectory_compression.n")
 
 # %%
