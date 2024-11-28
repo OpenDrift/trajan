@@ -8,7 +8,6 @@ Examples of leveraging xarray in combination with trajan to analyze OMB data
 import matplotlib.pyplot as plt
 from pathlib import Path
 from trajan.readers.omb import read_omb_csv
-from trajan.plot.spectra import plot_trajan_spectra
 import coloredlogs
 import datetime
 
@@ -144,18 +143,5 @@ for crrt_field in ["Hs0", "pHs0"]:
 plt.legend()
 plt.ylabel("significant wave height [m]")
 plt.show()
-
-# %%
-
-# to plot one or more 1D wave spectra, we have dedicated tooling:
-
-# plot the spectra for just a few of the buoys; you could also not sel to plot the whole dataset
-xr_several_buoys = xr_buoys.sel(trajectory=["drifter_1", "drifter_2"])
-
-# tuning of start and end dates
-date_start = datetime.datetime(2022, 6, 16, 0, 0, 0)
-date_end = datetime.datetime(2022, 6, 18, 0, 0, 0)
-
-plot_trajan_spectra(xr_several_buoys, tuple_date_start_end=(date_start, date_end))
 
 # %%

@@ -28,13 +28,16 @@ class Plot:
         else:
             raise ValueError('Unknown wave variable')
 
-    def spectra(self, time, *args, **kwargs):
+    def spectra(self, time, decorate=True, *args, **kwargs):
         """
         Plot the wave spectra information from a trajan compatible xarray.
 
         Args:
 
             time: DataArray with times.
+
+            decorate: whether to put the xlabel, ylabel, pcolor, etc, or not; True by
+                default, switch off if you want to put these yourself
 
             vrange: can be either:
                 - None to use the default log range [-3.0, 1.0]
@@ -53,7 +56,6 @@ class Plot:
         vrange = kwargs.pop('vrange', None)
         nseconds_gap = kwargs.pop('nseconds_gap', 6 * 3600)
 
-        # TODO: is there a better solution for the following?
         # NOTE: we would rather like to do something simpler, like:
         # ax = kwargs.pop('ax', plt.axes())
         # NOTE: but it seems that calling plt.axes() durinig arg evaluation messes things up, so doing instead:
@@ -72,7 +74,6 @@ class Plot:
         spectra_frequencies = self.ds.cf['wave_frequency']
 
         crrt_spectra = self.ds.to_numpy()
-        # crrt_spectra_times = detect_time_dim(self.ds, 'obs_waves_imu').to_numpy()
         crrt_spectra_times = time.to_numpy()
 
         list_datetimes = []
@@ -114,6 +115,17 @@ class Plot:
 
         pclr = ax.pcolor(list_datetimes, spectra_frequencies, np.log10(
             np.transpose(np.array(list_spectra))), vmin=vmin_pcolor, vmax=vmax_pcolor)
+
+        if decorate:
+            ax.set_ylim([0.05, 0.25])
+            ax.set_ylabel("f [Hz]")
+
+            ax.set_xticks(ax.get_xticks(), ax.get_xticklabels(), rotation=45, ha='right')
+
+            cbar = plt.colorbar(pclr, ax=ax, orientation='vertical')
+            cbar.set_label('log$_{10}$(S) [m$^2$/Hz]')
+
+            plt.tight_layout()
 
         return ax
 
