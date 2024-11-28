@@ -5,14 +5,6 @@ Plotting wave spectra data, using the accessor syntax
 
 # %%
 
-exit()
-
-# %%
-
-ipython3
-
-# %%
-
 from pathlib import Path
 from trajan.readers.omb import read_omb_csv
 import coloredlogs
@@ -49,7 +41,7 @@ plt.show()
 # a plot with 3 lines, 2 columns
 fig, ax = plt.subplots(3, 2)
 
-ax_out = xr_data.isel(trajectory=0).processed_elevation_energy_spectrum.wave.plot(
+ax_out, pclr = xr_data.isel(trajectory=0).processed_elevation_energy_spectrum.wave.plot(
     xr_data.isel(trajectory=0).time_waves_imu.squeeze(),
     # plot on the second line, first column
     ax=ax[1, 0],
@@ -62,6 +54,10 @@ ax[1,0].set_ylim([0.05, 0.25])
 ax[1,0].set_ylabel("f [Hz]")
 
 plt.tight_layout()
+
+cbar = plt.colorbar(pclr, ax=ax, orientation='vertical', shrink=0.8)
+cbar.set_label('log$_{10}$(S) [m$^2$/Hz]')
+
 plt.show()
 
 # %%

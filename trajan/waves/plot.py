@@ -127,5 +127,5 @@ class Plot:
 
             plt.tight_layout()
 
-        return ax
+        return ax, pclr
 
