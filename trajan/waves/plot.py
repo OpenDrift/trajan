@@ -5,8 +5,6 @@ import numpy as np
 import xarray as xr
 import cf_xarray as _
 
-from trajan.accessor import detect_time_dim
-
 logger = logging.getLogger(__name__)
 logging.getLogger('matplotlib.font_manager').disabled = True
 
