@@ -139,7 +139,6 @@ Plotting
 
    plot.Plot
    animation.Animation
-   plot.spectra.plot_trajan_spectra
 
 
 
