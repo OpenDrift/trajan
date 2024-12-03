@@ -1,5 +1,5 @@
 """
-Examples of compressing data when dumping to .nc
+Examples of compressing data when saving to .nc
 ==============================================================================
 """
 
@@ -57,7 +57,7 @@ for var in encoding:
     print(f"{var}: {encoding[var] = }")
 print("")
 
-# dump, this time with compression
+# save, this time with compression
 xr_buoys.to_netcdf("trajectory_compression.nc", encoding=encoding)
 
 # on my machine, this is around 5.6MB
