@@ -204,9 +204,10 @@ class Traj2d(Traj):
         t0 = pd.to_datetime(t0)
         t1 = pd.to_datetime(t1)
 
-        return self.ds.where(np.logical_and(self.ds[self.time_varname] >= t0,
-                                            self.ds[self.time_varname] <= t1),
-                             drop=True)
+        return self.ds.where(
+            np.logical_and(self.ds[self.time_varname] >= t0,
+                           self.ds[self.time_varname]
+                           <= t1)).dropna(self.obs_dim, how='all')
 
     @__require_obs_dim__
     def iseltime(self, i):
@@ -232,8 +233,9 @@ class Traj2d(Traj):
         else:
             ds = self.ds.copy()
             ds = ds.dropna(self.obs_dim, how='all')
-            ds = ds.assign_coords({self.obs_dim : ds[self.time_varname]})
-            ds = ds.drop_vars(self.time_varname).rename({self.obs_dim: self.time_varname})
+            ds = ds.assign_coords({self.obs_dim: ds[self.time_varname]})
+            ds = ds.drop_vars(self.time_varname).rename(
+                {self.obs_dim: self.time_varname})
 
             ds[self.time_varname] = ds[self.time_varname].squeeze(
                 self.trajectory_dim)
