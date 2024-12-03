@@ -239,6 +239,9 @@ class Traj2d(Traj):
 
             ds[self.time_varname] = ds[self.time_varname].squeeze(
                 self.trajectory_dim)
+            ds = ds.loc[{self.time_varname : ~pd.isna(ds[self.time_varname])}]
+            _, ui = np.unique(ds[self.time_varname], return_index=True)
+            ds = ds.isel({self.time_varname : ui})
 
             return ds
 
