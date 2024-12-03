@@ -8,6 +8,7 @@ Examples of compressing data when dumping to .nc
 import xarray as xr
 from trajan.readers.omb import read_omb_csv
 from pathlib import Path
+import os
 
 # %%
 
@@ -20,7 +21,7 @@ xr_buoys = read_omb_csv(path_to_test_data)
 xr_buoys.to_netcdf("no_compression.nc")
 
 # on my machine, this is around 33MB
-print("ls -lh no_compression.nc\n-rw-rw-r-- 1 jeanr jeanr 33M nov.  28 14:59 no_compression.nc")
+print(f"size no compression: {round(os.stat('no_compression.nc').st_size/(pow(1024,2)), 2)} MB")
 
 # %%
 
@@ -54,11 +55,12 @@ encoding = {
 # the encoding looks like:
 for var in encoding:
     print(f"{var}: {encoding[var] = }")
+print("")
 
 # dump, this time with compression
 xr_buoys.to_netcdf("trajectory_compression.nc", encoding=encoding)
 
 # on my machine, this is around 5.6MB
-print("!ls -lh trajectory_compression.nc\n-rw-rw-r-- 1 jeanr jeanr 5,6M nov.  28 15:01 trajectory_compression.n")
+print(f"size with compression: {round(os.stat('trajectory_compression.nc').st_size/(pow(1024,2)), 2)} MB")
 
 # %%
