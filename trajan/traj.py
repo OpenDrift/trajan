@@ -361,27 +361,28 @@ class Traj:
             'long_name': 'trajectory name'
         }
 
+
         ds = ds.assign_attrs({
             'Conventions':
             'CF-1.10',
             'featureType':
             'trajectory',
             'geospatial_lat_min':
-            np.nanmin(self.tlat),
+            np.nanmin(self.tlat) if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'geospatial_lat_max':
-            np.nanmax(self.tlat),
+            np.nanmax(self.tlat) if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'geospatial_lon_min':
-            np.nanmin(self.tlon),
+            np.nanmin(self.tlon) if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'geospatial_lon_max':
-            np.nanmax(self.tlon),
+            np.nanmax(self.tlon) if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'time_coverage_start':
             pd.to_datetime(
-                np.nanmin(ds['time'].values[ds['time'].values != np.datetime64(
-                    'NaT')])).isoformat(),
+                np.nanmin(ds[self.time_varname].values[ds[self.time_varname].values != np.datetime64(
+                    'NaT')])).isoformat() if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'time_coverage_end':
             pd.to_datetime(
-                np.nanmax(ds['time'].values[ds['time'].values != np.datetime64(
-                    'NaT')])).isoformat(),
+                np.nanmax(ds[self.time_varname].values[ds[self.time_varname].values != np.datetime64(
+                    'NaT')])).isoformat() if self.ds.sizes[self.obs_dim] > 0 else np.nan,
         })
 
         if creator_name:

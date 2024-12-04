@@ -60,11 +60,15 @@ def append_dict_with_entry(dict_in: dict, parsed_entry: ParsedIridiumMessage):
         dict_in[parsed_entry.device_from]["T"] = []
     dict_in[parsed_entry.device_from][parsed_entry.kind].append(parsed_entry)
 
+EXPECTED_COLUMNS = [
+    'Date Time (UTC)', 'Device', 'Direction', 'Payload', 'Approx Lat/Lng',
+    'Payload (Text)', 'Length (Bytes)', 'Credits'
+]
 
-def read_omb_csv(path_in: Path,
+def read_omb_csv(path_in: Path|pd.DataFrame,
                  dict_instruments_params: dict = None,
                  modified_wave_packet_properties: dict = None) -> xr.Dataset:
-    logger.debug("read path to pandas")
+    logger.debug(f"reading {path_in}..")
 
     if modified_wave_packet_properties is None:
         nbr_bins_waves = _BD_YWAVE_NBR_BINS
@@ -76,21 +80,19 @@ def read_omb_csv(path_in: Path,
     ########################################
     # generic pandas read to be able to open from a variety of files
 
-    omb_dataframe = pd.read_csv(path_in)
+    if isinstance(path_in, pd.DataFrame):
+        omb_dataframe = path_in
+    else:
+        omb_dataframe = pd.read_csv(path_in)
+        ########################################
+        # check this is actually a Rock7 data file
 
-    ########################################
-    # check this is actually a Rock7 data file
+        columns = omb_dataframe.columns.to_list()
 
-    columns = omb_dataframe.columns.to_list()
-    expected_columns = [
-        'Date Time (UTC)', 'Device', 'Direction', 'Payload', 'Approx Lat/Lng',
-        'Payload (Text)', 'Length (Bytes)', 'Credits'
-    ]
-
-    if not set(expected_columns).issubset(set(columns)):
-        raise RuntimeError(
-            f"does not look like a Rock7 file; got colmns {columns}, expected {expected_columns}, missing: {set(expected_columns) - set(columns)}"
-        )
+        if not set(EXPECTED_COLUMNS).issubset(set(columns)):
+            raise RuntimeError(
+                f"does not look like a Rock7 file; got colmns {columns}, expected {EXPECTED_COLUMNS}, missing: {set(EXPECTED_COLUMNS) - set(columns)}"
+            )
 
     ########################################
     # decode
