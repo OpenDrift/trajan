@@ -214,7 +214,7 @@ class Traj2d(Traj):
 
         def select(t):
             ii = np.argwhere(~pd.isna(t[self.time_varname]).squeeze())
-            ii = ii[i].squeeze()
+            ii = ii[i].squeeze() if len(ii) > 0 else ii.squeeze()
 
             o = t.isel({self.obs_dim: ii})
 
