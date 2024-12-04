@@ -30,15 +30,15 @@ def detect_trajectory_dim(ds):
             return trajectory_var.name
         else:
             if len(trajectory_var.dims) > 1:
-                logger.warning(f'trajectory_id is {trajectory_var.name}, but dimensions '
+                logger.debug(f'trajectory_id is {trajectory_var.name}, but dimensions '
                                'have other names: {str(list(trajectory_var.sizes))}')
             elif len(trajectory_var.dims) == 1:  # Using the single dimension name
                 return list(trajectory_var.sizes)[0]
             else:
-                logger.warning('Single trajectory, a trajectory dimension will be added')
+                logger.debug('Single trajectory, a trajectory dimension will be added')
                 return None
 
-    logger.warning('No trajectory_id attribute/variable found, trying to identify by name.')
+    logger.debug('No trajectory_id attribute/variable found, trying to identify by name.')
     tx = detect_tx_variable(ds)
     for tdn in ['trajectory', 'traj']:  # Common names of trajectory dimension
         if tdn in tx.dims:
@@ -60,7 +60,7 @@ class TrajA(Traj):
                         raise ValueError(f'Dataset has several trajectory_id variables: {trajectory_id}')
                 else:
                     trajectory_id = trajectory_id[0]
-                    logger.warning(f'Using trajectory_id variable name ({trajectory_id}) '
+                    logger.debug(f'Using trajectory_id variable name ({trajectory_id}) '
                                    'as trajectory dimension name')
                     trajectory_dim = trajectory_id
                     ds = ds.set_coords(trajectory_dim)
@@ -123,7 +123,7 @@ class TrajA(Traj):
                 return ocls(ds, trajectory_dim, obs_dim, timecoord, rowsizevar)
 
             else:
-                logging.warning(f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual; try to parse with Traj1d or Traj2d")
+                logging.debug(f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual; try to parse with Traj1d or Traj2d")
 
         # we have a ds where 2D arrays are used to store data, this is either Traj1d or Traj2d
         # there may also be some slightly unusual cases where these Traj1d and Traj2d classes will be used on data with 1D arrays
@@ -151,7 +151,7 @@ class TrajA(Traj):
                     break
 
             if obs_dim is None:
-                logger.warning('No time or obs dimension detected.')
+                logger.debug('No time or obs dimension detected.')
 
         logger.debug(
             f"Detected obs-dim: {obs_dim}, detected time-variable: {time_varname}.")
