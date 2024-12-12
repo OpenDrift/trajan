@@ -150,7 +150,7 @@ class Traj1d(Traj):
         return self.ds.sel(*args, **kwargs)
 
     def seltime(self, t0=None, t1=None):
-        self.ds.sel({self.time_varname: slice(t0, t1)})
+        return self.ds.sel({self.time_varname: slice(t0, t1)})
 
     def iseltime(self, i):
         return self.ds.isel({self.time_varname: i})
