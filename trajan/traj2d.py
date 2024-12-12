@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import logging
 
-from .traj import Traj
+from .traj import Traj, ensure_time_dim
 
 logger = logging.getLogger(__name__)
 
@@ -194,20 +194,13 @@ class Traj2d(Traj):
 
         return ds
 
-    @__require_obs_dim__
+    def sel(self, *args, **kwargs):
+        return self.ds.groupby(
+            self.trajectory_dim).map(lambda d: ensure_time_dim(d.traj.to_1d(
+            ).sel(*args, **kwargs), self.time_varname).traj.to_2d(self.obs_dim))
+
     def seltime(self, t0=None, t1=None):
-        if t0 is None:
-            t0 = np.nanmin(self.ds[self.time_varname].values.ravel())
-        if t1 is None:
-            t1 = np.nanmax(self.ds[self.time_varname].values.ravel())
-
-        t0 = pd.to_datetime(t0)
-        t1 = pd.to_datetime(t1)
-
-        return self.ds.where(
-            np.logical_and(self.ds[self.time_varname] >= t0,
-                           self.ds[self.time_varname]
-                           <= t1)).dropna(self.obs_dim, how='all')
+        return self.sel({self.time_varname: slice(t0, t1)})
 
     @__require_obs_dim__
     def iseltime(self, i):
@@ -239,9 +232,9 @@ class Traj2d(Traj):
 
             ds[self.time_varname] = ds[self.time_varname].squeeze(
                 self.trajectory_dim)
-            ds = ds.loc[{self.time_varname : ~pd.isna(ds[self.time_varname])}]
+            ds = ds.loc[{self.time_varname: ~pd.isna(ds[self.time_varname])}]
             _, ui = np.unique(ds[self.time_varname], return_index=True)
-            ds = ds.isel({self.time_varname : ui})
+            ds = ds.isel({self.time_varname: ui})
 
             return ds
 

@@ -32,6 +32,11 @@ def detect_tx_variable(ds):
     else:
         raise ValueError("Could not determine x / lon variable")
 
+def ensure_time_dim(ds, time_dim):
+    if not time_dim in ds.dims:
+        return ds.expand_dims(time_dim)
+    else:
+        return ds
 
 class Traj:
     ds: xr.Dataset
@@ -692,6 +697,25 @@ class Traj:
         -------
         Dataset
             A new dataset interpolated to the target times. The dataset will be 1D (i.e. gridded) and the time dimension will be named `time`.
+        """
+
+    @abstractmethod
+    def sel(self, *args, **kwargs) -> xr.Dataset:
+        """Select on each trajectory. On 1D datasets this is just a shortcut for `Dataset.sel`.
+
+        Parameters
+        ----------
+        Anything accepted by `Dataset.sel`.
+
+        Returns
+        -------
+
+        ds : Dataset
+            A dataset with the selected range in each trajectory.
+
+        See also
+        --------
+        iseltime, sel, isel
         """
 
     @abstractmethod
