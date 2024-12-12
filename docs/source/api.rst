@@ -122,6 +122,7 @@ Methods
     Dataset.traj.convex_hull_contains_point
     Dataset.traj.get_area_convex_hull
     Dataset.traj.gridtime
+    Dataset.traj.sel
     Dataset.traj.seltime
     Dataset.traj.iseltime
     Dataset.traj.crop

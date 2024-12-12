@@ -146,8 +146,11 @@ class Traj1d(Traj):
                             coords={self.trajectory_dim: self.ds.trajectory},
                             attrs={'method': method})
 
+    def sel(self, *args, **kwargs):
+        return self.ds.sel(*args, **kwargs)
+
     def seltime(self, t0=None, t1=None):
-        return self.ds.sel({self.time_varname: slice(t0, t1)})
+        self.ds.sel({self.time_varname: slice(t0, t1)})
 
     def iseltime(self, i):
         return self.ds.isel({self.time_varname: i})

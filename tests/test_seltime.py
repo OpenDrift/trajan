@@ -12,13 +12,15 @@ def test_seltime(barents):
     print(barents.time.max(skipna=True))
 
     assert barents.time.min(skipna=True) < pd.to_datetime('2022-10-20')
+    assert barents.time.max(
+        skipna=True) > pd.to_datetime('2022-11-01T23:59:59')
 
     ds = barents.traj.seltime('2022-10-20', '2022-11-01')
     print(ds.time.min(skipna=True))
     print(ds.time.max(skipna=True))
 
     assert ds.time.min(skipna=True) >= pd.to_datetime('2022-10-20')
-    assert ds.time.max(skipna=True) <= pd.to_datetime('2022-11-01')
+    assert ds.time.max(skipna=True) <= pd.to_datetime('2022-11-01T23:59:59')
 
 
 def test_iseltime(barents):
