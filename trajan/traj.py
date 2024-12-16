@@ -298,7 +298,7 @@ class Traj:
         """
         Create a transformer useful for transforming other coordinates to the CRS of this dataset.
 
-        Paramters
+        Parameters
         ---------
         from_crs : pyproj.crs.CRS
 

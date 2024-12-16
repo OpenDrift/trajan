@@ -40,18 +40,13 @@ print(ds)
 
 #%%
 # Transform the drifter dataset to the CRS of the model
-tx, ty = ds.traj.transform(nk_crs, ds.traj.tx, ds.traj.ty)
-
-#%%
-# By making sure the coordinates has defined dimensions xarray can select along the dimensions, and does not return slices along all coordinates. See `xarray slicing <https://docs.xarray.dev/en/stable/user-guide/indexing.html#vectorized-indexing>`_ for more details.
-tx = xr.DataArray(tx, dims=['trajectory', 'time'])
-ty = xr.DataArray(ty, dims=['trajectory', 'time'])
+dst = ds.traj.transform(nk_crs)
 
 #%%
 # Extract the values of a variable for the trajectory
-temp = nk.isel(depth=0).sel(time=ds.time,
-                            X=tx,
-                            Y=ty,
+temp = nk.isel(depth=0).sel(time=dst.time,
+                            X=dst.x,
+                            Y=dst.y,
                             method='nearest').temperature
 print(temp)
 
