@@ -105,7 +105,7 @@ Methods
    :template: autosummary/accessor_method.rst
 
     Dataset.traj.transform
-    Dataset.traj.itransform
+    Dataset.traj.transformer
     Dataset.traj.set_crs
     Dataset.traj.assign_cf_attrs
     Dataset.traj.index_of_last

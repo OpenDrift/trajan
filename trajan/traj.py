@@ -32,11 +32,13 @@ def detect_tx_variable(ds):
     else:
         raise ValueError("Could not determine x / lon variable")
 
+
 def ensure_time_dim(ds, time_dim):
     if not time_dim in ds.dims:
         return ds.expand_dims(time_dim)
     else:
         return ds
+
 
 class Traj:
     ds: xr.Dataset
@@ -184,43 +186,172 @@ class Traj:
                                  data=y)  # TODO: remove grid-mapping.
                 return Y
 
-    def transform(self, to_crs, x, y):
+    def transform(self, to_crs):
         """
-        Transform coordinates in this datasets coordinate system to `to_crs` coordinate system.
+        Transform this datasets to `to_crs` coordinate system. If the target
+        projection is not a geographic coordinate system the variables will be
+        named `x` and `y`, otherwise `lon` and `lat`.
 
         Parameters
         ----------
         to_crs : pyproj.crs.CRS
 
-        x, y : array-like
-            Coordinates in `self` CRS
 
         Returns
         -------
-        xn, yn : array-like
-            Coordinates in `to_crs`
+        ds : array-like
+            Dataset in `to_crs` coordinate system.
+
+        Example
+        -------
+
+        Transform dataset to UTM coordinates:
+
+        >>> import xarray as xr
+        >>> import trajan as _
+        >>> import lzma
+        >>> import pyproj
+        >>> b = lzma.open('examples/barents.nc.xz')
+        >>> ds = xr.open_dataset(b)
+        >>> print(ds)
+        <xarray.Dataset> Size: 110kB
+        Dimensions:        (trajectory: 2, obs: 2287)
+        Dimensions without coordinates: trajectory, obs
+        Data variables:
+            lon            (trajectory, obs) float64 37kB ...
+            lat            (trajectory, obs) float64 37kB ...
+            time           (trajectory, obs) datetime64[ns] 37kB ...
+            drifter_names  (trajectory) <U16 128B ...
+        Attributes: (12/13)
+            Conventions:          CF-1.10
+            featureType:          trajectory
+            geospatial_lat_min:   74.5454462
+            geospatial_lat_max:   77.4774768
+            geospatial_lon_min:   17.2058074
+            geospatial_lon_max:   29.8523485
+            ...                   ...
+            time_coverage_end:    2022-11-23T13:30:28
+            creator_email:        gauteh@met.no, knutfd@met.no
+            creator_name:         Gaute Hope and Knut Frode Dagestad
+            creator_url:          https://github.com/OpenDrift/opendrift
+            summary:              Two drifters in the Barents Sea. One stranded at Ho...
+            title:                Barents Sea drifters
+
+        >>> crs = pyproj.CRS.from_epsg(3857) # mercator
+        >>>
+        >>> ds_merc = ds.traj.transform(crs)
+        >>> print(ds_merc)
+        <xarray.Dataset> Size: 110kB
+        Dimensions:        (trajectory: 2, obs: 2287)
+        Dimensions without coordinates: trajectory, obs
+        Data variables:
+            time           (trajectory, obs) datetime64[ns] 37kB ...
+            drifter_names  (trajectory) <U16 128B ...
+            x              (trajectory, obs) float64 37kB 3.323e+06 ... 2.354e+06
+            y              (trajectory, obs) float64 37kB 1.401e+07 ... 1.276e+07
+            proj1          float64 8B nan
+        Attributes: (12/13)
+            Conventions:          CF-1.10
+            featureType:          trajectory
+            geospatial_lat_min:   74.5454462
+            geospatial_lat_max:   77.4774768
+            geospatial_lon_min:   17.2058074
+            geospatial_lon_max:   29.8523485
+            ...                   ...
+            time_coverage_end:    2022-11-23T13:30:28
+            creator_email:        gauteh@met.no, knutfd@met.no
+            creator_name:         Gaute Hope and Knut Frode Dagestad
+            creator_url:          https://github.com/OpenDrift/opendrift
+            summary:              Two drifters in the Barents Sea. One stranded at Ho...
+            title:                Barents Sea drifters
+
+
+        See also
+        --------
+        transformer, crs
         """
         t = pyproj.Transformer.from_crs(self.crs, to_crs, always_xy=True)
-        return t.transform(x, y)
+        tx, ty = t.transform(self.tx, self.ty)
 
-    def itransform(self, from_crs, x, y):
+        xvar = self.tx.name
+        yvar = self.ty.name
+
+        ds = self.ds.copy().drop_vars([xvar, yvar])
+
+        tx = xr.DataArray(tx, coords=self.tx.coords)
+        ty = xr.DataArray(ty, coords=self.ty.coords)
+
+        if to_crs.is_geographic:
+            # TODO: may exist..
+            ds['lon'] = tx
+            ds['lat'] = ty
+        else:
+            ds['x'] = tx
+            ds['y'] = ty
+
+        ds = ds.traj.set_crs(to_crs)
+
+        return ds
+
+    def transformer(self, from_crs):
         """
-        Transform coordinates in `from_crs` coordinate system to this datasets coordinate system.
+        Create a transformer useful for transforming other coordinates to the CRS of this dataset.
 
         Parameters
-        ----------
+        ---------
         from_crs : pyproj.crs.CRS
-
-        x, y : array-like
-            Coordinates in from_crs CRS
 
         Returns
         -------
-        xn, yn : array-like
-            Coordinates in this datasets CRS
+        transformer: pyproj.Transformer
+
+
+        Example
+        -------
+
+        Transform UTM coordinates to lat-lon
+
+        >>> import xarray as xr
+        >>> import trajan as _
+        >>> import lzma
+        >>> import pyproj
+        >>> b = lzma.open('examples/barents.nc.xz')
+        >>> ds = xr.open_dataset(b)
+        >>> print(ds)
+        <xarray.Dataset> Size: 110kB
+        Dimensions:        (trajectory: 2, obs: 2287)
+        Dimensions without coordinates: trajectory, obs
+        Data variables:
+            lon            (trajectory, obs) float64 37kB ...
+            lat            (trajectory, obs) float64 37kB ...
+            time           (trajectory, obs) datetime64[ns] 37kB ...
+            drifter_names  (trajectory) <U16 128B ...
+        Attributes: (12/13)
+            Conventions:          CF-1.10
+            featureType:          trajectory
+            geospatial_lat_min:   74.5454462
+            geospatial_lat_max:   77.4774768
+            geospatial_lon_min:   17.2058074
+            geospatial_lon_max:   29.8523485
+            ...                   ...
+            time_coverage_end:    2022-11-23T13:30:28
+            creator_email:        gauteh@met.no, knutfd@met.no
+            creator_name:         Gaute Hope and Knut Frode Dagestad
+            creator_url:          https://github.com/OpenDrift/opendrift
+            summary:              Two drifters in the Barents Sea. One stranded at Ho...
+            title:                Barents Sea drifters
+
+        >>> crs = pyproj.CRS.from_epsg(3857) # mercator
+        >>>
+        >>> tlon, tlat = ds.traj.transformer(crs).transform(-10000, 3000)
+        >>> print(tlon, tlat)
+        -0.08983152841195213 0.026949457529889528
+
+        See also
+        --------
+        transform, crs
         """
-        t = pyproj.Transformer.from_crs(from_crs, self.crs, always_xy=True)
-        return t.transform(x, y)
+        return pyproj.Transformer.from_crs(from_crs, self.crs, always_xy=True)
 
     @property
     def crs(self) -> pyproj.crs.CRS:
@@ -297,8 +428,10 @@ class Traj:
         else:
             gm = crs.to_cf()
 
+            name = gm.get('grid_mapping_name', 'proj1')
+
             # Create grid mapping variable
-            v = xr.DataArray(name=gm['grid_mapping_name'])
+            v = xr.DataArray(name=name)
             v.attrs = gm
             ds[v.name] = v
             ds[self.tx.name].attrs['grid_mapping'] = v.name
@@ -366,28 +499,33 @@ class Traj:
             'long_name': 'trajectory name'
         }
 
-
         ds = ds.assign_attrs({
             'Conventions':
             'CF-1.10',
             'featureType':
             'trajectory',
             'geospatial_lat_min':
-            np.nanmin(self.tlat) if self.ds.sizes[self.obs_dim] > 0 else np.nan,
+            np.nanmin(self.tlat)
+            if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'geospatial_lat_max':
-            np.nanmax(self.tlat) if self.ds.sizes[self.obs_dim] > 0 else np.nan,
+            np.nanmax(self.tlat)
+            if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'geospatial_lon_min':
-            np.nanmin(self.tlon) if self.ds.sizes[self.obs_dim] > 0 else np.nan,
+            np.nanmin(self.tlon)
+            if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'geospatial_lon_max':
-            np.nanmax(self.tlon) if self.ds.sizes[self.obs_dim] > 0 else np.nan,
+            np.nanmax(self.tlon)
+            if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'time_coverage_start':
             pd.to_datetime(
-                np.nanmin(ds[self.time_varname].values[ds[self.time_varname].values != np.datetime64(
-                    'NaT')])).isoformat() if self.ds.sizes[self.obs_dim] > 0 else np.nan,
+                np.nanmin(ds[self.time_varname].values[ds[
+                    self.time_varname].values != np.datetime64('NaT')])).
+            isoformat() if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'time_coverage_end':
             pd.to_datetime(
-                np.nanmax(ds[self.time_varname].values[ds[self.time_varname].values != np.datetime64(
-                    'NaT')])).isoformat() if self.ds.sizes[self.obs_dim] > 0 else np.nan,
+                np.nanmax(ds[self.time_varname].values[ds[
+                    self.time_varname].values != np.datetime64('NaT')])
+            ).isoformat() if self.ds.sizes[self.obs_dim] > 0 else np.nan,
         })
 
         if creator_name:
