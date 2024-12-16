@@ -265,7 +265,6 @@ class Traj:
             summary:              Two drifters in the Barents Sea. One stranded at Ho...
             title:                Barents Sea drifters
 
-        >>> print(ds_merc.proj1.attrs)
 
         See also
         --------
