@@ -101,49 +101,62 @@ class Traj1d(Traj):
         plt.show()
 
     def skill(self, other, method='liu-weissberg', **kwargs):
-        if self.ds.sizes[self.trajectory_dim] != other.sizes[
-                other.traj.trajectory_dim]:
+
+        # Broadcast so that we have same dimensions in both datasets
+        other = other.broadcast_like(self.ds)
+        ds = self.ds.broadcast_like(other)
+
+        other = other.traj  # Normalise
+
+        numtraj_self = self.ds.sizes[self.trajectory_dim]
+        numtraj_other = other.ds.sizes[other.trajectory_dim]
+        if numtraj_self > 1 and numtraj_other > 1 and numtraj_self != numtraj_other:
             raise ValueError(
-                f"There must be the same number of trajectories in the two datasets that are compared. This dataset: {self.ds.sizes[self.trajectory_dim]}, other: {other.sizes[other.traj.trajectory_dim]}."
+                'Datasets must have the same number of trajectories, or a single trajectory. '
+                f'This dataset: {numtraj_self}, other: {numtraj_other}.'
+            )
+
+        numobs_self = self.ds.sizes[self.obs_dim]
+        numobs_other = other.ds.sizes[other.obs_dim]
+        if numobs_self != numobs_other:
+            raise ValueError(
+                f'Trajectories must have the same lengths. This dataset: {numobs_self}, other: {numobs_other}.'
             )
 
         diff = np.max(
             np.abs((self.ds[self.obs_dim] -
-                    other[other.traj.obs_dim]).astype('timedelta64[s]').astype(
+                    other.ds[other.obs_dim]).astype('timedelta64[s]').astype(
                         np.float64)))
-
         if not np.isclose(diff, 0):
             raise ValueError(
                 f"The two datasets must have approximately equal time coordinates, maximum difference: {diff} seconds. Consider using `gridtime` to interpolate one of the datasets."
             )
 
-        s = np.zeros((self.ds.sizes[self.trajectory_dim]), dtype=np.float32)
-
         # ds = self.ds.dropna(dim=self.obs_dim)
         # other = other.dropna(dim=other.traj.obs_dim)
 
-        ds = self.ds.transpose(self.trajectory_dim, self.obs_dim, ...)
-        other = other.transpose(other.traj.trajectory_dim, other.traj.obs_dim,
-                                ...)
+        # Skillscore methods expect that obs_dim is the first dimension
+        ds = ds.transpose(self.obs_dim, ...)
+        other = other.ds.transpose(other.obs_dim, ...)
 
-        lon0 = ds.traj.tlon  # TODO should be self.tlon ?
-        lat0 = ds.traj.tlat
-        lon1 = other.traj.tlon
-        lat1 = other.traj.tlat
+        if method == 'liu-weissberg':
+            skill_method = skill.liu_weissberg
+        else:
+            raise ValueError(f"Unknown skill-score method: {method}.")
+        
+        s = skill_method(ds.traj.tlon, ds.traj.tlat, other.traj.tlon, other.traj.tlat, **kwargs)
 
-        for ti in range(0, len(s)):
-            if method == 'liu-weissberg':
-                s[ti] = skill.liu_weissberg(
-                    lon0.isel({self.trajectory_dim: ti}),
-                    lat0.isel({self.trajectory_dim: ti}),
-                    lon1.isel({self.trajectory_dim: ti}),
-                    lat1.isel({self.trajectory_dim: ti}), **kwargs)
+        newcoords = dict(ds.traj.tlon.sizes)
+        newcoords.pop('time')
+        for dim in newcoords:
+            if dim in ds.coords:
+                newcoords[dim] = ds.coords[dim]
             else:
-                raise ValueError(f"Unknown skill-score method: {method}.")
+                newcoords[dim] = np.arange(newcoords[dim])
 
         return xr.DataArray(s,
                             name='Skillscore',
-                            coords={self.trajectory_dim: self.ds.trajectory},
+                            coords=newcoords,
                             attrs={'method': method})
 
     def sel(self, *args, **kwargs):

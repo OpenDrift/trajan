@@ -1000,8 +1000,8 @@ class Traj:
         >>> skill = ds.traj.skill(other)
 
         >>> skill
-        <xarray.DataArray 'Skillscore' (trajectory: 2)> Size: 8B
-        array([1., 1.], dtype=float32)
+        <xarray.DataArray 'Skillscore' (trajectory: 2)> Size: 16B
+        array([1., 1.])
         Coordinates:
           * trajectory  (trajectory) int64 16B 0 1
         Attributes:
@@ -1018,8 +1018,8 @@ class Traj:
         >>> skill = b0.traj.skill(ds)
 
         >>> skill
-        <xarray.DataArray 'Skillscore' (trajectory: 2)> Size: 8B
-        array([1.      , 0.608058], dtype=float32)
+        <xarray.DataArray 'Skillscore' (trajectory: 2)> Size: 16B
+        array([1.        , 0.60805799])
         Coordinates:
           * trajectory  (trajectory) int64 16B 0 1
         Attributes:
