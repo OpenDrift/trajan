@@ -958,15 +958,15 @@ class Traj:
         """
 
     @abstractmethod
-    def skill(self, other, method='liu-weissberg', **kwargs) -> xr.Dataset:
+    def skill(self, expected, method='liu-weissberg', **kwargs) -> xr.Dataset:
         """
-        Compare the skill score between this trajectory and `other`.
+        Compare the skill score between this trajectory and an `expected` trajectory.
 
         Parameters
         ----------
 
-        other : Dataset
-            Another trajectory dataset.
+        expected : Dataset
+            Another trajectory dataset, normally the observed / expected.
 
         method : str
             skill-score method, currently only liu-weissberg.
@@ -977,14 +977,18 @@ class Traj:
         Returns
         -------
 
-        skill : Dataset
-            The skill-score in the same dimensions as this dataset.
+        skill : DataArray
+            The skill-score in the combined dimensions of both datasets.
 
         Notes
         -----
+        Both datasets must have the same number of trajectories (N:N), or at least one of the datasets (normally the expected) must have a single trajectory only (1:N, N:1, 1:1).
+
         The datasets must be sampled (or have observations) at approximately the same timesteps. Consider using :meth:`gridtime` to interpolate one of the datasets to the other.
 
-        The datasets must have the same number of trajectories. If you wish to compare a single trajectory to many others, duplicate it along the trajectory dimension to match the trajectory dimension of the other. See further down for an example.
+        Any additional dimensions will be broadcasted, so that the result include the combined dimensions of both datasets.
+        
+        Some skillscore methods (e.g. liu-weissberg) are not symmetrical. This specific skillscore is normalized on the length of the expected / observed trajectories. Thus `a.traj.skill(b)` will provide different numerical results than `b.traj.skill(a)`. 
 
         Examples
         --------
@@ -994,12 +998,12 @@ class Traj:
         >>> import lzma
         >>> b = lzma.open('examples/barents.nc.xz')
         >>> ds = xr.open_dataset(b)
-        >>> other = ds.copy()
+        >>> expected = ds.copy()
         >>> ds = ds.traj.gridtime('1h')
-        >>> other = other.traj.gridtime(ds.time)
-        >>> skill = ds.traj.skill(other)
+        >>> expected = expected.traj.gridtime(ds.time)
+        >>> skill = ds.traj.skill(expected)
 
-        >>> skill
+        >>> skill  # Returns 1 since comparing to itself
         <xarray.DataArray 'Skillscore' (trajectory: 2)> Size: 16B
         array([1., 1.])
         Coordinates:
@@ -1007,15 +1011,9 @@ class Traj:
         Attributes:
             method:   liu-weissberg
 
-        If you need to broadcast a dataset with a single drifter to one with many you can use `xarray.broadcast` or `xarray.Dataset.broadcast_like`:
 
-        .. note::
-
-            If the other dataset has any other dimensions, on any other variables, you need to exclude those when broadcasting.
-
-        >>> b0 = ds.isel(trajectory=0) # `b0` now only has a single drifter (no trajectory dimension)
-        >>> b0 = b0.broadcast_like(ds)
-        >>> skill = b0.traj.skill(ds)
+        >>> expected = ds.isel(trajectory=0)
+        >>> skill = ds.traj.skill(expected)
 
         >>> skill
         <xarray.DataArray 'Skillscore' (trajectory: 2)> Size: 16B

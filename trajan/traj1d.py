@@ -100,60 +100,66 @@ class Traj1d(Traj):
         plt.xlim([0, 30])
         plt.show()
 
-    def skill(self, other, method='liu-weissberg', **kwargs):
+    def skill(self, expected, method='liu-weissberg', **kwargs):
 
-        # Broadcast so that we have same dimensions in both datasets
-        other = other.broadcast_like(self.ds)
-        ds = self.ds.broadcast_like(other)
-
-        other = other.traj  # Normalise
+        expected = expected.traj  # Normalise
+        expected_trajdim = expected.trajectory_dim
+        self_trajdim = self.trajectory_dim
 
         numtraj_self = self.ds.sizes[self.trajectory_dim]
-        numtraj_other = other.ds.sizes[other.trajectory_dim]
-        if numtraj_self > 1 and numtraj_other > 1 and numtraj_self != numtraj_other:
+        numtraj_expected = expected.ds.sizes[expected.trajectory_dim]
+        if numtraj_self > 1 and numtraj_expected > 1 and numtraj_self != numtraj_expected:
             raise ValueError(
                 'Datasets must have the same number of trajectories, or a single trajectory. '
-                f'This dataset: {numtraj_self}, other: {numtraj_other}.'
+                f'This dataset: {numtraj_self}, expected: {numtraj_expected}.'
             )
 
         numobs_self = self.ds.sizes[self.obs_dim]
-        numobs_other = other.ds.sizes[other.obs_dim]
-        if numobs_self != numobs_other:
+        numobs_expected = expected.ds.sizes[expected.obs_dim]
+        if numobs_self != numobs_expected:
             raise ValueError(
-                f'Trajectories must have the same lengths. This dataset: {numobs_self}, other: {numobs_other}.'
+                f'Trajectories must have the same lengths. This dataset: {numobs_self}, expected: {numobs_expected}.'
             )
 
         diff = np.max(
             np.abs((self.ds[self.obs_dim] -
-                    other.ds[other.obs_dim]).astype('timedelta64[s]').astype(
+                    expected.ds[expected.obs_dim]).astype('timedelta64[s]').astype(
                         np.float64)))
         if not np.isclose(diff, 0):
             raise ValueError(
                 f"The two datasets must have approximately equal time coordinates, maximum difference: {diff} seconds. Consider using `gridtime` to interpolate one of the datasets."
             )
 
-        # ds = self.ds.dropna(dim=self.obs_dim)
-        # other = other.dropna(dim=other.traj.obs_dim)
+        # Skillscore methods expect that obs_dim is the first dimension
+        ds = self.ds.transpose(self.obs_dim, ...)
+        expected = expected.ds.transpose(expected.obs_dim, ...)
+
+        # Broadcast so that we have same dimensions in both datasets
+        if numtraj_expected == 1 and expected_trajdim in expected.sizes:
+            expected = expected.squeeze(dim=expected_trajdim, drop=True)
+        elif numtraj_self == 1 and self_trajdim in ds.sizes:
+            ds = ds.squeeze(dim=self_trajdim, drop=True)
+        ds = ds.broadcast_like(expected)
+        expected = expected.broadcast_like(ds)
 
         # Skillscore methods expect that obs_dim is the first dimension
         ds = ds.transpose(self.obs_dim, ...)
-        other = other.ds.transpose(other.obs_dim, ...)
+        expected = expected.transpose(expected.traj.obs_dim, ...)
 
         if method == 'liu-weissberg':
             skill_method = skill.liu_weissberg
         else:
             raise ValueError(f"Unknown skill-score method: {method}.")
         
-        s = skill_method(ds.traj.tlon, ds.traj.tlat, other.traj.tlon, other.traj.tlat, **kwargs)
+        s = skill_method(expected.traj.tlon, expected.traj.tlat, ds.traj.tlon, ds.traj.tlat, **kwargs)
 
-        newcoords = dict(ds.traj.tlon.sizes)
+        newcoords = dict(ds.lon.sizes)
         newcoords.pop('time')
         for dim in newcoords:
             if dim in ds.coords:
-                newcoords[dim] = ds.coords[dim]
+                newcoords[dim] = dict(ds.coords)[dim]
             else:
-                newcoords[dim] = np.arange(newcoords[dim])
-
+                newcoords[dim] = np.arange(dict(newcoords)[dim])
         return xr.DataArray(s,
                             name='Skillscore',
                             coords=newcoords,
