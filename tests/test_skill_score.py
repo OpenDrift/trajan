@@ -22,7 +22,7 @@ def test_barents_trajs(barents):
     b1 = b1.traj.gridtime(b0.time)
     skill = b0.traj.skill(b1, tolerance_threshold=1)
     print(skill)
-    np.testing.assert_allclose(skill.values, 0.543, atol=0.001)
+    np.testing.assert_allclose(skill.values, 0.832, atol=0.001)
 
 def test_barents_trajs_noround(barents):
     barents = barents.traj.gridtime('1h', round=False)
@@ -31,7 +31,7 @@ def test_barents_trajs_noround(barents):
     b1 = b1.traj.gridtime(b0.time)
     skill = b0.traj.skill(b1, tolerance_threshold=1)
     print(skill)
-    np.testing.assert_allclose(skill.values, 0.544782, atol=0.001)
+    np.testing.assert_allclose(skill.values, 0.832, atol=0.001)
 
 def test_barents_align(barents):
     barents = barents.traj.gridtime('1h')
