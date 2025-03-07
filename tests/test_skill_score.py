@@ -49,6 +49,51 @@ def test_barents_align(barents):
     skill = b01.traj.skill(barents)
     print(skill)
 
+def test_skillscores():
+    lon_obs = np.array([0, 1, 2, 3, 4, 5])
+    lat_obs = np.array([0, 0, 0, 0, 0, 0])
+    lon_model = lon_obs
+    km2deg = 111
+    lon_model[-1] = lon_obs[-1] + 1.8/km2deg
+    lat_model = np.array([0, 1.2/km2deg, -3.4/km2deg, 6.3/km2deg, 4.2/km2deg, 0])
+    # Test distance between trajectories
+    db = ta.skill.distance_between_trajectories(lon_obs, lat_obs, lon_model, lat_model)
+    assert np.testing.assert_array_almost_equal(
+        db, np.array([0, 1195.4, 3387.0, 6275.8, 4183.9, 0]), 1) is None
+    # Test distance along trajectory
+    da = ta.skill.distance_along_trajectory(lon_obs, lat_obs)
+    assert np.testing.assert_array_almost_equal(
+        da, np.array([111319.5, 111319.5, 111319.5, 111319.5, 111319.5]), 1) is None
+    # Test DARPA skillscore
+    skill_darpa = ta.skill.darpa(lon_obs+.01, lat_obs, lon_model, lat_model)
+    assert skill_darpa == 145
+    # Test Liu-Weissberg skillscore
+    skill_lw = ta.skill.liu_weissberg(lon_obs, lat_obs, lon_model, lat_model)
+    np.testing.assert_almost_equal(skill_lw, 0.99099, 5)
+
+def test_skillscores_2d():
+    lon_obs = np.array([[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5]]).T
+    lat_obs = np.array([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]).T
+    lon_model = lon_obs
+    km2deg = 111
+    lon_model[:,-1] = lon_obs[:,-1] + 1.8/km2deg
+    lat_model = np.array([[0, 1.2/km2deg, -3.4/km2deg, 6.3/km2deg, 4.2/km2deg, 0], [0, 1.2/km2deg, -3.4/km2deg, 6.3/km2deg, 4.2/km2deg, 0]]).T
+    # Test distance between trajectories
+    db = ta.skill.distance_between_trajectories(lon_obs, lat_obs, lon_model, lat_model)
+    assert np.testing.assert_array_almost_equal(
+        db, np.array([[0, 1195.4, 3387.0, 6275.8, 4183.9, 0],
+                      [0, 1195.4, 3387.0, 6275.8, 4183.9, 0]]).T, 1) is None
+    # Test distance along trajectory
+    da = ta.skill.distance_along_trajectory(lon_obs, lat_obs)
+    assert np.testing.assert_array_almost_equal(
+        da, np.array([[111319.5, 111319.5, 111319.5, 111319.5, 111319.5],
+                      [111319.5, 111319.5, 111319.5, 111319.5, 111319.5]]).T, 1) is None
+    # DARPA skillscore does not yet support 2D arrays, TBD
+    # Test Liu-Weissberg skillscore
+    skill_lw = ta.skill.liu_weissberg(lon_obs, lat_obs, lon_model, lat_model)
+    assert skill_lw.shape == (2,)
+    np.testing.assert_almost_equal(skill_lw[0], 0.99099, 5)
+
 
 @pytest.mark.xfail(reason='Need opendrift version with test data')
 def test_opendrift(plot, tmpdir):

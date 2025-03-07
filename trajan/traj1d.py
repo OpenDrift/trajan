@@ -148,6 +148,8 @@ class Traj1d(Traj):
 
         if method == 'liu-weissberg':
             skill_method = skill.liu_weissberg
+        elif method == 'darpa':
+            skill_method = skill.darpa
         else:
             raise ValueError(f"Unknown skill-score method: {method}.")
         
