@@ -64,7 +64,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          name: my-artifact-${{ matrix.runs-on }}
+          name: docs-${{ matrix.runs-on }}
           path: ./docs/build/html
           overwrite: true
 
@@ -89,4 +89,4 @@ jobs:
         uses: actions/upload-artifact/merge@v4
         with:
           name: all-my-files
-          pattern: my-artifact-*
+          pattern: docs-*
