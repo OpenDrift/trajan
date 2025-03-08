@@ -20,8 +20,8 @@ jobs:
         os: ["ubuntu", "macos", "windows"]
         python-version: [ '3.9', '3.10', '3.11' ]
     steps:
-      - uses: actions/checkout@v3
-      - uses: mamba-org/setup-micromamba@v1
+      - uses: actions/checkout@v4
+      - uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment.yml
           channels: conda-forge
@@ -35,7 +35,7 @@ jobs:
 
       - name: Cache cartopy maps
         id: cache-cartopy
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.local/share/cartopy
           key: cartopy-maps
