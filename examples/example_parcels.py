@@ -37,6 +37,7 @@ skillscore = ds.traj.skill(expected=ds_true, method='liu-weissberg', tolerance_t
 #%%
 # Plotting trajectories, colored by their skillscore, compared to the "true" trajectory (black)
 mappable = ds.traj.plot(land='mask', color=skillscore)
-ds_true.traj.plot(color='k', linewidth=3)
+ds_true.traj.plot(color='k', linewidth=3, label='"True" trajectory')
 plt.colorbar(mappable=mappable, orientation='horizontal', label='Skillscore per trajectory')
+plt.legend()
 plt.show()
