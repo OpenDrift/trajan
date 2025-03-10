@@ -13,21 +13,17 @@ import trajan as ta
 
 #%%
 # Importing a trajectory dataset from a simulation with OpenDrift.
-# decode_coords is needed so that lon and lat are not interpreted as coordinate variables.
-with lzma.open('openoil.nc.xz') as oil:
-    ds = xr.open_dataset(oil, decode_coords=False)
-    ds.load()
-    # Requirement that status>=0 is needed since non-valid points are not masked in OpenDrift output
-    ds = ds.where(ds.status>=0)  # only active particles
+ds = xr.open_dataset('openoil.nc')
 
 #%%
 # Displaying some basic information about this dataset
 print(ds.traj)
 
 #%%
-# Making a basic plot of trajectories
-ds.traj.plot()
-plt.title('Basic trajectory plot')
+# Plotting trajectories, colored by oil viscosity
+mappable = ds.traj.plot(color=ds.viscosity, alpha=1)
+plt.title('Oil trajectories')
+plt.colorbar(mappable, orientation='horizontal', label=f'Oil viscosity  [{ds.viscosity.units}]')
 plt.show()
 
 #%%

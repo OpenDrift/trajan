@@ -9,11 +9,9 @@ def plot(pytestconfig):
 
 @pytest.fixture
 def opendrift_sim():
-    oil = Path(__file__).parent.parent / 'examples' / 'openoil.nc.xz'
-    with lzma.open(oil) as oil:
-        ds = xr.open_dataset(oil)
-        ds.load()
-        return ds
+    oil = Path(__file__).parent.parent / 'examples' / 'openoil.nc'
+    ds = xr.open_dataset(oil)
+    return ds
 
 @pytest.fixture
 def barents():
