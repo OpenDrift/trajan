@@ -168,6 +168,12 @@ class Plot:
             y = self.ds.traj.tlat.values.T
 
         if hasattr(kwargs['color'], 'shape'):
+            if isinstance(kwargs['color'], xr.DataArray):
+                kwargs['color'] = kwargs['color'].values
+            # TODO: it should be possible to make this much faster, especially for fixed color per trajectory
+            if kwargs['color'].ndim == 1:  # Fixed color per line
+                assert len(kwargs['color']) == x.shape[1]
+                kwargs['color'] = kwargs['color'][:, np.newaxis] * np.ones(x.shape).T
             from matplotlib.collections import LineCollection
             c = kwargs.pop('color').T
             if hasattr(c, 'values'):
