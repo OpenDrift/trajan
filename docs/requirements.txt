@@ -1,8 +1,7 @@
-sphinx
-intersphinx-registry
+sphinx==8.1
 sphinx-gallery>=0.5.0
 sphinx-autoapi
 sphinx-autosummary-accessors
 matplotlib
 numpydoc
-pydata-sphinx-theme>=0.16.1
+pydata-sphinx-theme
