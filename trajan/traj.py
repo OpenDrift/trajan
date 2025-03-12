@@ -13,6 +13,7 @@ import xarray as xr
 import cf_xarray as _
 import pandas as pd
 import logging
+import cartopy.crs
 
 from .plot import Plot
 from .animation import Animation
@@ -361,6 +362,10 @@ class Traj:
         Returns
         -------
         pyproj.crs.CRS
+
+        See also
+        --------
+        transform, set_crs
         """
         if len(self.ds.cf.grid_mapping_names) == 0:
             logger.debug(
@@ -380,6 +385,30 @@ class Traj:
             logger.debug(f'Constructing CRS from grid_mapping: {gm}')
             return pyproj.crs.CRS.from_cf(gm.attrs)
 
+    @property
+    def ccrs(self) -> cartopy.crs.CRS:
+        """
+        Retrieve a cartopy CRS from the pyproj CRS.
+
+        Returns
+        -------
+        cartopy.crs.CRS
+
+        Warning
+        -------
+        This may not be totally accurate.
+
+        See also
+        --------
+        crs, transform
+        """
+
+        crs = self.crs
+        if crs is not None:
+            return cartopy.crs.CRS(crs.to_json_dict())
+        else:
+            return None
+
     def set_crs(self, crs) -> xr.Dataset:
         """
         Returns a new dataset with the CF-supported grid-mapping / projection set to `crs`.
@@ -395,7 +424,11 @@ class Traj:
 
         Warning
         -------
-        This does not transform the coordinates, make sure that `crs` is matching the data in the dataset.
+        You most likely want `transform`. This does not transform the coordinates, make sure that `crs` is matching the data in the dataset.
+
+        See also
+        --------
+        transform
         """
 
         # TODO: Ideally this would be handled by cf-xarray or rio-xarray.
@@ -987,8 +1020,8 @@ class Traj:
         The datasets must be sampled (or have observations) at approximately the same timesteps. Consider using :meth:`gridtime` to interpolate one of the datasets to the other.
 
         Any additional dimensions will be broadcasted, so that the result include the combined dimensions of both datasets.
-        
-        Some skillscore methods (e.g. liu-weissberg) are not symmetrical. This specific skillscore is normalized on the length of the expected / observed trajectories. Thus `a.traj.skill(b)` will provide different numerical results than `b.traj.skill(a)`. 
+
+        Some skillscore methods (e.g. liu-weissberg) are not symmetrical. This specific skillscore is normalized on the length of the expected / observed trajectories. Thus `a.traj.skill(b)` will provide different numerical results than `b.traj.skill(a)`.
 
         Examples
         --------

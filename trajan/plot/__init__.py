@@ -1,5 +1,6 @@
 import logging
 import matplotlib.pyplot as plt
+import cartopy.mpl.geoaxes
 import cartopy.crs as ccrs
 import numpy as np
 import xarray as xr
@@ -26,11 +27,7 @@ class Plot:
     def __cartesian__(self):
         return self.ds.traj.crs is None
 
-    def set_up_map(
-        self,
-        kwargs_d=None,
-        **kwargs
-    ):
+    def set_up_map(self, kwargs_d=None, **kwargs):
         """
         Set up axes for plotting.
 
@@ -64,7 +61,7 @@ class Plot:
         if kwargs_d is None:
             kwargs_d = kwargs
         else:
-            for k,v in kwargs:
+            for k, v in kwargs:
                 kwargs_d[k] = v
 
         ax = kwargs_d.pop('ax', None)
@@ -127,8 +124,14 @@ class Plot:
         gl.top_labels = None
 
         if land is not None:
-            add_land(ax, lonmin, latmin, lonmax, latmax,
-                 fast=(land == 'mask' or land == 'fast'), lscale=land, globe=crs.globe)
+            add_land(ax,
+                     lonmin,
+                     latmin,
+                     lonmax,
+                     latmax,
+                     fast=(land == 'mask' or land == 'fast'),
+                     lscale=land,
+                     globe=crs.globe)
 
         return ax
 
@@ -157,15 +160,21 @@ class Plot:
 
         if 'alpha' not in kwargs and 'trajectory' in self.ds.dims:
             num = self.ds.sizes['trajectory']
-            if num>100:  # If many trajectories, make more transparent
-                kwargs['alpha'] = np.maximum(.1, 100/np.float64(num))
+            if num > 100:  # If many trajectories, make more transparent
+                kwargs['alpha'] = np.maximum(.1, 100 / np.float64(num))
 
-        if self.__cartesian__:
-            x = self.ds.traj.tx.values.T
-            y = self.ds.traj.ty.values.T
-        else:
-            x = self.ds.traj.tlon.values.T
-            y = self.ds.traj.tlat.values.T
+        # TODO: If not possible to construct a cartopy CRS, convert the dataset
+        #       using self.ds.traj.tlon/tlat
+        x = self.ds.traj.tx.values.T
+        y = self.ds.traj.ty.values.T
+        dcrs = self.ds.traj.ccrs
+
+        cartesian = self.__cartesian__
+
+        if not isinstance(ax, cartopy.mpl.geoaxes.GeoAxes):
+            logger.debug(
+                'axes are not cartopy geoaxes, plotting without transform')
+            cartesian = True
 
         if hasattr(kwargs['color'], 'shape'):
             if isinstance(kwargs['color'], xr.DataArray):
@@ -173,7 +182,8 @@ class Plot:
             # TODO: it should be possible to make this much faster, especially for fixed color per trajectory
             if kwargs['color'].ndim == 1:  # Fixed color per line
                 assert len(kwargs['color']) == x.shape[1]
-                kwargs['color'] = kwargs['color'][:, np.newaxis] * np.ones(x.shape).T
+                kwargs['color'] = kwargs['color'][:, np.newaxis] * np.ones(
+                    x.shape).T
             from matplotlib.collections import LineCollection
             c = kwargs.pop('color').T
             if hasattr(c, 'values'):
@@ -184,23 +194,31 @@ class Plot:
             colorbar = kwargs.pop('colorbar', False)
 
             for i in range(x.shape[1]):
-                logger.debug(f'Plotting trajectory {i} of {x.shape[1]} with color')
-                points = np.array([x[:,i].T, y[:,i].T]).T.reshape(-1, 1, 2)
+                logger.debug(
+                    f'Plotting trajectory {i} of {x.shape[1]} with color')
+                points = np.array([x[:, i].T, y[:, i].T]).T.reshape(-1, 1, 2)
                 segments = np.concatenate([points[:-1], points[1:]], axis=1)
-                if self.__cartesian__:
-                    lc = LineCollection(segments, cmap='jet', norm=norm,
-                                        *args, **kwargs)
+                if cartesian:
+                    lc = LineCollection(segments,
+                                        cmap='jet',
+                                        norm=norm,
+                                        *args,
+                                        **kwargs)
                 else:
-                    lc = LineCollection(segments, cmap='jet', norm=norm, transform=self.gcrs,
-                                        *args, **kwargs)
+                    lc = LineCollection(segments,
+                                        cmap='jet',
+                                        norm=norm,
+                                        transform=dcrs,
+                                        *args,
+                                        **kwargs)
                 # Set the values used for colormapping
-                lc.set_array(c[:,i])
+                lc.set_array(c[:, i])
                 paths = ax.add_collection(lc)
         else:
-            if self.__cartesian__:
+            if cartesian:
                 paths = ax.plot(x, y, *args, **kwargs)
             else:
-                paths = ax.plot(x, y, transform=self.gcrs, *args, **kwargs)
+                paths = ax.plot(x, y, transform=dcrs, *args, **kwargs)
 
         return paths
 
@@ -230,8 +248,8 @@ class Plot:
 
         if 'alpha' not in kwargs and 'trajectory' in self.ds.dims:
             num = self.ds.sizes['trajectory']
-            if num>100:  # If many particles, make more transparent
-                kwargs['alpha'] = np.maximum(.1, 100/np.float64(num))
+            if num > 100:  # If many particles, make more transparent
+                kwargs['alpha'] = np.maximum(.1, 100 / np.float64(num))
 
         if self.__cartesian__:
             x = self.ds.traj.tx.values.T
@@ -273,8 +291,8 @@ class Plot:
         # TODO: might not work for cartesian plots
         line_segments = [hull.points[simplex] for simplex in hull.simplices]
         from matplotlib.collections import LineCollection
-        paths = ax.add_collection(LineCollection(line_segments, transform=self.gcrs,
-                                                 *args, **kwargs))
+        paths = ax.add_collection(
+            LineCollection(line_segments, transform=self.gcrs, *args,
+                           **kwargs))
 
         return paths
-
