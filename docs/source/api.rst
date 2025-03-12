@@ -94,6 +94,7 @@ Attributes
     Dataset.traj.tlon
     Dataset.traj.tlat
     Dataset.traj.crs
+    Dataset.traj.ccrs
 
 .. _dsmeth:
 
