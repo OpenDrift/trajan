@@ -100,8 +100,48 @@ class Traj1d(Traj):
         plt.xlim([0, 30])
         plt.show()
 
-    def skill(self, expected, method='liu-weissberg', **kwargs):
+    def skill_along_trajectory(self, expected, **kwargs):
+        """_Skill score is calculated for each trajectory versus the matcing part of the expected (single) trajectory.
+        """
 
+        expected = expected.traj  # Normalise
+
+        numtraj_expected = expected.ds.sizes[expected.trajectory_dim]
+        if numtraj_expected > 1:
+            raise ValueError(
+                f'Expected must contain a single trajectory, this contains {numtraj_expected}.'
+            )
+
+        start_lon = self.ds.lon.bfill(dim='time').isel(time=0)
+        start_lat = self.ds.lat.bfill(dim='time').isel(time=0)
+        end_lon = self.ds.lon.ffill(dim='time').isel(time=-1)
+        end_lat = self.ds.lat.ffill(dim='time').isel(time=-1)
+                
+        def skill_matching(traj, expected):
+            traj = traj.where(np.isfinite(traj.lon), drop=True)
+            expected_overlap = expected.sel(time=slice(traj.time[0], traj.time[-1]))
+            mask = False
+            if traj.sizes[self.obs_dim] != expected_overlap.sizes[expected_overlap.traj.obs_dim]:
+                traj = traj.sel(time=slice(expected_overlap.time[0], expected_overlap.time[-1]))
+                mask = True
+            s = traj.traj.skill(expected_overlap, **kwargs)
+            if mask is True:
+                s = s*np.nan  # Mask out the skill score if the trajectories are not of equal length
+            s['start_time'] = traj.time[0]
+            s['end_time'] = traj.time[-1]
+            return s
+    
+        s = self.ds.groupby(self.trajectory_dim).apply(skill_matching, expected=expected)
+        s['start_lon'] = start_lon
+        s['start_lat'] = start_lat
+        s['end_lon'] = end_lon
+        s['end_lat'] = end_lat
+        s = s.drop_vars('time')
+
+        return s
+
+    def skill(self, expected, method='liu-weissberg', **kwargs):
+        
         expected = expected.traj  # Normalise
         expected_trajdim = expected.trajectory_dim
         self_trajdim = self.trajectory_dim

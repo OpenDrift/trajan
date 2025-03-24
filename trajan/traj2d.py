@@ -289,3 +289,6 @@ class Traj2d(Traj):
             {self.trajectory_dim: self.ds[self.trajectory_dim]})
 
         return d
+
+    def skill(self):
+        raise ValueError('Not implemented for 1D datasets')
