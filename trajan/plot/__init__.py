@@ -82,10 +82,10 @@ class Plot:
 
         # Create a new figure if none exists.
         if corners is None:
-            lonmin = self.ds.lon.min() - margin
-            lonmax = self.ds.lon.max() + margin
-            latmin = self.ds.lat.min() - margin
-            latmax = self.ds.lat.max() + margin
+            lonmin = self.ds.traj.tlon.min() - margin
+            lonmax = self.ds.traj.tlon.max() + margin
+            latmin = self.ds.traj.tlat.min() - margin
+            latmax = self.ds.traj.tlat.max() + margin
         else:
             lonmin = corners[0]
             lonmax = corners[1]

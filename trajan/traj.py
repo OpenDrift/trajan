@@ -7,6 +7,7 @@ https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions
 
 from abc import abstractmethod
 from datetime import timedelta
+from functools import cache
 import pyproj
 import numpy as np
 import xarray as xr
@@ -162,10 +163,7 @@ class Traj:
             if self.crs is None:
                 return self.tx
             else:
-                x, _ = self.transform(self.__gcrs__, self.tx, self.ty)
-                X = self.tx.copy(deep=False,
-                                 data=x)  # TODO: remove grid-mapping.
-                return X
+                return self.transform(self.__gcrs__).traj.tlon
 
     @property
     def tlat(self) -> xr.DataArray:
@@ -182,11 +180,9 @@ class Traj:
             if self.crs is None:
                 return self.ty
             else:
-                _, y = self.transform(self.__gcrs__, self.tx, self.ty)
-                Y = self.ty.copy(deep=False,
-                                 data=y)  # TODO: remove grid-mapping.
-                return Y
+                return self.transform(self.__gcrs__).traj.tlat
 
+    @cache
     def transform(self, to_crs):
         """
         Transform this datasets to `to_crs` coordinate system. If the target

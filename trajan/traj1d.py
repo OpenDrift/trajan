@@ -116,7 +116,7 @@ class Traj1d(Traj):
         start_lat = self.ds.lat.bfill(dim='time').isel(time=0)
         end_lon = self.ds.lon.ffill(dim='time').isel(time=-1)
         end_lat = self.ds.lat.ffill(dim='time').isel(time=-1)
-                
+
         def skill_matching(traj, expected):
             traj = traj.where(np.isfinite(traj.lon), drop=True)
             expected_overlap = expected.sel(time=slice(traj.time[0], traj.time[-1]))
@@ -130,7 +130,7 @@ class Traj1d(Traj):
             s['start_time'] = traj.time[0]
             s['end_time'] = traj.time[-1]
             return s
-    
+
         s = self.ds.groupby(self.trajectory_dim).apply(skill_matching, expected=expected)
         s['start_lon'] = start_lon
         s['start_lat'] = start_lat
@@ -140,8 +140,8 @@ class Traj1d(Traj):
 
         return s
 
-    def skill(self, expected, method='liu-weissberg', **kwargs):
-        
+    def skill(self, expected, method='liu-weissberg', **kwargs) -> xr.Dataset:
+
         expected = expected.traj  # Normalise
         expected_trajdim = expected.trajectory_dim
         self_trajdim = self.trajectory_dim
@@ -192,7 +192,7 @@ class Traj1d(Traj):
             skill_method = skill.darpa
         else:
             raise ValueError(f"Unknown skill-score method: {method}.")
-        
+
         s = skill_method(expected.traj.tlon, expected.traj.tlat, ds.traj.tlon, ds.traj.tlat, **kwargs)
 
         newcoords = dict(ds.lon.sizes)
