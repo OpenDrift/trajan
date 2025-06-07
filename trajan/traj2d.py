@@ -148,7 +148,7 @@ class Traj2d(Traj):
         ds = self.ds.copy(deep=True)
 
         # The observation coordinate will be re-written
-        ds = ds.drop_vars([self.obs_dim])
+        ds = ds.drop_vars([self.obs_dim], errors='ignore')
 
         assert self.obs_dim in ds[
             self.
