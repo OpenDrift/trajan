@@ -1091,6 +1091,12 @@ class Traj:
         Convert dataset into a 2D dataset from.
         """
 
+    @abstractmethod
+    def append(self, da, obs_dims=None) -> xr.Dataset:
+        """
+        Append trajectories from other dataset to this.
+        """
+
     def crop(self,
              lonmin=-360,
              lonmax=360,

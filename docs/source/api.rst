@@ -126,6 +126,7 @@ Methods
     Dataset.traj.sel
     Dataset.traj.seltime
     Dataset.traj.iseltime
+    Dataset.traj.append
     Dataset.traj.crop
     Dataset.traj.contained_in
     Dataset.traj.is_1d

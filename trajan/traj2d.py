@@ -194,10 +194,29 @@ class Traj2d(Traj):
 
         return ds
 
+    def append(self, da, obs_dims=None):
+        ds = self.ds.copy(deep=True)
+
+        if obs_dims is None:
+            obs_dims = [self.obs_dim]
+        else:
+            obs_dims = list(obs_dims)
+
+        # Increase obs_dims to size of max
+        for o in obs_dims:
+            print(o)
+            N = max(ds.sizes[o], da.sizes[o])
+            ds = ds.pad({o: (0, N - ds.sizes[o])})
+            da = da.pad({o: (0, N - da.sizes[o])})
+
+        ds = xr.concat((ds, da), dim='trajectory')
+
+        return ds
+
     def sel(self, *args, **kwargs):
-        return self.ds.groupby(
-            self.trajectory_dim).map(lambda d: ensure_time_dim(d.traj.to_1d(
-            ).sel(*args, **kwargs), self.time_varname).traj.to_2d(self.obs_dim))
+        return self.ds.groupby(self.trajectory_dim).map(
+            lambda d: ensure_time_dim(d.traj.to_1d().sel(*args, **kwargs), self
+                                      .time_varname).traj.to_2d(self.obs_dim))
 
     def seltime(self, t0=None, t1=None):
         return self.sel({self.time_varname: slice(t0, t1)})
