@@ -34,7 +34,9 @@ class Traj1d(Traj):
         time = ds[self.time_varname].rename({
             self.time_varname: obs_dim
         }).expand_dims(
-            dim={self.trajectory_dim: ds.sizes[self.trajectory_dim]})
+            dim={
+                self.trajectory_dim: ds.sizes[self.trajectory_dim]
+            }).assign_coords({self.trajectory_dim: ds[self.trajectory_dim]})
         # TODO should also add cf_role here
         ds = ds.rename({self.time_varname: obs_dim})
         ds[self.time_varname] = time
@@ -119,19 +121,23 @@ class Traj1d(Traj):
 
         def skill_matching(traj, expected):
             traj = traj.where(np.isfinite(traj.lon), drop=True)
-            expected_overlap = expected.sel(time=slice(traj.time[0], traj.time[-1]))
+            expected_overlap = expected.sel(
+                time=slice(traj.time[0], traj.time[-1]))
             mask = False
-            if traj.sizes[self.obs_dim] != expected_overlap.sizes[expected_overlap.traj.obs_dim]:
-                traj = traj.sel(time=slice(expected_overlap.time[0], expected_overlap.time[-1]))
+            if traj.sizes[self.obs_dim] != expected_overlap.sizes[
+                    expected_overlap.traj.obs_dim]:
+                traj = traj.sel(time=slice(expected_overlap.time[0],
+                                           expected_overlap.time[-1]))
                 mask = True
             s = traj.traj.skill(expected_overlap, **kwargs)
             if mask is True:
-                s = s*np.nan  # Mask out the skill score if the trajectories are not of equal length
+                s = s * np.nan  # Mask out the skill score if the trajectories are not of equal length
             s['start_time'] = traj.time[0]
             s['end_time'] = traj.time[-1]
             return s
 
-        s = self.ds.groupby(self.trajectory_dim).apply(skill_matching, expected=expected)
+        s = self.ds.groupby(self.trajectory_dim).apply(skill_matching,
+                                                       expected=expected)
         s['start_lon'] = start_lon
         s['start_lat'] = start_lat
         s['end_lon'] = end_lon
@@ -151,8 +157,7 @@ class Traj1d(Traj):
         if numtraj_self > 1 and numtraj_expected > 1 and numtraj_self != numtraj_expected:
             raise ValueError(
                 'Datasets must have the same number of trajectories, or a single trajectory. '
-                f'This dataset: {numtraj_self}, expected: {numtraj_expected}.'
-            )
+                f'This dataset: {numtraj_self}, expected: {numtraj_expected}.')
 
         numobs_self = self.ds.sizes[self.obs_dim]
         numobs_expected = expected.ds.sizes[expected.obs_dim]
@@ -162,9 +167,10 @@ class Traj1d(Traj):
             )
 
         diff = np.max(
-            np.abs((self.ds[self.obs_dim] -
-                    expected.ds[expected.obs_dim]).astype('timedelta64[s]').astype(
-                        np.float64)))
+            np.abs((
+                self.ds[self.obs_dim] -
+                expected.ds[expected.obs_dim]).astype('timedelta64[s]').astype(
+                    np.float64)))
         if not np.isclose(diff, 0):
             raise ValueError(
                 f"The two datasets must have approximately equal time coordinates, maximum difference: {diff} seconds. Consider using `gridtime` to interpolate one of the datasets."
@@ -193,7 +199,8 @@ class Traj1d(Traj):
         else:
             raise ValueError(f"Unknown skill-score method: {method}.")
 
-        s = skill_method(expected.traj.tlon, expected.traj.tlat, ds.traj.tlon, ds.traj.tlat, **kwargs)
+        s = skill_method(expected.traj.tlon, expected.traj.tlat, ds.traj.tlon,
+                         ds.traj.tlat, **kwargs)
 
         newcoords = dict(ds.lon.sizes)
         newcoords.pop('time')

@@ -254,6 +254,8 @@ class Traj2d(Traj):
             ds = ds.loc[{self.time_varname: ~pd.isna(ds[self.time_varname])}]
             _, ui = np.unique(ds[self.time_varname], return_index=True)
             ds = ds.isel({self.time_varname: ui})
+            ds = ds.assign_coords(
+                {self.trajectory_dim: ds[self.trajectory_dim]})
 
             return ds
 
