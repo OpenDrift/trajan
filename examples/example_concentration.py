@@ -36,7 +36,7 @@ ds_c.isel(time=12).number_area_concentration.plot()
 plt.show()
 
 #%% 
-# We see that the cell area decreases slightly sway from equator.
+# We see that the cell area decreases slightly away from equator.
 # This is accounted for when calculating area/volume concentration.
 ds_c.cell_area.plot()
 plt.show()
@@ -49,9 +49,8 @@ grid3d = ds.traj.make_grid(dx=400, z=z)
 
 #%% 
 # Calculate the concentration of elements for this new grid, also weighted with element property "mass_oil"
-weights = 'mass_oil'
 ds = ds.isel(time=12)  # Pre-selecting a single time before calculating concentrations
-ds_c = ds.traj.concentration(grid3d, weights=weights)
+ds_c = ds.traj.concentration(grid3d, weights='mass_oil')
 
 #%% 
 # Plot the oil concentration (mass/volume, kg/m3) at depths 1-3m and 20-30m
