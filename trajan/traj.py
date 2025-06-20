@@ -1301,15 +1301,15 @@ class Traj:
             The same grid Xarray Dataset as input, with the following variables added:
               - number: the number of elements within each grid cell
               - number_area_concentration: the number of elements per area of each grid cell
-                    (only if grid does not contain z)
+                (only if grid does not contain z)
               - number_volume_concentration: the number of elements per volume of each grid cell
-                    (only if grid does not contain z)
+                (only if grid does not contain z)
               - <weights>_sum: the sum of property <weights> within each grid cell
               - <weights>_mean: the mean of property <weights> within each grid cell
               - <weights>_area_concentration: the concentration of <weights> per area of each grid cell
-                    (only if grid does not contain z)
+                (only if grid does not contain z)
               - <weights>_volume_concentration: the volume concentration of <weights> per volume of each grid cell
-                    (only if grid contains z)
+                (only if grid contains z)
         """
 
         # TODO: support other projections
