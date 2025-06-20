@@ -134,6 +134,8 @@ Methods
     Dataset.traj.to_1d
     Dataset.traj.to_2d
     Dataset.traj.condense_obs
+    Dataset.traj.make_grid
+    Dataset.traj.get_concentration
 
 .. currentmodule:: trajan
 
