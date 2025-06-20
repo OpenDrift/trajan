@@ -1221,11 +1221,10 @@ class Traj:
               - lon_edges, lat_edges (edges of the cells, i.e. one element more than lon, lat)
               - z (vertical center of each layer, only if z if provided as input)
               - z_edges (vertical edges of each layer, i.e. one element more than z, and only if z if provided as input)
-            The dataset contains the following variables on the above goordinates/grid:
+            The dataset contains the following variables on the above coordinates/grid:
               - layer_thickness: Thickness of layers in meters, i.e. the diff of input z
               - cell_area: Area [m2] of each grid cell
               - cell_volume: Volume [m3] of each grid cell, i.e. the above cell_area multiplied by layer_thickness
-
         """
 
         if dy is None:
@@ -1282,7 +1281,7 @@ class Traj:
 
         return ds
 
-    def get_concentration(self, grid, weights=None):
+    def concentration(self, grid, weights=None):
         """
         Calculate concentration of elements on a provided grid
 
@@ -1300,22 +1299,18 @@ class Traj:
 
         Dataset
             The same grid Xarray Dataset as input, with the following variables added:
-
               - number: the number of elements within each grid cell
               - number_area_concentration: the number of elements per area of each grid cell
                     (only if grid does not contain z)
               - number_volume_concentration: the number of elements per volume of each grid cell
                     (only if grid does not contain z)
-
               - <weights>_sum: the sum of property <weights> within each grid cell
               - <weights>_mean: the mean of property <weights> within each grid cell
               - <weights>_area_concentration: the concentration of <weights> per area of each grid cell
                     (only if grid does not contain z)
               - <weights>_volume_concentration: the volume concentration of <weights> per volume of each grid cell
                     (only if grid contains z)
-
         """
-
 
         # TODO: support other projections
         from xarray.groupers import BinGrouper, UniqueGrouper
