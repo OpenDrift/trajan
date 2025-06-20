@@ -41,6 +41,26 @@ def ensure_time_dim(ds, time_dim):
     else:
         return ds
 
+def grid_area(lons, lats):
+    """Calculate the area of each grid cell"""
+    from shapely.geometry import Polygon
+
+    if lons.ndim == 1:
+        lons, lats = np.meshgrid(lons, lats)
+
+    geod = pyproj.Geod(ellps="WGS84")
+    rows, cols = lons.shape
+    grid_areas = np.zeros((rows - 1, cols - 1))
+
+    for i in range(rows - 1):
+        for j in range(cols - 1):
+            lon = [lons[i, j], lons[i, j + 1], lons[i + 1, j + 1], lons[i + 1, j]]
+            lat = [lats[i, j], lats[i, j + 1], lats[i + 1, j + 1], lats[i + 1, j]]
+            polygon = Polygon([(lon[0], lat[0]), (lon[1], lat[1]), (lon[2], lat[2]), (lon[3], lat[3])])
+            grid_areas[i, j] = abs(geod.geometry_area_perimeter(polygon)[0])
+
+    return grid_areas
+
 
 class Traj:
     ds: xr.Dataset
@@ -1168,3 +1188,183 @@ class Traj:
                      (self.tlat.max(dim=self.obs_dim) < latmax))
 
         return self.ds.isel({self.trajectory_dim: condition})
+
+    def make_grid(self, dx, dy=None, z=None,
+                  lonmin=None, lonmax=None, latmin=None, latmax=None):
+        """
+        Make a grid that covers all elements of dataset, with given spatial resolution.
+
+        Parameters
+        ----------
+
+        dx : float
+            Horizontal pixel/grid/cell size in meters, along direction of x or longitude
+
+        dy : float
+            Horizontal pixel/grid/cell size in meters, along direction of y or latitude
+            If not provided, dy will be equal to dx (square pixels)
+
+        z : array-like
+            The bounds of the grid in the vertical.
+            The outout grid will contain the centerpoints between each "layer", i.e. one element less
+
+        lonmin, lonmax, latmin, latmax : float
+            If not provided, these values will be taken from the min/max og lon/lat of the dataset
+
+        Returns
+        -------
+
+        Dataset
+            A new Xarray Dataset with the following coordinates:
+              - time (only if input dataset has a time dimension)
+              - lon, lat  (center of the cells)
+              - lon_edges, lat_edges (edges of the cells, i.e. one element more than lon, lat)
+              - z (vertical center of each layer, only if z if provided as input)
+              - z_edges (vertical edges of each layer, i.e. one element more than z, and only if z if provided as input)
+            The dataset contains the following variables on the above goordinates/grid:
+              - layer_thickness: Thickness of layers in meters, i.e. the diff of input z
+              - cell_area: Area [m2] of each grid cell
+              - cell_volume: Volume [m3] of each grid cell, i.e. the above cell_area multiplied by layer_thickness
+
+        """
+
+        if dy is None:
+            dy = dx  # Square pixels
+        else:
+            raise NotImplementedError('Rectangular pixels is not yet implemented')
+
+        if lonmin is not None:
+            if self.crs.is_geographic:
+                xmin, xmax, ymin, ymax = lonmin, lonmax, latmin, latmax
+            else:
+                # Bounds are given as lon/lat, but dataset projection is not geographic
+                # - Calculate (x,y) for all 4 corners (lon,lat)
+                # - Use min/max og these (x,y) as bounds
+                raise NotImplementedError('Not implemented')
+        else:
+            xmin = self.tx.min()
+            xmax = self.tx.max()
+            ymin = self.ty.min()
+            ymax = self.ty.max()
+
+        if self.crs.is_geographic:
+            # dx is given in meters, but must be converted to degrees
+            dy = dy / 111000
+            dx = dy / np.cos(np.radians((ymin + ymax)/2)).values
+            xdimname = 'lon'
+            ydimname = 'lat'
+        else:
+            xdimname = 'x'
+            ydimname = 'y'
+
+        x = np.arange(xmin, xmax + dx*2, dx)  # One extra row/column
+        y = np.arange(ymin, ymax + dy*2, dy)
+        area = grid_area(x, y)
+
+        # Create Xarray Dataset
+        data_vars = {}
+        data_vars['cell_area'] = ([ydimname, xdimname], area, {'long_name': 'Cell area', 'unit': 'm2'})
+
+        coords = {ydimname: (y[0:-1]+y[1::])/2, xdimname: (x[0:-1]+x[1::])/2,
+                  ydimname + '_edges': y, xdimname + '_edges': x}
+        if 'time' in self.ds.coords:
+            coords['time'] = self.ds.time
+        if z is not None:
+            z = np.array(z)
+            coords['z'] = (z[0:-1] + z[1::]) / 2  # z refers to the center of layer
+            coords['z_edges'] = z  # z_edges refer to the edges of each layer, i.a. one element longer
+            data_vars['layer_thickness'] = (['z'], -(z[1::]-z[0:-1]), {'long_name': 'Layer thickness', 'unit': 'm'})
+
+        ds = xr.Dataset(data_vars=data_vars, coords=coords)
+        if z is not None:
+            ds['cell_volume'] = ds.cell_area*ds.layer_thickness
+            ds['cell_volume'].attrs = {'long_name': 'Cell volume', 'unit': 'm3'}
+
+        return ds
+
+    def get_concentration(self, grid, weights=None):
+        """
+        Calculate concentration of elements on a provided grid
+
+        Parameters
+        ----------
+
+        grid : Dataset
+            A grid Dataset, as returned from `trajan.make_grid`
+
+        weights : string
+            If provided, the concentration weighted with this variable will also be calculated
+
+        Returns
+        -------
+
+        Dataset
+            The same grid Xarray Dataset as input, with the following variables added:
+
+              - number: the number of elements within each grid cell
+              - number_area_concentration: the number of elements per area of each grid cell
+                    (only if grid does not contain z)
+              - number_volume_concentration: the number of elements per volume of each grid cell
+                    (only if grid does not contain z)
+
+              - <weights>_sum: the sum of property <weights> within each grid cell
+              - <weights>_mean: the mean of property <weights> within each grid cell
+              - <weights>_area_concentration: the concentration of <weights> per area of each grid cell
+                    (only if grid does not contain z)
+              - <weights>_volume_concentration: the volume concentration of <weights> per volume of each grid cell
+                    (only if grid contains z)
+
+        """
+
+
+        # TODO: support other projections
+        from xarray.groupers import BinGrouper, UniqueGrouper
+
+        variables = ['lat', 'lon']  # Dataset variables needed for gridding
+        if weights is not None:
+            variables.append(weights)
+
+        grid_dims = []
+        if self.time_varname is not None:
+            grid_dims.append('time')
+        if 'z_edges' in grid.variables:
+            variables.append('z')
+            grid_dims.append('z')
+        grid_dims = grid_dims + ['lat', 'lon']
+
+        ds = self.ds[variables]  # Selecting subset for gridding
+
+        groupers = {}
+        if 'time' in grid_dims:
+            groupers['time'] = UniqueGrouper()
+        if 'z' in variables:
+            groupers['z'] = BinGrouper(bins=np.flip(grid.z_edges))  # z must be increasing
+        groupers['lat'] = BinGrouper(bins=grid.lat_edges)
+        groupers['lon'] = BinGrouper(bins=grid.lon_edges)
+        g = ds.groupby(groupers)
+
+        # Calculate number concentration
+        number = g.count()  # Number of elements per grid cell
+        if 'z' in variables:
+            number = number.isel(z_bins=slice(None, None, -1))  # Flipping z back
+        grid['number'] = (grid_dims, number.lon.data)
+        if 'z' in variables:
+            grid['number_volume_concentration'] = grid.number / grid.cell_volume
+        else:
+            grid['number_area_concentration'] = grid.number / grid.cell_area
+
+        # Calculate concentration of weights variable, if requested
+        if weights is not None:
+            w_sum = g.sum()
+            if 'z' in variables:
+                w_sum = w_sum.isel(z_bins=slice(None, None, -1))  # Flipping z back
+            grid[weights + '_sum'] = (grid_dims, w_sum[weights].data)
+            grid[weights + '_mean'] = grid[weights + '_sum'] / grid.number
+            if 'z' in variables:  # Volume concentration
+                grid[weights + '_volume_concentration'] = grid[weights + '_sum'] / grid.cell_volume
+                grid[weights + '_volume_concentration'] = grid[weights + '_sum'] / grid.cell_volume
+                grid[weights + '_volume_concentration'].attrs['long_name'] = f'{weights} per m3'
+            else:  # Area concentration
+                grid[weights + '_area_concentration'] = grid[weights + '_sum'] / grid.cell_area
+
+        return grid
