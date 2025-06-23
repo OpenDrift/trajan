@@ -200,13 +200,11 @@ class Plot:
                 segments = np.concatenate([points[:-1], points[1:]], axis=1)
                 if cartesian:
                     lc = LineCollection(segments,
-                                        cmap='jet',
                                         norm=norm,
                                         *args,
                                         **kwargs)
                 else:
                     lc = LineCollection(segments,
-                                        cmap='jet',
                                         norm=norm,
                                         transform=dcrs,
                                         *args,
