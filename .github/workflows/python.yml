@@ -77,7 +77,7 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           pip install --upgrade typing-extensions twine
-          twine upload --skip-existing *
+          twine upload --skip-existing wheels/*
 
   merge:
     runs-on: ubuntu-latest
