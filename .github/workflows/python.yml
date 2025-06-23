@@ -10,7 +10,7 @@ on:
 
 jobs:
   tests:
-    name: pytests (${{ matrix.os }} - ${{ matrix.python-version }}, Mambaforge)
+    name: pytests (${{ matrix.os }} - ${{ matrix.python-version }}, Miniforge)
     runs-on: ${{ matrix.os }}-latest
     defaults:
       run:
@@ -72,7 +72,7 @@ jobs:
         with:
           python-version: '3.10'
           miniforge-version: latest
-          miniforge-variant: Mambaforge
+          miniforge-variant: Miniforge
       - name: Publish to PyPi
         env:
           TWINE_USERNAME: __token__
