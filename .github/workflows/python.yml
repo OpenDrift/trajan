@@ -65,8 +65,9 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          path: wheels
           name: wheels
+          path: wheels
+          pattern: wheels-*
           merge-multiple: true
       - uses: conda-incubator/setup-miniconda@v2
         with:
