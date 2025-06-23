@@ -66,9 +66,14 @@ plt.gca().yaxis.tick_right()
 plt.show()
 
 #%% 
-# Plot the vertical profiles of oil concentration versus depth
+# Plot a vertical profile (east to west) of the oil concentration
 oil_mass_profile = ds_c.mass_oil_volume_concentration.median(dim='lat')
 print(oil_mass_profile)
+oil_mass_profile.plot(y='z', ylim=(None, 0))
+plt.show()
+
+#%%
+# Plot the vertical profiles as lines
 oil_mass_profile.plot.line(
     y='z', add_legend=False, xlim=(0, None), ylim=(None, 0))
 plt.xlabel('Oil concentration [kg / m3]')
