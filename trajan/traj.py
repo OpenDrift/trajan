@@ -1248,7 +1248,7 @@ class Traj:
 
         if self.crs.is_geographic:
             # dx is given in meters, but must be converted to degrees
-            dy = dy / 111000
+            dy = dy / 111500
             dx = dy / np.cos(np.radians((ymin + ymax)/2)).values
             xdimname = 'lon'
             ydimname = 'lat'
