@@ -35,6 +35,13 @@ plt.show()
 ds_c.isel(time=12).number_area_concentration.plot()
 plt.show()
 
+#%%
+# Plot the number concentration (number/area) for surface oil only (elements where z=0)
+ds_surface = ds.where(ds.z==0).traj.concentration(grid)
+ds_surface.isel(time=12).number_area_concentration.plot()
+plt.title('Concentration of elements at surface')
+plt.show()
+
 #%% 
 # We see that the cell area decreases slightly away from equator.
 # This is accounted for when calculating area/volume concentration.
