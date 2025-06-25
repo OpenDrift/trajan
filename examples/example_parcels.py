@@ -23,9 +23,21 @@ ds.traj.plot(land='mask', margin=1)
 # TODO: we must allow no time dimension for the below to work
 #ds.mean('trajectory', skipna=True).traj.plot(color='r', label='Mean trajectory')
 # In the meantime, we regrid to a regular 1D dataset to allow plotting a mean trajectory
-ds = ds.traj.gridtime('1h')
+ds = ds.traj.gridtime('4h')
 ds.mean('trajectory').traj.plot(color='r', label='Mean trajectory')
 plt.legend()
+plt.show()
+
+#%%
+# Calculating and plotting the concentration of elements, after 6 and 24 hours
+grid = ds.traj.make_grid(dx=3000)
+ds_conc = ds.traj.concentration(grid)
+plt.subplot(1,2,1)
+ds_conc.number.isel(time=6).plot(vmin=0, vmax=20)
+plt.scatter(ds.isel(time=6).lon, ds.isel(time=6).lat, s=1, color='black')
+plt.subplot(1,2,2)
+ds_conc.number.isel(time=24).plot(vmin=0, vmax=20)
+plt.scatter(ds.isel(time=24).lon, ds.isel(time=24).lat, s=1, color='black')
 plt.show()
 
 #%%
