@@ -770,20 +770,39 @@ class Traj:
         return azimuth_forward
 
     def velocity_components(self):
-        """Returns velocity components [m/s] from one position to the next.
+        """
+        Calculate velocity components [m/s] from one position to the next.
 
-        Last time is repeated for last position (which has no next position)
+        The last time step is repeated for the last position (which has no next position).
 
         Returns
         -------
-        (u, v) : array_like
-            East and north components of velocities at given position along trajectories.
+        u : xarray.DataArray
+            Eastward velocity component [m/s] at each position along trajectories.
+            Dimensions: same as the dataset's trajectory and observation dimensions.
+        v : xarray.DataArray
+            Northward velocity component [m/s] at each position along trajectories.
+            Dimensions: same as the dataset's trajectory and observation dimensions.
+
+        See Also
+        --------
+        speed : Calculate the speed along trajectories.
+        azimuth_to_next : Calculate the azimuth (direction) to the next position.
         """
         speed = self.speed()
         azimuth = self.azimuth_to_next()
 
-        u = speed * np.cos(azimuth)
-        v = speed * np.sin(azimuth)
+        # Calculate velocity components
+        u = speed * np.cos(np.radians(azimuth))
+        v = speed * np.sin(np.radians(azimuth))
+
+        # Assign names and attributes
+        u.name = "u_velocity"
+        v.name = "v_velocity"
+        u.attrs["units"] = "m/s"
+        v.attrs["units"] = "m/s"
+        u.attrs["description"] = "Eastward velocity component"
+        v.attrs["description"] = "Northward velocity component"
 
         return u, v
 
