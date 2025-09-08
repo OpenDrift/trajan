@@ -42,7 +42,21 @@ def ensure_time_dim(ds, time_dim):
         return ds
 
 def grid_area(lons, lats):
-    """Calculate the area of each grid cell"""
+    """
+    Calculate the area of each grid cell.
+
+    Parameters
+    ----------
+    lons : array-like
+        Longitudes of the grid.
+    lats : array-like
+        Latitudes of the grid.
+
+    Returns
+    -------
+    xarray.DataArray
+        Grid cell areas with dimensions ('lat', 'lon').
+    """
     from shapely.geometry import Polygon
 
     if lons.ndim == 1:
@@ -59,7 +73,7 @@ def grid_area(lons, lats):
             polygon = Polygon([(lon[0], lat[0]), (lon[1], lat[1]), (lon[2], lat[2]), (lon[3], lat[3])])
             grid_areas[i, j] = abs(geod.geometry_area_perimeter(polygon)[0])
 
-    return grid_areas
+    return xr.DataArray(grid_areas, name="grid_area", attrs={'units': 'm^2', 'description': 'Area of each grid cell'})
 
 
 class Traj:
@@ -595,15 +609,17 @@ class Traj:
         return ds
 
     def index_of_last(self):
-        """Find index of last valid position along each trajectory.
+        """
+        Find the index of the last valid position along each trajectory.
 
         Returns
         -------
-        array-like
-            Array of the index of the last valid position along each trajectory.
+        xarray.DataArray
+            Index of the last valid position for each trajectory.
+            Dimensions: ('trajectory',).
         """
-        return np.ma.notmasked_edges(np.ma.masked_invalid(self.ds.lon.values),
-                                     axis=1)[1][1]
+        last_indices = np.ma.notmasked_edges(np.ma.masked_invalid(self.ds.lon.values), axis=1)[1][1]
+        return xr.DataArray(last_indices, dims=[self.trajectory_dim], name="index_of_last")
 
     @abstractmethod
     def speed(self) -> xr.DataArray:
@@ -855,35 +871,33 @@ class Traj:
         return p.contains_points(point)[0]
 
     def get_area_convex_hull(self):
-        """Return the area [m2] of the convex hull spanned by all positions.
+        """
+        Calculate the area [m2] of the convex hull spanned by all positions.
 
         Returns
         -------
-        scalar
-            Area [m2] of convex hull around all positions.
+        xarray.DataArray
+            Area of the convex hull in square meters.
         """
-
         from scipy.spatial import ConvexHull
 
         lon = self.ds.lon.where(self.ds.status == 0)
         lat = self.ds.lat.where(self.ds.status == 0)
         fin = np.isfinite(lat + lon)
         if np.sum(fin) <= 3:
-            return 0
+            return xr.DataArray(0, name="convex_hull_area", attrs={"units": "m2"})
         if len(np.unique(lat)) == 1 and len(np.unique(lon)) == 1:
-            return 0
+            return xr.DataArray(0, name="convex_hull_area", attrs={"units": "m2"})
         lat = lat[fin]
         lon = lon[fin]
-        # An equal area projection centered around the particles
         aea = pyproj.Proj(
             f'+proj=aea +lat_0={lat.mean().values} +lat_1={lat.min().values} +lat_2={lat.max().values} +lon_0={lon.mean().values} +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs'
         )
-
         x, y = aea(lat, lon, inverse=False)
         fin = np.isfinite(x + y)
         points = np.vstack((y.T, x.T)).T
         hull = ConvexHull(points)
-        return np.array(hull.volume)  # volume=area for 2D as here
+        return xr.DataArray(hull.volume, name="convex_hull_area", attrs={"units": "m2"})
 
     @abstractmethod
     def gridtime(self, times, time_varname=None) -> xr.Dataset:
@@ -1277,7 +1291,7 @@ class Traj:
 
         x = np.arange(xmin, xmax + dx*2, dx)  # One extra row/column
         y = np.arange(ymin, ymax + dy*2, dy)
-        area = grid_area(x, y)
+        area = grid_area(x, y).data
 
         # Create Xarray Dataset
         data_vars = {}
