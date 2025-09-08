@@ -19,9 +19,18 @@ class Traj1d(Traj):
         super().__init__(ds, trajectory_dim, obs_dim, time_varname)
 
     def timestep(self):
-        """Time step between observations in seconds."""
-        return ((self.ds.time[1] - self.ds.time[0]) /
-                np.timedelta64(1, 's')).values
+        """
+        Calculate the time step between observations in seconds.
+
+        Returns
+        -------
+        xarray.DataArray
+            Time step between observations with a single value.
+            Attributes:
+            - units: seconds
+        """
+        timestep = ((self.ds.time[1] - self.ds.time[0]) / np.timedelta64(1, 's')).values
+        return xr.DataArray(timestep, name="timestep", attrs={"units": "seconds"})
 
     def is_1d(self):
         return True
@@ -30,32 +39,58 @@ class Traj1d(Traj):
         return False
 
     def to_2d(self, obs_dim='obs'):
+        """
+        Convert the dataset to a 2D representation.
+
+        Parameters
+        ----------
+        obs_dim : str, optional
+            Name of the observation dimension in the 2D representation, by default 'obs'.
+
+        Returns
+        -------
+        xarray.Dataset
+            Dataset with a 2D representation of trajectories.
+        """
         ds = self.ds.copy()
-        time = ds[self.time_varname].rename({
-            self.time_varname: obs_dim
-        }).expand_dims(
-            dim={
-                self.trajectory_dim: ds.sizes[self.trajectory_dim]
-            }).assign_coords({self.trajectory_dim: ds[self.trajectory_dim]})
-        # TODO should also add cf_role here
+        time = ds[self.time_varname].rename({self.time_varname: obs_dim}).expand_dims(
+            dim={self.trajectory_dim: ds.sizes[self.trajectory_dim]}
+        ).assign_coords({self.trajectory_dim: ds[self.trajectory_dim]})
         ds = ds.rename({self.time_varname: obs_dim})
         ds[self.time_varname] = time
-        ds[obs_dim] = np.arange(0, ds.sizes[obs_dim])
-
+        ds[obs_dim] = xr.DataArray(np.arange(0, ds.sizes[obs_dim]), dims=[obs_dim])
         return ds
 
     def to_1d(self):
         return self.ds.copy()
 
     def time_to_next(self):
+        """
+        Calculate the time difference to the next observation.
+
+        Returns
+        -------
+        xarray.DataArray
+            Time difference to the next observation with the same dimensions as the dataset.
+            Attributes:
+            - units: seconds
+        """
         time_step = self.ds.time[1] - self.ds.time[0]
-        return time_step
+        return xr.DataArray(time_step, name="time_to_next", attrs={"units": "seconds"})
 
     def velocity_spectrum(self):
+        """
+        Calculate the velocity spectrum for a single trajectory.
 
+        Returns
+        -------
+        xarray.DataArray
+            Velocity spectrum with dimensions ('period').
+            Attributes:
+            - units: power
+        """
         if self.ds.sizes[self.trajectory_dim] > 1:
-            raise ValueError(
-                'Spectrum can only be calculated for a single trajectory')
+            raise ValueError('Spectrum can only be calculated for a single trajectory')
 
         u, v = self.velocity_components()
         u = u.squeeze()
@@ -63,8 +98,7 @@ class Traj1d(Traj):
         u = u[np.isfinite(u)]
         v = v[np.isfinite(v)]
 
-        timestep_h = (self.ds.time[1] - self.ds.time[0]) / np.timedelta64(
-            1, 'h')  # hours since start
+        timestep_h = (self.ds.time[1] - self.ds.time[0]) / np.timedelta64(1, 'h')  # hours since start
 
         ps = np.abs(np.fft.rfft(np.abs(u + 1j * v)))
         freq = np.fft.rfftfreq(n=u.size, d=timestep_h.values)
@@ -72,12 +106,11 @@ class Traj1d(Traj):
 
         da = xr.DataArray(
             data=ps,
-            name='velocity spectrum',
+            name='velocity_spectrum',
             dims=['period'],
-            coords={'period': (['period'], 1 / freq, {
-                'units': 'hours'
-            })},
-            attrs={'units': 'power'})
+            coords={'period': (['period'], 1 / freq, {'units': 'hours'})},
+            attrs={'units': 'power'}
+        )
 
         return da
 
@@ -146,9 +179,27 @@ class Traj1d(Traj):
 
         return s
 
-    def skill(self, expected, method='liu-weissberg', **kwargs) -> xr.Dataset:
+    def skill(self, expected, method='liu-weissberg', **kwargs) -> xr.DataArray:
+        """
+        Calculate the skill score for trajectories.
 
-        expected = expected.traj  # Normalise
+        Parameters
+        ----------
+        expected : Traj1d
+            Expected trajectory dataset.
+        method : str, optional
+            Skill score method, by default 'liu-weissberg'.
+        **kwargs : dict
+            Additional arguments for the skill score calculation.
+
+        Returns
+        -------
+        xarray.DataArray
+            Skill score with dimensions matching the dataset.
+            Attributes:
+            - method: Skill score calculation method.
+        """
+        expected = expected.traj  # Normalize
         expected_trajdim = expected.trajectory_dim
         self_trajdim = self.trajectory_dim
 
@@ -157,7 +208,8 @@ class Traj1d(Traj):
         if numtraj_self > 1 and numtraj_expected > 1 and numtraj_self != numtraj_expected:
             raise ValueError(
                 'Datasets must have the same number of trajectories, or a single trajectory. '
-                f'This dataset: {numtraj_self}, expected: {numtraj_expected}.')
+                f'This dataset: {numtraj_self}, expected: {numtraj_expected}.'
+            )
 
         numobs_self = self.ds.sizes[self.obs_dim]
         numobs_expected = expected.ds.sizes[expected.obs_dim]
