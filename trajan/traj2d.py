@@ -29,25 +29,40 @@ class Traj2d(Traj):
 
     def timestep(self, average=np.nanmedian):
         """
-        Return median time step between observations in seconds.
+        Calculate the median time step between observations in seconds.
+
+        Parameters
+        ----------
+        average : callable, optional
+            Function to calculate the average time step, by default `np.nanmedian`.
+
+        Returns
+        -------
+        xarray.DataArray
+            Median time step between observations.
+            Attributes:
+            - units: seconds
         """
         td = np.diff(self.ds.time, axis=1) / np.timedelta64(1, 's')
         td = average(td)
-        return td
+        return xr.DataArray(td, name="timestep", attrs={"units": "seconds"})
 
     def time_to_next(self):
-        """Return time from one position to the next.
+        """
+        Calculate the time difference to the next observation.
 
-           Returned datatype is np.timedelta64
-           Last time is repeated for last position (which has no next position)
+        Returns
+        -------
+        xarray.DataArray
+            Time difference to the next observation with the same dimensions as the dataset.
+            Attributes:
+            - units: seconds
         """
         time = self.ds.time
         lenobs = self.ds.sizes[self.obs_dim]
-        td = time.isel(obs=slice(1, lenobs)) - time.isel(
-            obs=slice(0, lenobs - 1))
-        td = xr.concat((td, td.isel(obs=-1)),
-                       dim=self.obs_dim)  # repeating last time step
-        return td
+        td = time.isel(obs=slice(1, lenobs)) - time.isel(obs=slice(0, lenobs - 1))
+        td = xr.concat((td, td.isel(obs=-1)), dim=self.obs_dim)  # Repeat last time step
+        return td.astype("timedelta64[s]").rename("time_to_next").assign_attrs({"units": "seconds"})
 
     def is_1d(self):
         return False
@@ -56,8 +71,19 @@ class Traj2d(Traj):
         return True
 
     def insert_nan_where(self, condition):
-        """Insert NaN-values in trajectories after given positions, shifting rest of trajectory."""
+        """
+        Insert NaN values in trajectories after given positions, shifting the rest of the trajectory.
 
+        Parameters
+        ----------
+        condition : xarray.DataArray
+            Boolean condition indicating where NaN values should be inserted.
+
+        Returns
+        -------
+        xarray.Dataset
+            Dataset with NaN values inserted at specified positions.
+        """
         index_of_last = self.index_of_last()
         num_inserts = condition.sum(dim=self.obs_dim)
         max_obs = (index_of_last + num_inserts).max().values
@@ -66,28 +92,26 @@ class Traj2d(Traj):
         trajcoord = range(self.ds.sizes[self.trajectory_dim])
         nd = xr.Dataset(
             coords={
-                self.trajectory_dim:
-                ([self.trajectory_dim],
-                 range(self.ds.sizes[self.trajectory_dim])),
-                self.obs_dim:
-                ([self.obs_dim], range(max_obs))  # Longest trajectory
+                self.trajectory_dim: ([self.trajectory_dim], trajcoord),
+                self.obs_dim: ([self.obs_dim], range(max_obs))  # Longest trajectory
             },
-            attrs=self.ds.attrs)
+            attrs=self.ds.attrs
+        )
 
         # Add extended variables
         for varname, var in self.ds.data_vars.items():
             if self.obs_dim not in var.dims:
                 nd[varname] = var
                 continue
-            # Create empty dataarray to hold interpolated values for given variable
+
+            # Create empty DataArray to hold interpolated values for the variable
             da = xr.DataArray(
-                data=np.zeros(tuple(nd.sizes[di] for di in nd.dims)) * np.nan,
+                data=np.full((nd.sizes[self.trajectory_dim], nd.sizes[self.obs_dim]), np.nan),
                 dims=nd.dims,
                 attrs=var.attrs,
             )
 
-            for t in range(self.ds.sizes[
-                    self.trajectory_dim]):  # loop over trajectories
+            for t in range(self.ds.sizes[self.trajectory_dim]):  # Loop over trajectories
                 numins = num_inserts[t]
                 olddata = var.isel(trajectory=t).values
                 wh = np.argwhere(condition.isel(trajectory=t).values) + 1
@@ -102,14 +126,11 @@ class Traj2d(Traj):
                     else:
                         na = np.atleast_1d(np.nan)
                     newdata = np.concatenate(
-                        [np.concatenate((ss, na)) for ss in s])
+                        [np.concatenate((ss, na)) for ss in s]
+                    )
 
-                newdata = newdata[slice(0, max_obs -
-                                        1)]  # truncating, should be checked
-                da[{
-                    self.trajectory_dim: t,
-                    self.obs_dim: slice(0, len(newdata))
-                }] = newdata
+                newdata = newdata[:max_obs]  # Truncate to max_obs
+                da[{self.trajectory_dim: t, self.obs_dim: slice(0, len(newdata))}] = newdata
 
             nd[varname] = da.astype(var.dtype)
 
@@ -119,21 +140,29 @@ class Traj2d(Traj):
         return nd
 
     def drop_where(self, condition):
-        """Remove positions where condition is True, shifting rest of trajectory."""
+        """
+        Remove positions where the condition is True, shifting the rest of the trajectory.
 
+        Parameters
+        ----------
+        condition : xarray.DataArray
+            Boolean condition indicating positions to drop.
+
+        Returns
+        -------
+        xarray.Dataset
+            Dataset with positions removed where the condition is True.
+        """
         trajs = []
         newlen = 0
         for i in range(self.ds.sizes[self.trajectory_dim]):
-            new = self.ds.isel(trajectory=i).drop_sel(obs=np.where(
-                condition.isel(
-                    trajectory=i))[0])  # Dropping from given trajectory
+            new = self.ds.isel(trajectory=i).drop_sel(obs=np.where(condition.isel(trajectory=i))[0])
             newlen = max(newlen, new.sizes[self.obs_dim])
             trajs.append(new)
 
-        # Ensure all trajectories have equal length, by padding with NaN at end
+        # Ensure all trajectories have equal length by padding with NaN at the end
         trajs = [
-            t.pad(
-                pad_width={self.obs_dim: (0, newlen - t.sizes[self.obs_dim])})
+            t.pad(pad_width={self.obs_dim: (0, newlen - t.sizes[self.obs_dim])})
             for t in trajs
         ]
 
@@ -261,11 +290,26 @@ class Traj2d(Traj):
 
     @__require_obs_dim__
     def gridtime(self, times, time_varname=None, round=True):
-        if isinstance(times, str) or isinstance(
-                times, pd.Timedelta):  # Make time series with given interval
-            if round is True:
-                start_time = np.nanmin(np.asarray(
-                    self.ds.time.dt.floor(times)))
+        """
+        Interpolate the dataset to a given time grid.
+
+        Parameters
+        ----------
+        times : str, pandas.Timedelta, or numpy.ndarray
+            Time grid to interpolate to. If a string or Timedelta, it specifies the interval.
+        time_varname : str, optional
+            Name of the time variable, by default the dataset's time variable.
+        round : bool, optional
+            Whether to round the start and end times to the nearest interval, by default True.
+
+        Returns
+        -------
+        xarray.Dataset
+            Dataset interpolated to the specified time grid.
+        """
+        if isinstance(times, (str, pd.Timedelta)):  # Create time series with given interval
+            if round:
+                start_time = np.nanmin(np.asarray(self.ds.time.dt.floor(times)))
                 end_time = np.nanmax(np.asarray(self.ds.time.dt.ceil(times)))
             else:
                 start_time = np.nanmin(np.asarray(self.ds.time))
@@ -281,33 +325,28 @@ class Traj2d(Traj):
         time_varname = self.time_varname if time_varname is None else time_varname
 
         d = None
-
         for t in range(self.ds.sizes[self.trajectory_dim]):
-            dt = self.ds.isel({self.trajectory_dim : t}) \
-                        .dropna(self.obs_dim, how='all')
-
-            dt = dt.assign_coords({self.obs_dim : dt[self.time_varname].values }) \
+            dt = self.ds.isel({self.trajectory_dim: t}).dropna(self.obs_dim, how="all")
+            dt = dt.assign_coords({self.obs_dim: dt[self.time_varname].values}) \
                    .drop_vars(self.time_varname) \
-                   .rename({self.obs_dim : time_varname}) \
+                   .rename({self.obs_dim: time_varname}) \
                    .set_index({time_varname: time_varname})
 
             _, ui = np.unique(dt[time_varname], return_index=True)
             dt = dt.isel({time_varname: ui})
-            dt = dt.isel(
-                {time_varname: np.where(~pd.isna(dt[time_varname].values))[0]})
+            dt = dt.isel({time_varname: np.where(~pd.isna(dt[time_varname].values))[0]})
 
             if dt.sizes[time_varname] > 0:
                 dt = dt.interp({time_varname: times})
             else:
-                logger.warning(f"time dimension ({time_varname}) is zero size")
+                logger.warning(f"Time dimension ({time_varname}) is zero size")
 
             if d is None:
                 d = dt.expand_dims(self.trajectory_dim)
             else:
                 d = xr.concat((d, dt), self.trajectory_dim)
 
-        d = d.assign_coords(
-            {self.trajectory_dim: self.ds[self.trajectory_dim]})
+        d = d.assign_coords({self.trajectory_dim: self.ds[self.trajectory_dim]})
 
         return d
 
