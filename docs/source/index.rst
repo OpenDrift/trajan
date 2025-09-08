@@ -91,6 +91,8 @@ Indices and tables
 * :ref:`genindex`
 
 
-.. |date| date::
 
-Last Updated on |date|
+.. |date| date::
+.. |time| date:: %H:%M
+
+Last Updated on |date| at |time|
