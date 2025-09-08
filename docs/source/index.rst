@@ -89,3 +89,8 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
+
+
+.. |date| date::
+
+Last Updated on |date|
