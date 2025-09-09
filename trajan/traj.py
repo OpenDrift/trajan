@@ -641,7 +641,8 @@ class Traj:
         distance = self.distance_to_next()
         timedelta_seconds = self.time_to_next() / np.timedelta64(1, 's')
 
-        return distance / timedelta_seconds
+        speed = distance / timedelta_seconds
+        return speed
 
     @abstractmethod
     def time_to_next(self) -> pd.Timedelta:
@@ -881,15 +882,20 @@ class Traj:
         """
         from scipy.spatial import ConvexHull
 
-        lon = self.ds.lon.where(self.ds.status == 0)
-        lat = self.ds.lat.where(self.ds.status == 0)
+        if 'status' in self.ds.variables:
+            lon = self.ds.lon.where(self.ds.status == 0)  # OpenDrift specific
+            lat = self.ds.lat.where(self.ds.status == 0)
+        else:
+            lon = self.ds.lon.where(np.isfinite(self.ds.lon) is True)
+            lat = self.ds.lat.where(np.isfinite(self.ds.lat) is True)
+
         fin = np.isfinite(lat + lon)
         if np.sum(fin) <= 3:
             return xr.DataArray(0, name="convex_hull_area", attrs={"units": "m2"})
         if len(np.unique(lat)) == 1 and len(np.unique(lon)) == 1:
             return xr.DataArray(0, name="convex_hull_area", attrs={"units": "m2"})
-        lat = lat[fin]
-        lon = lon[fin]
+        lat = lat.where(fin)
+        lon = lon.where(fin)
         aea = pyproj.Proj(
             f'+proj=aea +lat_0={lat.mean().values} +lat_1={lat.min().values} +lat_2={lat.max().values} +lon_0={lon.mean().values} +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs'
         )
