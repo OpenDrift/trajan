@@ -17,7 +17,7 @@ def test_to2d(barents):
 
 def test_to1d(barents):
     # print(barents)
-    gr = barents.traj.gridtime('1H')
+    gr = barents.traj.gridtime('1h')
     assert gr.traj.is_1d()
 
     gr = gr.traj.to_1d()

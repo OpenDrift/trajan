@@ -10,3 +10,5 @@ def test_opendrift(opendrift_sim, plot):
 
     if plot:
         plt.show()
+    else:
+        plt.close()

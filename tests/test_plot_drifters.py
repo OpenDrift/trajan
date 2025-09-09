@@ -9,6 +9,8 @@ def test_barents(barents, plot):
 
     if plot:
         plt.show()
+    else:
+        plt.close()
 
 def test_barents_linecolor(barents, plot):
     speed = barents.traj.speed()
@@ -25,3 +27,5 @@ def test_barents_linecolor(barents, plot):
 
     if plot:
         plt.show()
+    else:
+        plt.close()

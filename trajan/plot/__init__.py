@@ -1,4 +1,5 @@
 import logging
+import warnings
 import matplotlib.pyplot as plt
 import cartopy.mpl.geoaxes
 import cartopy.crs as ccrs
@@ -203,20 +204,29 @@ class Plot:
                                         norm=norm,
                                         *args,
                                         **kwargs)
-                else:
-                    lc = LineCollection(segments,
-                                        norm=norm,
-                                        transform=dcrs,
-                                        *args,
-                                        **kwargs)
+                else:                
+                    with warnings.catch_warnings():
+                        # Disable warnings due to transforming NaN values in trajectories
+                        warnings.filterwarnings("ignore", category=RuntimeWarning)
+                        lc = LineCollection(segments,
+                                            norm=norm,
+                                            transform=dcrs,
+                                            *args,
+                                            **kwargs)
                 # Set the values used for colormapping
-                lc.set_array(c[:, i])
-                paths = ax.add_collection(lc)
+                with warnings.catch_warnings():
+                    # Disable warnings due to transforming NaN values in trajectories
+                    warnings.filterwarnings("ignore", category=RuntimeWarning)
+                    lc.set_array(c[:, i])
+                    paths = ax.add_collection(lc)
         else:
             if cartesian:
                 paths = ax.plot(x, y, *args, **kwargs)
             else:
-                paths = ax.plot(x, y, transform=dcrs, *args, **kwargs)
+                with warnings.catch_warnings():
+                    # Disable warnings due to transforming NaN values in trajectories
+                    warnings.filterwarnings("ignore", category=RuntimeWarning)
+                    paths = ax.plot(x, y, transform=dcrs, *args, **kwargs)
 
         return paths
 

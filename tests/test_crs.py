@@ -2,10 +2,9 @@ import numpy as np
 import trajan as ta
 import xarray as xr
 import cf_xarray as _
-import matplotlib.pyplot as plt
 
 
-def test_barents_detect_lonlat(barents, plot):
+def test_barents_detect_lonlat(barents):
     print(barents.traj.crs)
 
     crs = barents.traj.crs
@@ -16,7 +15,7 @@ def test_barents_detect_lonlat(barents, plot):
     print(barents.traj.ccrs)
 
 
-def test_barents_set_crs(barents, plot):
+def test_barents_set_crs(barents):
     crs = barents.traj.crs
     barents = barents.traj.set_crs(crs)
 
@@ -25,7 +24,7 @@ def test_barents_set_crs(barents, plot):
     assert barents.traj.crs == crs
 
 
-def test_barents_tlat_tlon(barents, plot):
+def test_barents_tlat_tlon(barents):
     np.testing.assert_array_equal(barents.lon, barents.traj.tlon)
     np.testing.assert_array_equal(barents.lat, barents.traj.tlat)
 

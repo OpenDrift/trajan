@@ -35,6 +35,8 @@ def test_interpolate_barents(barents, plot):
 
         plt.legend()
         plt.show()
+    else:
+        plt.close()
 
 
 def test_distance(barents):
@@ -50,7 +52,7 @@ def test_length(barents):
     l = barents.traj.length()
     print(l)
 
-    lg = barents.traj.gridtime('1H').traj.length()
+    lg = barents.traj.gridtime('1h').traj.length()
     print(lg)
 
     np.testing.assert_allclose(l, lg, atol=20000)
@@ -152,6 +154,8 @@ def test_speed(barents, plot):
         plt.xlabel('Drifter speed  [m/s]')
         plt.ylabel('Number')
         plt.show()
+    else:
+        plt.close()
 
 def test_speed_2d(barents):
     s = barents.traj.speed()
@@ -169,9 +173,11 @@ def test_insert_nan_where(barents, plot):
         barents.traj.plot(color='b', linewidth=2)
         b2.traj.plot(color='r')
         plt.show()
+    else:
+        plt.close()
 
 
-def test_drop_where(barents, plot):
+def test_drop_where(barents):
 
     t2n = barents.traj.time_to_next() / np.timedelta64(1, 'm')
     assert_almost_equal(t2n.min(), 0.0166, 3)

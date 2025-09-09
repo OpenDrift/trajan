@@ -19,8 +19,9 @@ def test_read_example_csv(drifter_csv, plot):
 
     if plot:
         plt.show()
+    plt.close('all')
 
-def test_concat(drifter_csv, plot):
+def test_concat(drifter_csv):
     dc = pd.read_csv(drifter_csv)
     dc2 = dc.copy()
     dc2['Time'] = pd.to_datetime(dc['Time'], format='mixed') + pd.to_timedelta('1min')
