@@ -13,6 +13,8 @@ def test_convert_ragged(test_data, plot):
 
     if plot:
         plt.show()
+    else:
+        plt.close()
 
     print("----------------------------------------")
     print("the raw ds:")

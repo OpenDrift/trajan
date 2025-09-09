@@ -22,6 +22,7 @@ def test_plot_sfy(test_data, plot):
 
     if plot:
         plt.show()
+    plt.close('all')
 
 def test_gridtime(test_data):
     ds = xr.open_dataset(test_data / 'bug32.nc')

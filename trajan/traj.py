@@ -742,9 +742,12 @@ class Traj:
         latfrom = lat.isel({self.obs_dim: slice(0, lenobs - 1)})
         lonto = lon.isel({self.obs_dim: slice(1, lenobs)})
         latto = lat.isel({self.obs_dim: slice(1, lenobs)})
+        
         geod = pyproj.Geod(ellps='WGS84')
-        azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto,
-                                                 latto)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto, latto)
 
         distance = xr.DataArray(distance, coords=lonfrom.coords, dims=lon.dims)
         distance = xr.concat((distance, distance.isel({self.obs_dim: -1})),
@@ -769,7 +772,7 @@ class Traj:
         # TODO: method is almost duplicate of "distance_to_next" above
         lon = self.ds.lon
         lat = self.ds.lat
-        lenobs = self.ds.dims[self.obs_dim]
+        lenobs = self.ds.sizes[self.obs_dim]
         lonfrom = lon.isel({self.obs_dim: slice(0, lenobs - 1)})
         latfrom = lat.isel({self.obs_dim: slice(0, lenobs - 1)})
         lonto = lon.isel({self.obs_dim: slice(1, lenobs)})

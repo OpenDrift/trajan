@@ -20,9 +20,10 @@ def test_parcels_flatmesh_animate(plot):
     ds = xr.open_dataset('tests/test_data/parcels.zarr', engine='zarr')
     ds = ds.traj.set_crs(None)
     print(ds)
-    ds.traj.animate()
+    anim = ds.traj.animate()
 
     if plot:
         plt.show()
     else:
+        anim._draw_was_started = True  # avoiding warning
         plt.close()

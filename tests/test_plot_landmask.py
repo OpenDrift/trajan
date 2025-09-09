@@ -11,6 +11,8 @@ def test_defaults(opendrift_sim, plot):
 
     if plot:
         plt.show()
+    else:
+        plt.close()
 
 
 @pytest.mark.parametrize("land", ["auto", "c", "f", "mask"])
@@ -22,3 +24,5 @@ def test_land_specs(opendrift_sim, plot, land):
 
     if plot:
         plt.show()
+    else:
+        plt.close()

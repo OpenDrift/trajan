@@ -423,7 +423,7 @@ def read_omb_csv(path_in: Path|pd.DataFrame,
 
         xr_result["time"][crrt_instrument_idx,
                           0:len(list_time)] = pd.to_datetime(list_time,
-                                                             utc=True,
+                                                             #utc=True,  # Disabled by KFD due to warnings
                                                              unit='s')
         xr_result["lat"][crrt_instrument_idx, 0:len(list_lat)] = np_latitude
         xr_result["lon"][crrt_instrument_idx, 0:len(list_lon)] = np_longitude
@@ -445,7 +445,8 @@ def read_omb_csv(path_in: Path|pd.DataFrame,
         for crrt_wave_idx, crrt_wave_data in enumerate(
                 list_parsed_waves_messages):
             xr_result["time_waves_imu"][crrt_instrument_idx, crrt_wave_idx] = \
-                pd.to_datetime(crrt_wave_data.data.datetime_posix, utc=True, unit='s')
+                pd.to_datetime(crrt_wave_data.data.datetime_posix, #utc=True,
+                    unit='s')
 
             xr_result["pcutoff"][crrt_instrument_idx, crrt_wave_idx] = \
                 crrt_wave_data.data.low_frequency_index_cutoff

@@ -20,7 +20,7 @@ def moving_eddies_fieldset(xdim=200, ydim=350, mesh='flat'):
     time = np.arange(0., 8. * 86400., 86400., dtype=np.float64)
 
     # Coordinates of the test fieldset (on A-grid in m)
-    if mesh is 'spherical':
+    if mesh == 'spherical':
         lon = np.linspace(0, 4, xdim, dtype=np.float32)
         lat = np.linspace(45, 52, ydim, dtype=np.float32)
     else:
@@ -32,9 +32,9 @@ def moving_eddies_fieldset(xdim=200, ydim=350, mesh='flat'):
         return math.cos(math.radians(float(x)))
 
     dx = (lon[1] - lon[0]) * 1852 * 60 * cosd(
-        lat.mean()) if mesh is 'spherical' else lon[1] - lon[0]
+        lat.mean()) if mesh == 'spherical' else lon[1] - lon[0]
     dy = (lat[1] -
-          lat[0]) * 1852 * 60 if mesh is 'spherical' else lat[1] - lat[0]
+          lat[0]) * 1852 * 60 if mesh == 'spherical' else lat[1] - lat[0]
 
     # Define arrays U (zonal), V (meridional), and P (sea surface height) on A-grid
     U = np.zeros((lon.size, lat.size, time.size), dtype=np.float32)

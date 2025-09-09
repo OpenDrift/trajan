@@ -275,7 +275,7 @@ def decode_gnss_packet(bin_packet,
 
     posix_timestamp_fix = four_bytes_to_long(bin_packet[1:5])
     # print(posix_timestamp_fix)
-    datetime_fix = datetime.datetime.utcfromtimestamp(posix_timestamp_fix)
+    datetime_fix = datetime.datetime.fromtimestamp(posix_timestamp_fix, datetime.UTC)
 
     latitude_long = four_bytes_to_long(bin_packet[5:9])
     latitude = latitude_long / 1.0e7
@@ -377,7 +377,7 @@ def decode_ywave_packet(bin_packet,
     posix_timestamp = four_bytes_to_long(
         bin_packet[crrt_start_data_field:crrt_start_data_field + 4])
     crrt_start_data_field += 4
-    datetime_packet = datetime.datetime.utcfromtimestamp(posix_timestamp)
+    datetime_packet = datetime.datetime.fromtimestamp(posix_timestamp, datetime.UTC)
 
     spectrum_number = four_bytes_to_int(
         bin_packet[crrt_start_data_field:crrt_start_data_field + 4])
@@ -439,7 +439,7 @@ def decode_ywave_packet(bin_packet,
                  crrt_energy) in zip(list_frequencies, list_elevation_energies)
         ]
 
-        moment = np.trapz(list_to_integrate, list_frequencies)
+        moment = np.trapezoid(list_to_integrate, list_frequencies)
 
         return moment
 
@@ -588,7 +588,7 @@ def decode_thermistors_packet(bin_packet,
 
     posix_timestamp = four_bytes_to_long(
         bin_packet[crrt_start_field:crrt_start_field + 4])
-    datetime_packet = datetime.datetime.utcfromtimestamp(posix_timestamp)
+    datetime_packet = datetime.datetime.fromtimestamp(posix_timestamp, datetime.UTC)
     crrt_start_field += 4
 
     list_thermistors_readings = []
