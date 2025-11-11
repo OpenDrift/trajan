@@ -276,8 +276,6 @@ class Traj1d(Traj):
         return self.ds.isel({self.time_varname: i})
 
     def distance_to(self, other) -> xr.Dataset:
-        other = other.broadcast_like(self.ds)
-
         geod = pyproj.Geod(ellps='WGS84')
         az_fwd, a2, distance = geod.inv(self.tlon, self.tlat, other.traj.tlon,
                                         other.traj.tlat)
