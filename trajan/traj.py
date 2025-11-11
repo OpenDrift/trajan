@@ -93,6 +93,39 @@ class Traj:
         self.obs_dim = obs_dim  # dimension along which time increases
         self.time_varname = time_varname
 
+    def __call__(self, trajectory_dim=None, obs_dim=None, time_varname=None):
+        """
+        Specify the trajectory, observation and time dimensions or variable names.
+
+
+        Parameters
+        ----------
+        trajectory_dim : string
+            Name of trajectory dimension (usually `trajectory` or `drifter`).
+
+        obs_dim : string
+            Name of observation dimension (usually `obs` or `time`).
+
+        time_varname : string
+            Name of time variable or dimension coordinate (usually `time`).
+
+
+        Returns
+        -------
+        traj : Traj
+            Traj accessor with manually specified coordinates and dimensions.
+        """
+        if trajectory_dim is not None:
+            self.trajectory_dim = trajectory_dim
+
+        if obs_dim is not None:
+            self.obs_dim = obs_dim
+
+        if time_varname is not None:
+            self.time_varname = time_varname
+
+        return self
+
     def __repr__(self):
         output = '=======================\n'
         output += 'TrajAn info:\n'
