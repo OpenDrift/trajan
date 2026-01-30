@@ -326,9 +326,6 @@ class Traj2d(Traj):
         if not isinstance(times, np.ndarray):
             times = times.to_numpy()
 
-        if isinstance(max_time_diff, str):
-            max_time_diff = pd.Timedelta(max_time_diff)
-
         time_varname = self.time_varname if time_varname is None else time_varname
 
         d = None
@@ -346,9 +343,11 @@ class Traj2d(Traj):
             if dt.sizes[time_varname] > 0:
                 dt_interp = dt.interp({time_varname: times}, method='linear')
                 if max_time_diff is not None:  # mask where larger time difference
-                    interp_times = dt_interp[time_varname]
-                    nearest_times = dt[time_varname].sel({time_varname: times}, method='nearest')
-                    time_diff = np.abs(nearest_times.values - interp_times.values).astype('timedelta64[ns]')
+                    if isinstance(max_time_diff, str):
+                        max_time_diff = pd.Timedelta(max_time_diff)
+                    interp_times = dt_interp[time_varname].values
+                    nearest_times = dt[time_varname].sel({time_varname: times}, method='nearest').values
+                    time_diff = np.abs(nearest_times - interp_times).astype('timedelta64[ns]')
                     dt = dt_interp.where(time_diff <= max_time_diff)
                 else:
                     dt = dt_interp
