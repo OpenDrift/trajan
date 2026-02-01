@@ -43,7 +43,8 @@ class Traj2d(Traj):
             Attributes:
             - units: seconds
         """
-        td = np.diff(self.ds.time, axis=1) / np.timedelta64(1, 's')
+        #td = np.diff(self.ds.time, axis=1) / np.timedelta64(1, 's')
+        td = self.ds.time.diff(dim=self.obs_dim)
         td = average(td)
         return xr.DataArray(td, name="timestep", attrs={"units": "seconds"})
 
@@ -60,7 +61,7 @@ class Traj2d(Traj):
         """
         time = self.ds.time
         lenobs = self.ds.sizes[self.obs_dim]
-        td = time.isel(obs=slice(1, lenobs)) - time.isel(obs=slice(0, lenobs - 1))
+        td = time.diff(dim=self.obs_dim)
         td = xr.concat((td, td.isel(obs=-1)), dim=self.obs_dim)  # Repeat last time step
         return td.astype("timedelta64[s]").rename("time_to_next").assign_attrs({"units": "seconds"})
 
@@ -113,8 +114,8 @@ class Traj2d(Traj):
 
             for t in range(self.ds.sizes[self.trajectory_dim]):  # Loop over trajectories
                 numins = num_inserts[t]
-                olddata = var.isel(trajectory=t).values
-                wh = np.argwhere(condition.isel(trajectory=t).values) + 1
+                olddata = var.isel({self.trajectory_dim: t}).values
+                wh = np.argwhere(condition.isel({self.trajectory_dim: t}).values) + 1
                 if len(wh) == 0:
                     newdata = olddata
                 else:
