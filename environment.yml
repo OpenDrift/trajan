@@ -2,7 +2,7 @@ name: trajan
 channels:
   - conda-forge
 dependencies:
-  - xarray[complete]
+  - xarray[complete]<2025.9.0
   - pandas>=2
   - zarr
   - numpy
