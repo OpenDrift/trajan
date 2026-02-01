@@ -3,10 +3,9 @@ channels:
   - conda-forge
 dependencies:
   - xarray<2025.9.0
-  - pip
-  - pip:
-    - xarray[complete]
   - pandas>=2
+  - dask
+  - bottleneck
   - zarr
   - numpy
   - scipy
