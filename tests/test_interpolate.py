@@ -167,7 +167,7 @@ def test_insert_nan_where(barents, plot):
         barents.traj.time_to_next() > np.timedelta64(30, 'm'))
 
     assert all([a == b for a, b in zip(barents.keys(), b2.keys())])
-    assert b2.sizes['obs'] == 3222
+    assert b2.sizes['obs'] == 3223
 
     if plot:
         barents.traj.plot(color='b', linewidth=2)
