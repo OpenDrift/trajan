@@ -85,9 +85,8 @@ class Traj2d(Traj):
         xarray.Dataset
             Dataset with NaN values inserted at specified positions.
         """
-        index_of_last = self.index_of_last()
         num_inserts = condition.sum(dim=self.obs_dim)
-        max_obs = (index_of_last + num_inserts).max().values
+        max_obs = (self.index_of_last() + 1 + num_inserts).max().values
 
         # Create new empty dataset with extended obs dimension
         trajcoord = range(self.ds.sizes[self.trajectory_dim])
@@ -157,7 +156,8 @@ class Traj2d(Traj):
         trajs = []
         newlen = 0
         for i in range(self.ds.sizes[self.trajectory_dim]):
-            new = self.ds.isel(trajectory=i).drop_sel(obs=np.where(condition.isel(trajectory=i))[0])
+            new = self.ds.isel({self.trajectory_dim: i}).drop_sel(obs=np.where(
+                condition.isel({self.trajectory_dim: i}))[0])
             newlen = max(newlen, new.sizes[self.obs_dim])
             trajs.append(new)
 
