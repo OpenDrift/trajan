@@ -32,7 +32,7 @@ print("d2=", d2)
 #%%
 # Concatenate two 2D datasets (with observation dimension).
 
-dc = xr.concat((d1, d2), dim='trajectory')
+dc = xr.concat((d1, d2), dim='trajectory', join='outer')
 dc = dc.traj.condense_obs()
 print(dc)
 
@@ -51,7 +51,7 @@ assert 'obs' not in d1.dims
 
 #%%
 # Concatenating two 1D datasets will cause a lot of NaNs to be inserted.
-dc = xr.concat((d1, d2), dim='trajectory')
+dc = xr.concat((d1, d2), dim='trajectory', join='outer')
 print(dc)
 
 assert np.all(ds.lat.values[~np.isnan(ds.lat.values)] ==
@@ -59,8 +59,7 @@ assert np.all(ds.lat.values[~np.isnan(ds.lat.values)] ==
 
 #%%
 # Converting to 2D and condensing the dataset will give a cleaner result.
-
 dc = xr.concat((d1.traj.to_2d(), d2.traj.to_2d()),
-               dim='trajectory').traj.condense_obs()
+               dim='trajectory', join='outer').traj.condense_obs()
 print(dc)
 assert dc.sizes['obs'] == ds.sizes['obs']
