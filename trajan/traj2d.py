@@ -245,11 +245,12 @@ class Traj2d(Traj):
         return ds
 
     def sel(self, *args, **kwargs):
+        # Using TrajAn sel method that allows NaN
         return self.ds.groupby(self.trajectory_dim).map(
-            lambda d: ensure_time_dim(d.traj.to_1d().sel(*args, **kwargs), self
-                                      .time_varname).traj.to_2d(self.obs_dim))
+            lambda d: ensure_time_dim(d.traj.to_1d().traj.sel(*args, **kwargs), self.time_varname).traj.to_2d(self.obs_dim))
 
     def seltime(self, t0=None, t1=None):
+        # Using TrajAn sel method that allows NaN
         return self.sel({self.time_varname: slice(t0, t1)})
 
     @__require_obs_dim__
@@ -275,18 +276,24 @@ class Traj2d(Traj):
             )
         else:
             ds = self.ds.copy()
-            ds = ds.dropna(self.obs_dim, how='all')
-            ds = ds.assign_coords({self.obs_dim: ds[self.time_varname]})
-            ds = ds.drop_vars(self.time_varname).rename(
-                {self.obs_dim: self.time_varname})
 
-            ds[self.time_varname] = ds[self.time_varname].squeeze(
-                self.trajectory_dim)
-            ds = ds.loc[{self.time_varname: ~pd.isna(ds[self.time_varname])}]
-            _, ui = np.unique(ds[self.time_varname], return_index=True)
-            ds = ds.isel({self.time_varname: ui})
-            ds = ds.assign_coords(
-                {self.trajectory_dim: ds[self.trajectory_dim]})
+            # Do not remove NaN's since these now have meaning
+            #ds = ds.dropna(self.obs_dim, how='all')
+
+            # For 1D objects, we rename obs-dimension to name of time variable
+            # so that time becomes a coordinate variable,
+            # i.e. typically:   time(traj, obs) -> time(time)
+            ds = ds.assign_coords({self.obs_dim: ds[self.time_varname]})
+            ds = ds.drop_vars(self.time_varname).rename({self.obs_dim: self.time_varname})
+            ds[self.time_varname] = ds[self.time_varname].squeeze(self.trajectory_dim)
+
+            # Do not remove NaN's since these now have meaning
+            #ds = ds.loc[{self.time_varname: ~pd.isna(ds[self.time_varname])}]
+            #_, ui = np.unique(ds[self.time_varname], return_index=True)
+            #ds = ds.isel({self.time_varname: ui})
+
+            # Keep trajectory dimension, although always length 1 for 1D objects
+            ds = ds.assign_coords({self.trajectory_dim: ds[self.trajectory_dim]})
 
             return ds
 
