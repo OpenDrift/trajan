@@ -51,6 +51,8 @@ assert 'obs' not in d1.dims
 
 #%%
 # Concatenating two 1D datasets will cause a lot of NaNs to be inserted.
+d1 = d1.drop_duplicates('time')
+d2 = d2.drop_duplicates('time')
 dc = xr.concat((d1, d2), dim='trajectory', join='outer')
 print(dc)
 
