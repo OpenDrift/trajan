@@ -62,6 +62,7 @@ class Traj2d(Traj):
         time = self.ds.time
         lenobs = self.ds.sizes[self.obs_dim]
         td = time.diff(dim=self.obs_dim)
+        td.coords[self.obs_dim] = time[self.obs_dim]  # Same time index as initial
         td = xr.concat((td, td.isel(obs=-1)), dim=self.obs_dim)  # Repeat last time step
         return td.astype("timedelta64[s]").rename("time_to_next").assign_attrs({"units": "seconds"})
 
