@@ -291,7 +291,7 @@ class Traj2d(Traj):
             return ds
 
     @__require_obs_dim__
-    def gridtime(self, times, time_varname=None, round=True):
+    def gridtime(self, times, time_varname=None, round=True, max_time_diff=None):
         """
         Interpolate the dataset to a given time grid.
 
@@ -303,6 +303,8 @@ class Traj2d(Traj):
             Name of the time variable, by default the dataset's time variable.
         round : bool, optional
             Whether to round the start and end times to the nearest interval, by default True.
+        max_time_diff : str, pandas.Timedelta, or None (default)
+            Insert NaN where difference to closest time is larger than this.
 
         Returns
         -------
@@ -339,7 +341,16 @@ class Traj2d(Traj):
             dt = dt.isel({time_varname: np.where(~pd.isna(dt[time_varname].values))[0]})
 
             if dt.sizes[time_varname] > 0:
-                dt = dt.interp({time_varname: times})
+                dt_interp = dt.interp({time_varname: times}, method='linear')
+                if max_time_diff is not None:  # mask where larger time difference
+                    if isinstance(max_time_diff, str):
+                        max_time_diff = pd.Timedelta(max_time_diff)
+                    interp_times = dt_interp[time_varname].values
+                    nearest_times = dt[time_varname].sel({time_varname: times}, method='nearest').values
+                    time_diff = np.abs(nearest_times - interp_times).astype('timedelta64[ns]')
+                    dt = dt_interp.where(time_diff <= max_time_diff)
+                else:
+                    dt = dt_interp
             else:
                 logger.warning(f"Time dimension ({time_varname}) is zero size")
 
