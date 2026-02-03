@@ -788,6 +788,8 @@ class Traj:
         azimuth_forward = xr.concat(
             (azimuth_forward, azimuth_forward.isel({self.obs_dim: -1})),
             dim=self.obs_dim)  # repeating last time step to
+        azimuth_forward = azimuth_forward.assign_coords(
+            {self.obs_dim: np.arange(self.ds.sizes[self.obs_dim])})
         return azimuth_forward
 
     def velocity_components(self):
