@@ -135,8 +135,7 @@ class Traj2d(Traj):
 
             nd[varname] = da.astype(var.dtype)
 
-        nd = nd.drop_vars(
-            (self.obs_dim, self.trajectory_dim))  # Remove coordinates
+        nd = nd.assign_coords({self.obs_dim: np.arange(max_obs)})  # New obs index 1..N
 
         return nd
 
@@ -164,11 +163,14 @@ class Traj2d(Traj):
 
         # Ensure all trajectories have equal length by padding with NaN at the end
         trajs = [
-            t.pad(pad_width={self.obs_dim: (0, newlen - t.sizes[self.obs_dim])})
+            t.pad(pad_width={self.obs_dim: (0, newlen - t.sizes[self.obs_dim])}).
+                    assign_coords({self.obs_dim: np.arange(newlen)})  # New obs index 1..N
             for t in trajs
         ]
 
-        return xr.concat(trajs, dim=self.trajectory_dim)
+        ds = xr.concat(trajs, dim=self.trajectory_dim, join='exact')
+
+        return ds
 
     @__require_obs_dim__
     def condense_obs(self) -> xr.Dataset:
@@ -220,8 +222,7 @@ class Traj2d(Traj):
         ds = ds.isel({self.obs_dim: slice(0, maxN)})
 
         # Write new observation coordinate.
-        obs = np.arange(0, maxN)
-        ds = ds.assign_coords({self.obs_dim: obs})
+        ds = ds.assign_coords({self.obs_dim: np.arange(0, maxN)})
 
         return ds
 
@@ -245,13 +246,13 @@ class Traj2d(Traj):
         return ds
 
     def sel(self, *args, **kwargs):
-        # Using TrajAn sel method that allows NaN
         return self.ds.groupby(self.trajectory_dim).map(
             lambda d: ensure_time_dim(d.traj.to_1d().traj.sel(*args, **kwargs), self.time_varname).traj.to_2d(self.obs_dim))
 
     def seltime(self, t0=None, t1=None):
         # Using TrajAn sel method that allows NaN
-        return self.sel({self.time_varname: slice(t0, t1)})
+        return self.ds.groupby(self.trajectory_dim).map(
+            lambda d: ensure_time_dim(d.traj.to_1d().traj.seltime(t0, t1), self.time_varname).traj.to_2d(self.obs_dim))
 
     @__require_obs_dim__
     def iseltime(self, i):

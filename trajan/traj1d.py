@@ -267,20 +267,13 @@ class Traj1d(Traj):
                             attrs={'method': method})
 
     def sel(self, *args, **kwargs):
-        # Removing any NaN items to allow selecting with time as index
-        ds_dropped = self.ds.dropna(dim=self.obs_dim)
-        ds_dropped_selected = ds_dropped.sel(*args, **kwargs)
-
-        # Find indices of original trajectory corresponding to selected range
-        ind_start = np.where(self.ds[self.obs_dim] == ds_dropped_selected[self.obs_dim][0])[0][0]
-        ind_end = np.where(self.ds[self.obs_dim] == ds_dropped_selected[self.obs_dim][-1])[0][0]
-
-        # Return the corresponding range from original dataset, where NaN values are contained
-        return self.ds.isel({self.obs_dim: slice(ind_start, ind_end)})
+        return self.ds.sel(*args, **kwargs)
 
     def seltime(self, t0=None, t1=None):
-        # Using TrajAn sel method that allows NaN
-        return self.sel({self.time_varname: slice(t0, t1)})
+        # Preserving NaN in trajectories, as these provide information about gaps / segments
+        subset_indices = np.where((self.ds[self.time_varname] >= pd.to_datetime(t0)) &
+                                  (self.ds[self.time_varname] <= pd.to_datetime(t1)))[0]
+        return self.ds.isel({self.obs_dim: slice(subset_indices.min(), subset_indices.max()+1)})
 
     def iseltime(self, i):
         return self.ds.isel({self.time_varname: i})
