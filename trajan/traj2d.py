@@ -135,8 +135,7 @@ class Traj2d(Traj):
 
             nd[varname] = da.astype(var.dtype)
 
-        nd = nd.drop_vars(
-            (self.obs_dim, self.trajectory_dim))  # Remove coordinates
+        nd = nd.assign_coords({self.obs_dim: np.arange(max_obs)})  # New obs index 1..N
 
         return nd
 
@@ -164,11 +163,14 @@ class Traj2d(Traj):
 
         # Ensure all trajectories have equal length by padding with NaN at the end
         trajs = [
-            t.pad(pad_width={self.obs_dim: (0, newlen - t.sizes[self.obs_dim])})
+            t.pad(pad_width={self.obs_dim: (0, newlen - t.sizes[self.obs_dim])}).
+                    assign_coords({self.obs_dim: np.arange(newlen)})  # New obs index 1..N
             for t in trajs
         ]
 
-        return xr.concat(trajs, dim=self.trajectory_dim)
+        ds = xr.concat(trajs, dim=self.trajectory_dim, join='exact')
+
+        return ds
 
     @__require_obs_dim__
     def condense_obs(self) -> xr.Dataset:
@@ -220,8 +222,7 @@ class Traj2d(Traj):
         ds = ds.isel({self.obs_dim: slice(0, maxN)})
 
         # Write new observation coordinate.
-        obs = np.arange(0, maxN)
-        ds = ds.assign_coords({self.obs_dim: obs})
+        ds = ds.assign_coords({self.obs_dim: np.arange(0, maxN)})
 
         return ds
 
@@ -246,11 +247,12 @@ class Traj2d(Traj):
 
     def sel(self, *args, **kwargs):
         return self.ds.groupby(self.trajectory_dim).map(
-            lambda d: ensure_time_dim(d.traj.to_1d().sel(*args, **kwargs), self
-                                      .time_varname).traj.to_2d(self.obs_dim))
+            lambda d: ensure_time_dim(d.traj.to_1d().traj.sel(*args, **kwargs), self.time_varname).traj.to_2d(self.obs_dim))
 
     def seltime(self, t0=None, t1=None):
-        return self.sel({self.time_varname: slice(t0, t1)})
+        # Using TrajAn sel method that allows NaN
+        return self.ds.groupby(self.trajectory_dim).map(
+            lambda d: ensure_time_dim(d.traj.to_1d().traj.seltime(t0, t1), self.time_varname).traj.to_2d(self.obs_dim))
 
     @__require_obs_dim__
     def iseltime(self, i):
@@ -275,18 +277,24 @@ class Traj2d(Traj):
             )
         else:
             ds = self.ds.copy()
-            ds = ds.dropna(self.obs_dim, how='all')
-            ds = ds.assign_coords({self.obs_dim: ds[self.time_varname]})
-            ds = ds.drop_vars(self.time_varname).rename(
-                {self.obs_dim: self.time_varname})
 
-            ds[self.time_varname] = ds[self.time_varname].squeeze(
-                self.trajectory_dim)
-            ds = ds.loc[{self.time_varname: ~pd.isna(ds[self.time_varname])}]
-            _, ui = np.unique(ds[self.time_varname], return_index=True)
-            ds = ds.isel({self.time_varname: ui})
-            ds = ds.assign_coords(
-                {self.trajectory_dim: ds[self.trajectory_dim]})
+            # Do not remove NaN's since these now have meaning
+            #ds = ds.dropna(self.obs_dim, how='all')
+
+            # For 1D objects, we rename obs-dimension to name of time variable
+            # so that time becomes a coordinate variable,
+            # i.e. typically:   time(traj, obs) -> time(time)
+            ds = ds.assign_coords({self.obs_dim: ds[self.time_varname]})
+            ds = ds.drop_vars(self.time_varname).rename({self.obs_dim: self.time_varname})
+            ds[self.time_varname] = ds[self.time_varname].squeeze(self.trajectory_dim)
+
+            # Do not remove NaN's since these now have meaning
+            #ds = ds.loc[{self.time_varname: ~pd.isna(ds[self.time_varname])}]
+            #_, ui = np.unique(ds[self.time_varname], return_index=True)
+            #ds = ds.isel({self.time_varname: ui})
+
+            # Keep trajectory dimension, although always length 1 for 1D objects
+            ds = ds.assign_coords({self.trajectory_dim: ds[self.trajectory_dim]})
 
             return ds
 

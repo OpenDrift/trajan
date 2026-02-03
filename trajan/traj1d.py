@@ -270,7 +270,10 @@ class Traj1d(Traj):
         return self.ds.sel(*args, **kwargs)
 
     def seltime(self, t0=None, t1=None):
-        return self.ds.sel({self.time_varname: slice(t0, t1)})
+        # Preserving NaN in trajectories, as these provide information about gaps / segments
+        subset_indices = np.where((self.ds[self.time_varname] >= pd.to_datetime(t0)) &
+                                  (self.ds[self.time_varname] <= pd.to_datetime(t1)))[0]
+        return self.ds.isel({self.obs_dim: slice(subset_indices.min(), subset_indices.max()+1)})
 
     def iseltime(self, i):
         return self.ds.isel({self.time_varname: i})
