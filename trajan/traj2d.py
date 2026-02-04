@@ -299,7 +299,7 @@ class Traj2d(Traj):
             return ds
 
     @__require_obs_dim__
-    def gridtime(self, times, time_varname=None, round=True, max_time_diff=None):
+    def gridtime(self, *args, **kwargs):
         """
         Interpolate the dataset to a given time grid.
 
@@ -311,65 +311,19 @@ class Traj2d(Traj):
             Name of the time variable, by default the dataset's time variable.
         round : bool, optional
             Whether to round the start and end times to the nearest interval, by default True.
-        max_time_diff : str, pandas.Timedelta, or None (default)
-            Insert NaN where difference to closest time is larger than this.
 
         Returns
         -------
         xarray.Dataset
             Dataset interpolated to the specified time grid.
         """
-        if isinstance(times, (str, pd.Timedelta)):  # Create time series with given interval
-            if round:
-                start_time = np.nanmin(np.asarray(self.ds.time.dt.floor(times)))
-                end_time = np.nanmax(np.asarray(self.ds.time.dt.ceil(times)))
-            else:
-                start_time = np.nanmin(np.asarray(self.ds.time))
-                end_time = np.nanmax(np.asarray(self.ds.time))
-            times = pd.date_range(start_time,
-                                  end_time,
-                                  freq=times,
-                                  inclusive='both')
+        gridded = self.ds.groupby(self.trajectory_dim).map(
+                lambda d: ensure_time_dim(d.traj.to_1d().traj.gridtime(*args, **kwargs), self.time_varname))
 
-        if not isinstance(times, np.ndarray):
-            times = times.to_numpy()
+        # TODO: trajectory index should be preserved so that this should not be necessary
+        gridded = gridded.assign_coords({self.trajectory_dim: self.ds[self.trajectory_dim]})
 
-        time_varname = self.time_varname if time_varname is None else time_varname
-
-        d = None
-        for t in range(self.ds.sizes[self.trajectory_dim]):
-            dt = self.ds.isel({self.trajectory_dim: t}).dropna(self.obs_dim, how="all")
-            dt = dt.assign_coords({self.obs_dim: dt[self.time_varname].values}) \
-                   .drop_vars(self.time_varname) \
-                   .rename({self.obs_dim: time_varname}) \
-                   .set_index({time_varname: time_varname})
-
-            _, ui = np.unique(dt[time_varname], return_index=True)
-            dt = dt.isel({time_varname: ui})
-            dt = dt.isel({time_varname: np.where(~pd.isna(dt[time_varname].values))[0]})
-
-            if dt.sizes[time_varname] > 0:
-                dt_interp = dt.interp({time_varname: times}, method='linear')
-                if max_time_diff is not None:  # mask where larger time difference
-                    if isinstance(max_time_diff, str):
-                        max_time_diff = pd.Timedelta(max_time_diff)
-                    interp_times = dt_interp[time_varname].values
-                    nearest_times = dt[time_varname].sel({time_varname: times}, method='nearest').values
-                    time_diff = np.abs(nearest_times - interp_times).astype('timedelta64[ns]')
-                    dt = dt_interp.where(time_diff <= max_time_diff)
-                else:
-                    dt = dt_interp
-            else:
-                logger.warning(f"Time dimension ({time_varname}) is zero size")
-
-            if d is None:
-                d = dt.expand_dims(self.trajectory_dim)
-            else:
-                d = xr.concat((d, dt), self.trajectory_dim)
-
-        d = d.assign_coords({self.trajectory_dim: self.ds[self.trajectory_dim]})
-
-        return d
+        return gridded
 
     def skill(self):
-        raise ValueError('Not implemented for 1D datasets')
+        raise ValueError('Not implemented for 2D datasets')
