@@ -246,12 +246,12 @@ class Traj2d(Traj):
         return ds
 
     def sel(self, *args, **kwargs):
-        return self.ds.groupby(self.trajectory_dim).map(
+        return self.trajectories().map(
             lambda d: ensure_time_dim(d.traj.to_1d().traj.sel(*args, **kwargs), self.time_varname).traj.to_2d(self.obs_dim))
 
     def seltime(self, t0=None, t1=None):
         # Using TrajAn sel method that allows NaN
-        return self.ds.groupby(self.trajectory_dim).map(
+        return self.trajectories().map(
             lambda d: ensure_time_dim(d.traj.to_1d().traj.seltime(t0, t1), self.time_varname).traj.to_2d(self.obs_dim))
 
     @__require_obs_dim__
@@ -268,7 +268,7 @@ class Traj2d(Traj):
             else:
                 return o.expand_dims(self.obs_dim)
 
-        return self.ds.groupby(self.trajectory_dim).map(select)
+        return self.trajectories().map(select)
 
     def to_1d(self):
         if self.ds.sizes[self.trajectory_dim] > 1:
