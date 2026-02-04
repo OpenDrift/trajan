@@ -5,6 +5,7 @@ import trajan as ta
 import xarray as xr
 import pandas as pd
 
+
 def test_to2d(barents):
     # print(barents)
     gr = barents.traj.gridtime('1h')
@@ -14,6 +15,7 @@ def test_to2d(barents):
 
     b2d = gr.traj.to_2d()
     assert b2d.traj.is_2d()
+
 
 def test_to1d(barents):
     # print(barents)
@@ -29,3 +31,16 @@ def test_to1d(barents):
     print('converting to 1d')
     gr = barents.isel(trajectory=0).traj.to_1d()
     assert gr.traj.is_1d()
+
+
+def test_trajectories_group(barents):
+    assert barents.traj.is_2d()
+    # print(barents)
+
+    def a(t):
+        print(t)
+        return t.mean('obs')
+
+    # Calculates mean of each trajectory
+    p = barents.traj.trajectories().map(a)
+    print(p)

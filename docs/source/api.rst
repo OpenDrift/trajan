@@ -133,6 +133,7 @@ Methods
     Dataset.traj.is_2d
     Dataset.traj.to_1d
     Dataset.traj.to_2d
+    Dataset.traj.trajectories
     Dataset.traj.condense_obs
     Dataset.traj.make_grid
     Dataset.traj.concentration
