@@ -323,21 +323,20 @@ class Traj1d(Traj):
 
         time_varname = self.time_varname if time_varname is None else time_varname
 
-        ds = self.ds
+        ds = self.ds.copy()
+        # We fill NaN-values in time coordinate to be able to interpolate
+        ds[time_varname] = ds[time_varname].interpolate_na(
+                dim=time_varname, method='linear', fill_value='extrapolate', use_coordinate=False)
 
-        if self.obs_dim != time_varname:
-            ds = ds.rename({
-                self.obs_dim: time_varname
-            }).set_index({time_varname: time_varname})
+        #if self.obs_dim != time_varname:  # TODO: can this ever happen?
+        #    ds = ds.rename({self.obs_dim: time_varname}).set_index({time_varname: time_varname})
 
         _, ui = np.unique(ds[time_varname], return_index=True)
-
         if len(ui) != len(self.ds[time_varname]):
             logger.warning('non-unique time points, dropping time-duplicates')
-
         ds = ds.isel({time_varname: ui})
-        ds = ds.isel(
-            {time_varname: np.where(~pd.isna(ds[time_varname].values))[0]})
+        #ds = ds.isel(
+        #    {time_varname: np.where(~pd.isna(ds[time_varname].values))[0]})
 
         if ds.sizes[time_varname] > 0:
             ds = ds.interp({time_varname: times})
