@@ -41,6 +41,7 @@ def ensure_time_dim(ds, time_dim):
     else:
         return ds
 
+
 def grid_area(lons, lats):
     """
     Calculate the area of each grid cell.
@@ -68,12 +69,22 @@ def grid_area(lons, lats):
 
     for i in range(rows - 1):
         for j in range(cols - 1):
-            lon = [lons[i, j], lons[i, j + 1], lons[i + 1, j + 1], lons[i + 1, j]]
-            lat = [lats[i, j], lats[i, j + 1], lats[i + 1, j + 1], lats[i + 1, j]]
-            polygon = Polygon([(lon[0], lat[0]), (lon[1], lat[1]), (lon[2], lat[2]), (lon[3], lat[3])])
+            lon = [
+                lons[i, j], lons[i, j + 1], lons[i + 1, j + 1], lons[i + 1, j]
+            ]
+            lat = [
+                lats[i, j], lats[i, j + 1], lats[i + 1, j + 1], lats[i + 1, j]
+            ]
+            polygon = Polygon([(lon[0], lat[0]), (lon[1], lat[1]),
+                               (lon[2], lat[2]), (lon[3], lat[3])])
             grid_areas[i, j] = abs(geod.geometry_area_perimeter(polygon)[0])
 
-    return xr.DataArray(grid_areas, name="grid_area", attrs={'units': 'm^2', 'description': 'Area of each grid cell'})
+    return xr.DataArray(grid_areas,
+                        name="grid_area",
+                        attrs={
+                            'units': 'm^2',
+                            'description': 'Area of each grid cell'
+                        })
 
 
 class Traj:
@@ -618,8 +629,12 @@ class Traj:
             Index of the last valid position for each trajectory.
             Dimensions: ('trajectory',).
         """
-        last_indices = np.ma.notmasked_edges(np.ma.masked_invalid(self.ds.lon.values), axis=1)[1][1]
-        return xr.DataArray(last_indices, dims=[self.trajectory_dim], name="index_of_last")
+        last_indices = np.ma.notmasked_edges(np.ma.masked_invalid(
+            self.ds.lon.values),
+                                             axis=1)[1][1]
+        return xr.DataArray(last_indices,
+                            dims=[self.trajectory_dim],
+                            name="index_of_last")
 
     @abstractmethod
     def speed(self) -> xr.DataArray:
@@ -742,17 +757,19 @@ class Traj:
         latfrom = lat.isel({self.obs_dim: slice(0, lenobs - 1)})
         lonto = lon.isel({self.obs_dim: slice(1, lenobs)})
         latto = lat.isel({self.obs_dim: slice(1, lenobs)})
-        
+
         geod = pyproj.Geod(ellps='WGS84')
         import warnings
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=DeprecationWarning)
-            azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto, latto)
+            azimuth_forward, a2, distance = geod.inv(lonfrom, latfrom, lonto,
+                                                     latto)
 
         distance = xr.DataArray(distance, coords=lonfrom.coords, dims=lon.dims)
         distance = xr.concat((distance, distance.isel({self.obs_dim: -1})),
                              dim=self.obs_dim)  # repeating last time step to
-        distance = distance.assign_coords({self.obs_dim: np.arange(self.ds.sizes[self.obs_dim])})
+        distance = distance.assign_coords(
+            {self.obs_dim: np.arange(self.ds.sizes[self.obs_dim])})
         return distance
 
     def azimuth_to_next(self):
@@ -897,9 +914,13 @@ class Traj:
 
         fin = np.isfinite(lat + lon)
         if np.sum(fin) <= 3:
-            return xr.DataArray(0, name="convex_hull_area", attrs={"units": "m2"})
+            return xr.DataArray(0,
+                                name="convex_hull_area",
+                                attrs={"units": "m2"})
         if len(np.unique(lat)) == 1 and len(np.unique(lon)) == 1:
-            return xr.DataArray(0, name="convex_hull_area", attrs={"units": "m2"})
+            return xr.DataArray(0,
+                                name="convex_hull_area",
+                                attrs={"units": "m2"})
         lat = lat.where(fin)
         lon = lon.where(fin)
         aea = pyproj.Proj(
@@ -909,7 +930,9 @@ class Traj:
         fin = np.isfinite(x + y)
         points = np.vstack((y.T, x.T)).T
         hull = ConvexHull(points)
-        return xr.DataArray(hull.volume, name="convex_hull_area", attrs={"units": "m2"})
+        return xr.DataArray(hull.volume,
+                            name="convex_hull_area",
+                            attrs={"units": "m2"})
 
     @abstractmethod
     def gridtime(self, times, time_varname=None) -> xr.Dataset:
@@ -1234,8 +1257,14 @@ class Traj:
 
         return self.ds.isel({self.trajectory_dim: condition})
 
-    def make_grid(self, dx, dy=None, z=None,
-                  lonmin=None, lonmax=None, latmin=None, latmax=None):
+    def make_grid(self,
+                  dx,
+                  dy=None,
+                  z=None,
+                  lonmin=None,
+                  lonmax=None,
+                  latmin=None,
+                  latmax=None):
         """
         Make a grid that covers all elements of dataset, with given spatial resolution.
 
@@ -1275,7 +1304,8 @@ class Traj:
         if dy is None:
             dy = dx  # Square pixels
         else:
-            raise NotImplementedError('Rectangular pixels is not yet implemented')
+            raise NotImplementedError(
+                'Rectangular pixels is not yet implemented')
 
         if lonmin is not None:
             if self.crs.is_geographic:
@@ -1294,35 +1324,50 @@ class Traj:
         if self.crs.is_geographic:
             # dx is given in meters, but must be converted to degrees
             dy = dy / 111500
-            dx = dy / np.cos(np.radians((ymin + ymax)/2)).values
+            dx = dy / np.cos(np.radians((ymin + ymax) / 2)).values
             xdimname = 'lon'
             ydimname = 'lat'
         else:
             xdimname = 'x'
             ydimname = 'y'
 
-        x = np.arange(xmin, xmax + dx*2, dx)  # One extra row/column
-        y = np.arange(ymin, ymax + dy*2, dy)
+        x = np.arange(xmin, xmax + dx * 2, dx)  # One extra row/column
+        y = np.arange(ymin, ymax + dy * 2, dy)
         area = grid_area(x, y).data
 
         # Create Xarray Dataset
         data_vars = {}
-        data_vars['cell_area'] = ([ydimname, xdimname], area, {'long_name': 'Cell area', 'unit': 'm2'})
+        data_vars['cell_area'] = ([ydimname, xdimname], area, {
+            'long_name': 'Cell area',
+            'unit': 'm2'
+        })
 
-        coords = {ydimname: (y[0:-1]+y[1::])/2, xdimname: (x[0:-1]+x[1::])/2,
-                  ydimname + '_edges': y, xdimname + '_edges': x}
+        coords = {
+            ydimname: (y[0:-1] + y[1::]) / 2,
+            xdimname: (x[0:-1] + x[1::]) / 2,
+            ydimname + '_edges': y,
+            xdimname + '_edges': x
+        }
         if 'time' in self.ds.coords:
             coords['time'] = self.ds.time
         if z is not None:
             z = np.array(z)
-            coords['z'] = (z[0:-1] + z[1::]) / 2  # z refers to the center of layer
-            coords['z_edges'] = z  # z_edges refer to the edges of each layer, i.a. one element longer
-            data_vars['layer_thickness'] = (['z'], -(z[1::]-z[0:-1]), {'long_name': 'Layer thickness', 'unit': 'm'})
+            coords['z'] = (z[0:-1] +
+                           z[1::]) / 2  # z refers to the center of layer
+            coords[
+                'z_edges'] = z  # z_edges refer to the edges of each layer, i.a. one element longer
+            data_vars['layer_thickness'] = (['z'], -(z[1::] - z[0:-1]), {
+                'long_name': 'Layer thickness',
+                'unit': 'm'
+            })
 
         ds = xr.Dataset(data_vars=data_vars, coords=coords)
         if z is not None:
-            ds['cell_volume'] = ds.cell_area*ds.layer_thickness
-            ds['cell_volume'].attrs = {'long_name': 'Cell volume', 'unit': 'm3'}
+            ds['cell_volume'] = ds.cell_area * ds.layer_thickness
+            ds['cell_volume'].attrs = {
+                'long_name': 'Cell volume',
+                'unit': 'm3'
+            }
 
         return ds
 
@@ -1378,7 +1423,8 @@ class Traj:
         if 'time' in grid_dims:
             groupers['time'] = UniqueGrouper()
         if 'z' in variables:
-            groupers['z'] = BinGrouper(bins=np.flip(grid.z_edges))  # z must be increasing
+            groupers['z'] = BinGrouper(bins=np.flip(
+                grid.z_edges))  # z must be increasing
         groupers['lat'] = BinGrouper(bins=grid.lat_edges)
         groupers['lon'] = BinGrouper(bins=grid.lon_edges)
         g = ds.groupby(groupers)
@@ -1386,10 +1432,12 @@ class Traj:
         # Calculate number concentration
         number = g.count()  # Number of elements per grid cell
         if 'z' in variables:
-            number = number.isel(z_bins=slice(None, None, -1))  # Flipping z back
+            number = number.isel(z_bins=slice(None, None,
+                                              -1))  # Flipping z back
         grid['number'] = (grid_dims, number.lon.data)
         if 'z' in variables:
-            grid['number_volume_concentration'] = grid.number / grid.cell_volume
+            grid[
+                'number_volume_concentration'] = grid.number / grid.cell_volume
         else:
             grid['number_area_concentration'] = grid.number / grid.cell_area
 
@@ -1397,14 +1445,72 @@ class Traj:
         if weights is not None:
             w_sum = g.sum()
             if 'z' in variables:
-                w_sum = w_sum.isel(z_bins=slice(None, None, -1))  # Flipping z back
+                w_sum = w_sum.isel(z_bins=slice(None, None,
+                                                -1))  # Flipping z back
             grid[weights + '_sum'] = (grid_dims, w_sum[weights].data)
             grid[weights + '_mean'] = grid[weights + '_sum'] / grid.number
             if 'z' in variables:  # Volume concentration
-                grid[weights + '_volume_concentration'] = grid[weights + '_sum'] / grid.cell_volume
-                grid[weights + '_volume_concentration'] = grid[weights + '_sum'] / grid.cell_volume
-                grid[weights + '_volume_concentration'].attrs['long_name'] = f'{weights} per m3'
+                grid[weights +
+                     '_volume_concentration'] = grid[weights +
+                                                     '_sum'] / grid.cell_volume
+                grid[weights +
+                     '_volume_concentration'] = grid[weights +
+                                                     '_sum'] / grid.cell_volume
+                grid[weights + '_volume_concentration'].attrs[
+                    'long_name'] = f'{weights} per m3'
             else:  # Area concentration
-                grid[weights + '_area_concentration'] = grid[weights + '_sum'] / grid.cell_area
+                grid[weights +
+                     '_area_concentration'] = grid[weights +
+                                                   '_sum'] / grid.cell_area
 
         return grid
+
+    def trajectories(self):
+        """
+        Iterate over each trajectory. This returns a `xr.DataArrayGroupBy`.
+
+        Returns
+        -------
+
+        DataArrayGroupBy
+            Each group contains exactly one trajectory, allowing computations to be made indepently.
+
+        Examples
+        --------
+
+        Calculate mean position of each trajectory:
+
+        >>> import xarray as xr
+        >>> import trajan as _
+        >>> import lzma
+        >>> b = lzma.open('examples/barents.nc.xz')
+        >>> ds = xr.open_dataset(b)
+        >>> p = ds.traj.trajectories().map(lambda t: t.mean('obs'))
+
+        >>> p
+        <xarray.Dataset> Size: 160B
+        Dimensions:        (trajectory: 2)
+        Dimensions without coordinates: trajectory
+        Data variables:
+            lon            (trajectory) float64 16B 25.81 21.45
+            lat            (trajectory) float64 16B 76.85 75.64
+            drifter_names  (trajectory) <U16 128B 'UIB-2022-TILL-01' 'UIB-2022-TILL-02'
+        Attributes: (12/13)
+            Conventions:          CF-1.10
+            featureType:          trajectory
+            geospatial_lat_min:   74.5454462
+            geospatial_lat_max:   77.4774768
+            geospatial_lon_min:   17.2058074
+            geospatial_lon_max:   29.8523485
+            ...                   ...
+            time_coverage_end:    2022-11-23T13:30:28
+            creator_email:        gauteh@met.no, knutfd@met.no
+            creator_name:         Gaute Hope and Knut Frode Dagestad
+            creator_url:          https://github.com/OpenDrift/opendrift
+            summary:              Two drifters in the Barents Sea. One stranded at Ho...
+            title:                Barents Sea drifters
+
+        """
+        bins = np.arange(self.ds.sizes[self.trajectory_dim] + 1) - 1
+        tids = xr.DataArray(dims=(self.trajectory_dim,), data=np.arange(self.ds.sizes[self.trajectory_dim]))
+        return self.ds.groupby_bins(tids, bins)

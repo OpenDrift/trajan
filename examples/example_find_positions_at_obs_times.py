@@ -28,7 +28,7 @@ def gridwaves(tds):
     return t.traj.to_2d(obs_dim='obs_waves_imu')
 
 
-dsw = ds.groupby('trajectory').map(gridwaves)
+dsw = ds.traj.trajectories().map(gridwaves)
 
 print(dsw)
 
