@@ -4,6 +4,7 @@ import numpy as np
 import trajan as ta
 import xarray as xr
 import pandas as pd
+from trajan.readers.omb import read_omb_csv
 
 
 def test_to2d(barents):
@@ -33,7 +34,7 @@ def test_to1d(barents):
     assert gr.traj.is_1d()
 
 
-def test_trajectories_group(barents):
+def test_trajectories_group_barents(barents):
     assert barents.traj.is_2d()
     # print(barents)
 
@@ -43,4 +44,19 @@ def test_trajectories_group(barents):
 
     # Calculates mean of each trajectory
     p = barents.traj.trajectories().map(a)
+    print(p)
+
+def test_trajectories_group_omb(test_data):
+    path_to_test_data = test_data / 'csv' / 'omb1.csv'
+    ds = read_omb_csv(path_to_test_data)
+    assert ds.traj.is_2d()
+
+    print(ds.lon.values)
+
+    def a(t):
+        print(t.lon.values)
+        return t.dropna('obs').mean('obs')
+
+    # Calculates mean of each trajectory
+    p = ds.traj.trajectories().map(a)
     print(p)

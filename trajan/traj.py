@@ -1512,4 +1512,5 @@ class Traj:
 
         """
         bins = np.arange(self.ds.sizes[self.trajectory_dim] + 1) - 1
-        return self.ds.groupby_bins(self.trajectory_dim, bins)
+        tids = xr.DataArray(dims=(self.trajectory_dim,), data=np.arange(self.ds.sizes[self.trajectory_dim]))
+        return self.ds.groupby_bins(tids, bins)
