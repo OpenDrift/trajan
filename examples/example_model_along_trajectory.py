@@ -10,7 +10,7 @@ import pyproj
 import trajan as ta
 import matplotlib.pyplot as plt
 
-print(xr.__version__)
+print(ta.versions())
 
 import logging
 logging.basicConfig(level=logging.DEBUG)

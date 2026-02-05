@@ -21,6 +21,39 @@ logger = logging.getLogger(__name__)
 
 __version__ = importlib.metadata.version("trajan")
 
+def versions():
+    def version(package):
+        try:
+            return importlib.metadata.version(package)
+        except importlib.metadata.PackageNotFoundError:
+            return "N/A"
+
+    import multiprocessing
+    import platform
+    import sys
+    s = '\n------------------------------------------------------\n'
+    s += 'Software and hardware:\n'
+    s += '  TrajAn version %s\n' % __version__
+    s += '  Platform: %s, %s\n' % (platform.system(), platform.release())
+    try:
+        from psutil import virtual_memory
+        ram = virtual_memory().total/(1024**3)
+    except:
+        ram = 'unknown'
+    s += '  %s GB memory\n' % ram
+    s += '  %s processors (%s)\n' % (multiprocessing.cpu_count(),
+                                   platform.processor())
+    s += '  NumPy version %s\n' % version('numpy')
+    s += '  SciPy version %s\n' % version('scipy')
+    s += '  Matplotlib version %s\n' % version('matplotlib')
+    s += '  NetCDF4 version %s\n' % version('netCDF4')
+    s += '  Xarray version %s\n' % version('xarray')
+    s += '  Pandas version %s\n' % version('pandas')
+    s += '  OpenDrift version %s\n' % version('opendrift')
+    s += '  Python version %s\n' % sys.version.replace('\n', '')
+    s += '------------------------------------------------------\n'
+    return s
+
 
 def read_csv(f, **kwargs):
     """
