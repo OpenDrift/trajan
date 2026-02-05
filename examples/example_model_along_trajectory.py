@@ -12,6 +12,9 @@ import matplotlib.pyplot as plt
 
 print(xr.__version__)
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 #%%
 # Open drifter dataset from a CSV file
 ds = ta.read_csv('bug05_pos.csv.xz',
@@ -37,7 +40,9 @@ print(nk_crs)
 times = nk.sel(time=slice('2022-05-10', '2022-05-20')).time.values
 print(times, 'Drifter times')
 ds = ds.traj.gridtime(times)
+print('Dropping na')
 ds = ds.dropna('time', how='all')
+print('Dropped na')
 
 print(ds)
 
