@@ -12,9 +12,6 @@ import matplotlib.pyplot as plt
 
 print(ta.versions())
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
-
 #%%
 # Open drifter dataset from a CSV file
 ds = ta.read_csv('bug05_pos.csv.xz',
@@ -38,11 +35,8 @@ print(nk_crs)
 #%%
 # Grid the drifter dataset to the timesteps of the model.
 times = nk.sel(time=slice('2022-05-10', '2022-05-20')).time.values
-print(times, 'Drifter times')
 ds = ds.traj.gridtime(times)
-print('Dropping na')
 ds = ds.dropna('time', how='all')
-print('Dropped na')
 
 print(ds)
 
@@ -62,9 +56,6 @@ print(temp)
 #%%
 # Notice that the `lat` and `lon` variables from Norkyst match the original `lat` and `lon` from the dataset.
 
-try:
-    plt.figure()
-    temp.plot()
-    plt.show()
-except:
-    print('Could not plot data')
+plt.figure()
+temp.plot()
+plt.show()
