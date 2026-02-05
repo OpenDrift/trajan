@@ -10,6 +10,8 @@ import pyproj
 import trajan as ta
 import matplotlib.pyplot as plt
 
+print(xr.__version__)
+
 #%%
 # Open drifter dataset from a CSV file
 ds = ta.read_csv('bug05_pos.csv.xz',
@@ -33,6 +35,7 @@ print(nk_crs)
 #%%
 # Grid the drifter dataset to the timesteps of the model.
 times = nk.sel(time=slice('2022-05-10', '2022-05-20')).time.values
+print(times, 'Drifter times')
 ds = ds.traj.gridtime(times)
 ds = ds.dropna('time', how='all')
 
@@ -41,6 +44,7 @@ print(ds)
 #%%
 # Transform the drifter dataset to the CRS of the model
 dst = ds.traj.transform(nk_crs)
+print(dst.x)
 
 #%%
 # Extract the values of a variable for the trajectory
@@ -53,6 +57,9 @@ print(temp)
 #%%
 # Notice that the `lat` and `lon` variables from Norkyst match the original `lat` and `lon` from the dataset.
 
-plt.figure()
-temp.plot()
-plt.show()
+try:
+    plt.figure()
+    temp.plot()
+    plt.show()
+except:
+    print('Could not plot data')
