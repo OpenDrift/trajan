@@ -322,8 +322,10 @@ class Traj1d(Traj):
             times = times.to_numpy()
 
         time_varname = self.time_varname if time_varname is None else time_varname
+        times = times.astype(self.ds[time_varname].dtype)  # Make sure we have same dtype for ds and times array
 
         ds = self.ds.copy()
+
         # We fill NaN-values in time coordinate to be able to interpolate
         ds[time_varname] = ds[time_varname].interpolate_na(
                 dim=time_varname, method='linear', fill_value='extrapolate', use_coordinate=False)
