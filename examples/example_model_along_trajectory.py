@@ -33,28 +33,26 @@ print(nk_crs)
 #%%
 # Grid the drifter dataset to the timesteps of the model.
 times = nk.sel(time=slice('2022-05-10', '2022-05-20')).time.values
+ds = ds.traj.gridtime(times)
+ds = ds.dropna('time', how='all')
 
-# The gridtime command below has stopped working without any changes in Trajan, thus must be due to changes in external dependencies
-#ds = ds.traj.gridtime(times)
-#ds = ds.dropna('time', how='all')
-#
-#print(ds)
-#
-##%%
-## Transform the drifter dataset to the CRS of the model
-#dst = ds.traj.transform(nk_crs)
-#
-##%%
-## Extract the values of a variable for the trajectory
-#temp = nk.isel(depth=0).sel(time=dst.time,
-#                            X=dst.x,
-#                            Y=dst.y,
-#                            method='nearest').temperature
-#print(temp)
-#
-##%%
-## Notice that the `lat` and `lon` variables from Norkyst match the original `lat` and `lon` from the dataset.
-#
-#plt.figure()
-#temp.plot()
-#plt.show()
+print(ds)
+
+#%%
+# Transform the drifter dataset to the CRS of the model
+dst = ds.traj.transform(nk_crs)
+
+#%%
+# Extract the values of a variable for the trajectory
+temp = nk.isel(depth=0).sel(time=dst.time,
+                            X=dst.x,
+                            Y=dst.y,
+                            method='nearest').temperature
+print(temp)
+
+#%%
+# Notice that the `lat` and `lon` variables from Norkyst match the original `lat` and `lon` from the dataset.
+
+plt.figure()
+temp.plot()
+plt.show()
