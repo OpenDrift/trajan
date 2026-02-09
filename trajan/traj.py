@@ -768,8 +768,7 @@ class Traj:
         distance = xr.DataArray(distance, coords=lonfrom.coords, dims=lon.dims)
         distance = xr.concat((distance, distance.isel({self.obs_dim: -1})),
                              dim=self.obs_dim)  # repeating last time step to
-        distance = distance.assign_coords(
-            {self.obs_dim: np.arange(self.ds.sizes[self.obs_dim])})
+        distance = distance.assign_coords({self.obs_dim: self.ds[self.obs_dim]})
         return distance
 
     def azimuth_to_next(self):
@@ -806,7 +805,7 @@ class Traj:
             (azimuth_forward, azimuth_forward.isel({self.obs_dim: -1})),
             dim=self.obs_dim)  # repeating last time step to
         azimuth_forward = azimuth_forward.assign_coords(
-            {self.obs_dim: np.arange(self.ds.sizes[self.obs_dim])})
+            {self.obs_dim: self.ds[self.obs_dim]})
         return azimuth_forward
 
     def velocity_components(self):
@@ -833,8 +832,8 @@ class Traj:
         azimuth = self.azimuth_to_next()
 
         # Calculate velocity components
-        u = speed * np.cos(np.radians(azimuth))
-        v = speed * np.sin(np.radians(azimuth))
+        u = speed * np.sin(np.radians(azimuth))
+        v = speed * np.cos(np.radians(azimuth))
 
         # Assign names and attributes
         u.name = "u_velocity"
