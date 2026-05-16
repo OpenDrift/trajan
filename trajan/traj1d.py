@@ -349,3 +349,22 @@ class Traj1d(Traj):
             ds = ds.expand_dims('trajectory')
 
         return ds
+
+    def trim(self):
+        """
+        Remove empty positions at start and end of trajectory.
+
+        Returns
+        -------
+        xarray.Dataset
+            Trimmed dataset
+        """
+
+        mask = np.isfinite(self.tlon)
+        first = mask.argmax(dim='time')
+        last  = mask.sizes['time'] - 1 - mask.isel(time=slice(None, None, -1)).argmax(dim="time")
+        firstindex = first.min().values
+        lastindex = last.max().values
+        numobs = self.ds.sizes[self.obs_dim]
+        logger.debug(f'Trimming {firstindex} points from start and {numobs - lastindex} points from end')
+        return self.ds.isel(time=slice(firstindex, lastindex))
