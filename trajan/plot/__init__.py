@@ -304,3 +304,49 @@ class Plot:
                            **kwargs))
 
         return paths
+
+    def concave_hull(self, *args, **kwargs):
+        """
+        Plot the concave hull around all particles
+
+        Args:
+
+            ax: Use existing axes, otherwise a new one is set up.
+
+            crs: Specify crs for new axis.
+
+        Returns:
+
+            Matplotlib lines, and axes.
+        """
+
+        alpha = kwargs.pop('alpha', None)
+        if alpha is None:
+            alpha = {}
+        else:
+            alpha = {'alpha': alpha}
+
+        logger.debug(f'Plotting concave hull')
+        polygon = self.ds.traj.concave_hull(**alpha)  # Shapely
+
+        ax = self.set_up_map(kwargs)
+
+        color = kwargs.pop('color', self.DEFAULT_LINE_COLOR)
+        if 'edgecolor' not in kwargs:
+            kwargs['edgecolor'] = color
+
+        paths = ax.add_geometries(
+            [polygon],
+            color='none',
+            facecolor='none',
+            crs=self.gcrs,
+            **kwargs)
+
+        ## TODO: might not work for cartesian plots
+        #line_segments = [hull.points[simplex] for simplex in hull.simplices]
+        #from matplotlib.collections import LineCollection
+        #paths = ax.add_collection(
+        #    LineCollection(line_segments, transform=self.gcrs, *args,
+        #                   **kwargs))
+
+        return paths
