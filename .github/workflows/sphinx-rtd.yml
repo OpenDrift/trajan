@@ -34,7 +34,6 @@ jobs:
       - uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment.yml
-          channels: conda-forge
           cache-environment: true
           post-cleanup: 'all'
           init-shell: >-
