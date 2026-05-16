@@ -845,6 +845,32 @@ class Traj:
 
         return u, v
 
+    def concave_hull(self, alpha=70):
+        """Return the concave hull for all particles, in geographical coordinates.
+
+        TODO: under development
+
+        Returns
+        -------
+        Shapely polygon
+            Polygon around all positions of given Dataset.
+        """
+
+        import alphashape
+
+        lon = self.ds.lon.values
+        lat = self.ds.lat.values
+        fin = np.isfinite(lat + lon)
+        if np.sum(fin) <= 3:
+            return None
+        if len(np.unique(lat)) == 1 and len(np.unique(lon)) == 1:
+            return None
+        lat = lat[fin]
+        lon = lon[fin]
+        points = np.vstack((lon.T, lat.T)).T
+
+        return alphashape.alphashape(points, alpha)
+
     def convex_hull(self):
         """Return the scipy convex hull for all particles, in geographical coordinates.
 

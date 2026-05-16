@@ -34,13 +34,12 @@ jobs:
       - uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment.yml
-          channels: conda-forge
           cache-environment: true
           post-cleanup: 'all'
           init-shell: >-
             bash
             powershell
-          extra-specs: python=3.14
+          create-args: python=3.14
 
       - name: Install documentation dependencies
         run: |
