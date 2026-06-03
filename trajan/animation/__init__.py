@@ -319,7 +319,8 @@ class Animation:
                                   and not isinstance(self._color, xr.DataArray))
                               else self.DEFAULT_LINE_COLOR))
 
-        sc_kwargs = dict(s=self._markersize, alpha=self._alpha, zorder=10)
+        sc_kwargs = dict(s=self._markersize, alpha=self._alpha, zorder=10,
+                         animated=True)
         if is_geo:
             sc_kwargs['transform'] = self.gcrs
 
@@ -338,6 +339,13 @@ class Animation:
         else:
             sc = ax.scatter(x0, y0, c=marker_color, **sc_kwargs)
 
+        # Title artist — mark animated so blitting redraws it each frame
+        if self._title is not None:
+            title_text = ax.set_title('')
+            title_text.set_animated(True)
+        else:
+            title_text = None
+
         def plot_frame(i):
             xi = x[:, i] if x.ndim > 1 else x
             yi = y[:, i] if y.ndim > 1 else y
@@ -350,15 +358,19 @@ class Animation:
                 pm.set_array(data_interp.isel(time=i).values.ravel())
 
             timestamp = np.datetime_as_string(times[i], unit='s') + ' UTC'
-            if self._title == 'auto':
-                ax.set_title(timestamp)
-            elif self._title is not None:
-                ax.set_title(f'{self._title}\n{timestamp}')
+            if title_text is not None:
+                if self._title == 'auto':
+                    title_text.set_text(timestamp)
+                else:
+                    title_text.set_text(f'{self._title}\n{timestamp}')
 
-            return [sc] + [pm for pm, _ in overlay_artists]
+            artists = [sc] + [pm for pm, _ in overlay_artists]
+            if title_text is not None:
+                artists.append(title_text)
+            return artists
 
         anim = FuncAnimation(fig, plot_frame, frames=frames,
-                             interval=1000 // self._fps, blit=False)
+                             interval=1000 // self._fps, blit=True)
         self._animation = anim
         return anim
 
