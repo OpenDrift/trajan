@@ -119,6 +119,5 @@ plt.show()
 
 #%%
 # Do a basic animation of the drift of the drifters
-ds.traj.animate()
-plt.show()
+ds.traj.animate().show()
 
