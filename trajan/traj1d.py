@@ -254,6 +254,20 @@ class Traj1d(Traj):
         s = skill_method(expected.traj.tlon, expected.traj.tlat, ds.traj.tlon,
                          ds.traj.tlat, **kwargs)
 
+        if kwargs.get('cumulative', False):
+            # Build DataArray with explicit dims from the (broadcasted) ds,
+            # then drop any size-1 dims that are not in self, and reorder to
+            # match self.ds.lon dimension order.
+            result = xr.DataArray(s, dims=ds.lon.dims, coords=ds.lon.coords,
+                                  name='Skillscore', attrs={'method': method})
+            self_dims = set(self.ds.lon.dims)
+            for dim in list(result.dims):
+                if dim not in self_dims and result.sizes[dim] == 1:
+                    result = result.squeeze(dim=dim, drop=True)
+            ordered = [d for d in self.ds.lon.dims if d in result.dims]
+            extra = [d for d in result.dims if d not in ordered]
+            return result.transpose(*(ordered + extra))
+
         newcoords = dict(ds.lon.sizes)
         newcoords.pop('time')
         for dim in newcoords:
