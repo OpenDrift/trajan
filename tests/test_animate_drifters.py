@@ -13,7 +13,7 @@ def test_animate_barents(barents, plot):
 
 def test_animate_barents_color_by(barents, plot):
     speed = barents.traj.speed()
-    anim = barents.traj.animate().color_by(speed, cmap='RdYlBu_r', vmin=0, vmax=2,
+    anim = barents.traj.animate().color_by(speed, cmap='plasma', vmin=0, vmax=2,
                                            label='Speed [m/s]')
     if plot:
         anim.show()
@@ -31,10 +31,18 @@ def test_animate_barents_show_trajectories(barents, plot):
         fa._draw_was_started = True
         plt.close('all')
 
-def test_animate_barents_save_gif(barents, tmp_path):
-    out = tmp_path / 'barents.gif'
+def test_animate_barents_save_mp4(barents, tmp_path):
+    import matplotlib.animation
+    out = tmp_path / 'barents.mp4'
+    if not matplotlib.animation.FFMpegWriter.isAvailable():
+        import pytest
+        pytest.skip('ffmpeg not available')
+    speed = barents.traj.speed()
     # land=None avoids cartopy shapefile download in CI
-    barents.traj.animate(land=None).set_timestep('6h').save(str(out))
+    (barents.traj.animate(land=None)
+        .color_by(speed, cmap='plasma', vmin=0, vmax=1, label='Speed [m/s]')
+        .set_timestep('6h')
+        .save(str(out)))
     assert out.exists() and out.stat().st_size > 0
     plt.close('all')
 

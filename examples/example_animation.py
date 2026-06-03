@@ -31,7 +31,7 @@ ds.traj.animate().set_title('Barents Sea drifters').show()
 # Pass the DataArray directly to ``color_by`` — no need to add it to the dataset.
 speed = ds.traj.speed()
 (ds.traj.animate()
-    .color_by(speed, cmap='RdYlBu_r', vmin=0, vmax=1,
+    .color_by(speed, cmap='plasma', vmin=0, vmax=1,
               label='Speed  [m/s]')
     .set_title('Drifter speed')
     .show())
@@ -47,14 +47,14 @@ speed = ds.traj.speed()
     .show())
 
 #%%
-# Save the animation to a GIF file.
+# Save the animation to an MP4 file (faster and smaller than GIF).
 (ds.traj.animate()
-    .color_by(speed, cmap='RdYlBu_r', vmin=0, vmax=1,
+    .color_by(speed, cmap='plasma', vmin=0, vmax=1,
               label='Speed  [m/s]')
     .show_trajectories(alpha=0.2)
     .set_title('Barents Sea drifters')
     .set_fps(10)
-    .save('barents_drifters.gif'))
+    .save('barents_drifters.mp4'))
 
 #%%
 # .. image:: /gallery/animations/example_animation_0.gif
