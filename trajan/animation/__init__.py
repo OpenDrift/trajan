@@ -418,8 +418,16 @@ class Animation:
                 raise RuntimeError(
                     "FFmpeg is required to save .mp4 files. "
                     "Install it with e.g. `conda install ffmpeg`.")
-            writer = matplotlib.animation.FFMpegWriter(fps=self._fps,
-                                                       bitrate=1800)
+            writer = matplotlib.animation.FFMpegWriter(
+                fps=self._fps,
+                codec='libx264',
+                bitrate=1800,
+                extra_args=[
+                    '-profile:v', 'baseline',
+                    '-vf', 'crop=trunc(iw/2)*2:trunc(ih/2)*2',  # ensure even dimensions
+                    '-pix_fmt', 'yuv420p',  # broad player/browser compatibility
+                    '-an',  # no audio
+                ])
 
         logger.info(f'Saving animation to {filename}..')
         anim.save(filename, writer=writer)
