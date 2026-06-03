@@ -61,7 +61,7 @@ class Animation:
         self._alpha = 1.0
         self._fps = 8
         self._title = 'auto'
-        self._timestep = '1h'
+        self._timestep = None
         self._map_kwargs = {}
         self._overlays = []
         self._animation = None
@@ -138,12 +138,15 @@ class Animation:
 
     def set_timestep(self, interval):
         """
-        Set the time step between animation frames.
+        Resample the dataset to a fixed time step for animation.
+
+        By default the median time step of the dataset is used for irregular
+        datasets, and no resampling is done for regularly gridded ones.
 
         Parameters
         ----------
         interval : str or pandas.Timedelta
-            Passed to :meth:`trajan.Traj.gridtime`, e.g. ``'30min'``.
+            Passed to :meth:`trajan.Traj.gridtime`, e.g. ``'6h'``.
 
         Returns
         -------
@@ -247,7 +250,16 @@ class Animation:
         ax = self.ds.traj.plot.set_up_map(map_kwargs)
         fig = ax.get_figure()
 
-        ds = self.ds.traj.gridtime(self._timestep)
+        if self.ds.traj.is_1d():
+            ds = self.ds
+            logger.debug('Dataset is already regularly gridded, skipping gridtime')
+        else:
+            if self._timestep is not None:
+                timestep = self._timestep
+            else:
+                timestep = self.ds.traj.timestep()
+            ds = self.ds.traj.gridtime(timestep)
+            logger.debug(f'Gridded dataset to {timestep}')
         times = ds.time.values   # 1-D array after gridtime
         frames = len(times)
         logger.debug(f'Building animation: {frames} frames')

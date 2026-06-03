@@ -29,7 +29,7 @@ class Traj2d(Traj):
 
     def timestep(self, average=np.nanmedian):
         """
-        Calculate the median time step between observations in seconds.
+        Calculate the median time step between observations.
 
         Parameters
         ----------
@@ -38,15 +38,11 @@ class Traj2d(Traj):
 
         Returns
         -------
-        xarray.DataArray
+        pd.Timedelta
             Median time step between observations.
-            Attributes:
-            - units: seconds
         """
-        #td = np.diff(self.ds.time, axis=1) / np.timedelta64(1, 's')
         td = self.ds.time.diff(dim=self.obs_dim)
-        td = average(td)
-        return xr.DataArray(td, name="timestep", attrs={"units": "seconds"})
+        return pd.Timedelta(average(td))
 
     def time_to_next(self):
         """

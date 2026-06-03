@@ -20,17 +20,14 @@ class Traj1d(Traj):
 
     def timestep(self):
         """
-        Calculate the time step between observations in seconds.
+        Calculate the time step between observations.
 
         Returns
         -------
-        xarray.DataArray
-            Time step between observations with a single value.
-            Attributes:
-            - units: seconds
+        pd.Timedelta
+            Time step between observations.
         """
-        timestep = ((self.ds.time[1] - self.ds.time[0]) / np.timedelta64(1, 's')).values
-        return xr.DataArray(timestep, name="timestep", attrs={"units": "seconds"})
+        return pd.Timedelta((self.ds.time[1] - self.ds.time[0]).values)
 
     def is_1d(self):
         return True
