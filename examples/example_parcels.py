@@ -53,3 +53,15 @@ ds_true.traj.plot(color='k', linewidth=3, label='"True" trajectory')
 plt.colorbar(mappable=mappable, orientation='horizontal', label='Skillscore per trajectory')
 plt.legend()
 plt.show()
+
+#%%
+# Illustration of cumulative skillscore:
+# Plotting another random trajectory ("modeled"), colored by the cumulative skillscore
+# where the first trajectory is regarded as truth
+ds_model = ds.isel(trajectory=4)
+skillscore = ds_model.traj.skill(expected=ds_true, method='liu-weissberg', cumulative=True)
+ds_true.traj.plot(color='k', linewidth=3, label='"True" trajectory', land='mask')
+mappable = ds_model.traj.plot(linewidth=3, color=skillscore, label='"Modeled" trajectory')
+plt.colorbar(mappable=mappable, orientation='horizontal', label='Cumulative skillscore')
+plt.legend()
+plt.show()

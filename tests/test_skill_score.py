@@ -71,6 +71,78 @@ def test_skillscores():
     skill_lw = ta.skill.liu_weissberg(lon_obs, lat_obs, lon_model, lat_model)
     np.testing.assert_almost_equal(skill_lw, 0.99099, 5)
 
+def test_skillscores_cumulative():
+    lon_obs = np.array([0, 1, 2, 3, 4, 5], dtype=float)
+    lat_obs = np.array([0, 0, 0, 0, 0, 0], dtype=float)
+    lon_model = lon_obs.copy()
+    km2deg = 111
+    lon_model[-1] = lon_obs[-1] + 1.8/km2deg
+    lat_model = np.array([0, 1.2/km2deg, -3.4/km2deg, 6.3/km2deg, 4.2/km2deg, 0])
+
+    skill_cum = ta.skill.liu_weissberg(lon_obs, lat_obs, lon_model, lat_model, cumulative=True)
+
+    # Output length must match input length
+    assert len(skill_cum) == len(lon_obs)
+    # First value is NaN (no arc length at t=0); second value is always valid
+    assert np.isnan(skill_cum[0])
+    assert not np.isnan(skill_cum[1])
+    # All other values are in [0, 1]
+    assert np.all(skill_cum[1:] >= 0) and np.all(skill_cum[1:] <= 1)
+    # Last value equals the non-cumulative score
+    skill_scalar = ta.skill.liu_weissberg(lon_obs, lat_obs, lon_model, lat_model)
+    np.testing.assert_almost_equal(skill_cum[-1], skill_scalar, 10)
+    # Score decreases when divergence accelerates (d_k/L_k exceeds running average)
+    lon_div = np.array([0, 1, 2, 3, 4, 5], dtype=float)
+    lat_div = np.zeros(6)
+    lat_model_div = np.array([0, 0.5/111, 2.0/111, 5.0/111, 10.0/111, 18.0/111])  # super-linear divergence
+    skill_div = ta.skill.liu_weissberg(lon_div, lat_div, lon_div, lat_div + lat_model_div, cumulative=True)
+    assert skill_div[-1] < skill_div[-2], "Score should decrease for accelerating divergence"
+
+
+def test_skillscores_cumulative_2d():
+    lon_obs = np.array([[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5]], dtype=float).T
+    lat_obs = np.zeros_like(lon_obs)
+    lon_model = lon_obs.copy()
+    km2deg = 111
+    lon_model[:, -1] = lon_obs[:, -1] + 1.8/km2deg
+    lat_model = np.array([[0, 1.2/km2deg, -3.4/km2deg, 6.3/km2deg, 4.2/km2deg, 0],
+                          [0, 1.2/km2deg, -3.4/km2deg, 6.3/km2deg, 4.2/km2deg, 0]]).T
+
+    skill_cum = ta.skill.liu_weissberg(lon_obs, lat_obs, lon_model, lat_model, cumulative=True)
+
+    assert skill_cum.shape == (6, 2)
+    assert np.all(np.isnan(skill_cum[0, :]))
+    assert not np.any(np.isnan(skill_cum[1, :]))
+    assert np.all(skill_cum[1:, :] >= 0) and np.all(skill_cum[1:, :] <= 1)
+    # Last value matches non-cumulative score for each trajectory
+    skill_scalar = ta.skill.liu_weissberg(lon_obs, lat_obs, lon_model, lat_model)
+    np.testing.assert_array_almost_equal(skill_cum[-1, :], skill_scalar)
+
+
+def test_skillscores_cumulative_xarray(barents):
+    barents = barents.traj.gridtime('1h')
+    b0 = barents.isel(trajectory=0).dropna('time')
+    b1 = barents.isel(trajectory=1).sel(time=slice(b0.time[0], b0.time[-1]))
+    b1 = b1.traj.gridtime(b0.time)
+
+    skill_cum = b0.traj.skill(b1, cumulative=True)
+
+    # Cumulative result has exactly the same dims and coords as self's internal dataset
+    assert skill_cum.dims == b0.traj.ds.lon.dims
+    assert skill_cum.sizes == {d: b0.traj.ds.sizes[d] for d in b0.traj.ds.lon.dims}
+    np.testing.assert_array_equal(skill_cum.coords['time'].values, b0.coords['time'].values)
+    assert np.all(np.isnan(skill_cum.isel(time=0).values))
+    assert not np.any(np.isnan(skill_cum.isel(time=1).values))
+    # Cumulative array values are in [0, 1] beyond t=0
+    assert np.all(skill_cum.isel(time=slice(1, None)).values >= 0)
+    assert np.all(skill_cum.isel(time=slice(1, None)).values <= 1)
+    # Last value equals the non-cumulative score
+    skill_scalar = b0.traj.skill(b1)
+    np.testing.assert_array_almost_equal(
+        skill_cum.isel(time=-1).values.squeeze(),
+        skill_scalar.values.squeeze(), 5)
+
+
 def test_skillscores_2d():
     lon_obs = np.array([[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5]]).T
     lat_obs = np.array([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]).T
