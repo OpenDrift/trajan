@@ -23,7 +23,8 @@ ds = ds.traj.gridtime('1h')
 
 #%%
 # Basic animation — just call ``.animate()`` and ``.show()``.
-ds.traj.animate().show()
+# The title shows the current timestamp automatically.
+ds.traj.animate().set_title('Barents Sea drifters').show()
 
 #%%
 # Colour particles by drift speed.
@@ -32,6 +33,7 @@ speed = ds.traj.speed()
 (ds.traj.animate()
     .color_by(speed.name, cmap='RdYlBu_r', vmin=0, vmax=1,
               label='Speed  [m/s]')
+    .set_title('Drifter speed')
     .show())
 
 #%%
@@ -41,7 +43,7 @@ speed = ds.traj.speed()
     .color_by(speed.name, cmap='plasma', vmin=0, vmax=1,
               label='Speed  [m/s]')
     .show_trajectories(alpha=0.15)
-    .set_title('Barents Sea drifters')
+    .set_title('Speed with trajectory history')
     .show())
 
 #%%
@@ -50,6 +52,7 @@ speed = ds.traj.speed()
     .color_by(speed.name, cmap='RdYlBu_r', vmin=0, vmax=1,
               label='Speed  [m/s]')
     .show_trajectories(alpha=0.2)
+    .set_title('Barents Sea drifters')
     .set_fps(10)
     .save('barents_drifters.gif'))
 

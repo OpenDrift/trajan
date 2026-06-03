@@ -337,10 +337,11 @@ class Animation:
             for pm, data_interp in overlay_artists:
                 pm.set_array(data_interp.isel(time=i).values.ravel())
 
+            timestamp = np.datetime_as_string(times[i], unit='s') + ' UTC'
             if self._title == 'auto':
-                ax.set_title(np.datetime_as_string(times[i], unit='s') + ' UTC')
+                ax.set_title(timestamp)
             elif self._title is not None:
-                ax.set_title(self._title)
+                ax.set_title(f'{self._title}\n{timestamp}')
 
             return [sc] + [pm for pm, _ in overlay_artists]
 
