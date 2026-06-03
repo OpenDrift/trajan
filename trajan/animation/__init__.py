@@ -86,19 +86,20 @@ class Animation:
     def color_by(self, variable, cmap=None, vmin=None, vmax=None, label=None,
                  colorbar=True):
         """
-        Color particles by a dataset variable or a fixed matplotlib colour.
+        Color particles by a variable or a fixed matplotlib colour.
 
         Parameters
         ----------
-        variable : str
-            Name of a dataset variable (e.g. ``'speed'``) or any matplotlib
-            colour string (e.g. ``'red'``).
+        variable : str or xarray.DataArray
+            A DataArray with dims ``(trajectory, time)``, a dataset variable
+            name (e.g. ``'speed'``), or a fixed matplotlib colour string
+            (e.g. ``'red'``).
         cmap : str or Colormap, optional
-            Colormap used when *variable* is a dataset variable (default: ``'jet'``).
+            Colormap (default: ``'jet'``).
         vmin, vmax : float, optional
             Colour scale limits.
         label : str, optional
-            Colorbar label; defaults to *variable*.
+            Colorbar label.
         colorbar : bool, optional
             Whether to draw a colorbar (default: ``True``).
 
@@ -293,12 +294,20 @@ class Animation:
         if isinstance(cmap_obj, str):
             cmap_obj = matplotlib.colormaps[cmap_obj]
 
-        is_variable_color = (isinstance(self._color, str) and self._color in ds)
+        # Resolve the colour source: DataArray > variable name in ds > fixed colour
         colorarray = None
         vmin, vmax = self._vmin, self._vmax
 
-        if is_variable_color:
+        if isinstance(self._color, xr.DataArray):
+            colorarray = self._color.values  # (trajectory, time)
+            if self._clabel is None and self._color.name:
+                self._clabel = self._color.name
+        elif isinstance(self._color, str) and self._color in ds:
             colorarray = ds[self._color].values  # (trajectory, time)
+
+        is_variable_color = colorarray is not None
+
+        if is_variable_color:
             if vmin is None:
                 vmin = float(np.nanmin(colorarray))
             if vmax is None:
@@ -306,7 +315,8 @@ class Animation:
         
         marker_color = (None if is_variable_color
                         else (self._color
-                              if self._color is not None
+                              if (self._color is not None
+                                  and not isinstance(self._color, xr.DataArray))
                               else self.DEFAULT_LINE_COLOR))
 
         sc_kwargs = dict(s=self._markersize, alpha=self._alpha, zorder=10)
@@ -320,7 +330,9 @@ class Animation:
             sc = ax.scatter(x0, y0, c=colorarray[:, 0],
                             cmap=cmap_obj, vmin=vmin, vmax=vmax, **sc_kwargs)
             if self._colorbar:
-                label = self._clabel if self._clabel is not None else self._color
+                label = self._clabel
+                if label is None and isinstance(self._color, str):
+                    label = self._color
                 fig.colorbar(sc, ax=ax, label=label,
                              orientation='horizontal', pad=0.05, shrink=0.8)
         else:

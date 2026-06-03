@@ -28,10 +28,10 @@ ds.traj.animate().set_title('Barents Sea drifters').show()
 
 #%%
 # Colour particles by drift speed.
-# The ``color_by`` method accepts the name of any variable in the dataset.
+# Pass the DataArray directly to ``color_by`` — no need to add it to the dataset.
 speed = ds.traj.speed()
 (ds.traj.animate()
-    .color_by(speed.name, cmap='RdYlBu_r', vmin=0, vmax=1,
+    .color_by(speed, cmap='RdYlBu_r', vmin=0, vmax=1,
               label='Speed  [m/s]')
     .set_title('Drifter speed')
     .show())
@@ -40,7 +40,7 @@ speed = ds.traj.speed()
 # Show static trajectory lines in the background so the full path
 # of each drifter is always visible.
 (ds.traj.animate()
-    .color_by(speed.name, cmap='plasma', vmin=0, vmax=1,
+    .color_by(speed, cmap='plasma', vmin=0, vmax=1,
               label='Speed  [m/s]')
     .show_trajectories(alpha=0.15)
     .set_title('Speed with trajectory history')
@@ -49,7 +49,7 @@ speed = ds.traj.speed()
 #%%
 # Save the animation to a GIF file.
 (ds.traj.animate()
-    .color_by(speed.name, cmap='RdYlBu_r', vmin=0, vmax=1,
+    .color_by(speed, cmap='RdYlBu_r', vmin=0, vmax=1,
               label='Speed  [m/s]')
     .show_trajectories(alpha=0.2)
     .set_title('Barents Sea drifters')

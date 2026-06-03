@@ -13,7 +13,8 @@ def test_animate_barents(barents, plot):
 
 def test_animate_barents_color_by(barents, plot):
     speed = barents.traj.speed()
-    anim = barents.traj.animate().color_by(speed.name, cmap='RdYlBu_r', vmin=0, vmax=2)
+    anim = barents.traj.animate().color_by(speed, cmap='RdYlBu_r', vmin=0, vmax=2,
+                                           label='Speed [m/s]')
     if plot:
         anim.show()
     else:
