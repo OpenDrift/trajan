@@ -6,11 +6,15 @@ Trajan supports animating trajectory datasets using a builder pattern.
 Start with ``ds.traj.animate()``, chain configuration methods, then call
 ``.show()`` to display interactively or ``.save()`` to write a file.
 """
+import logging
 import lzma
 import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
+import coloredlogs
 import trajan as ta
+
+coloredlogs.install(level=logging.DEBUG, logger=logging.getLogger('trajan'))
 
 #%%
 # Load the Barents Sea drifter dataset and grid to a regular hourly time step
