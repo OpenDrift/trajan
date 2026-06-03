@@ -373,6 +373,7 @@ class Animation:
         anim = FuncAnimation(fig, plot_frame, frames=frames,
                              interval=1000 // self._fps, blit=True)
         self._animation = anim
+        self._frames = frames
         return anim
 
     def show(self):
@@ -442,8 +443,23 @@ class Animation:
                     '-an',  # no audio
                 ])
 
+        logger.debug(f'Saving {self._frames} frames to {filename}')
         logger.info(f'Saving animation to {filename}..')
-        anim.save(filename, writer=writer)
+
+        try:
+            from tqdm import tqdm
+            pbar = tqdm(total=self._frames, desc=f'Saving {filename}', unit='frame')
+            def progress(i, n):
+                pbar.update(1)
+        except ImportError:
+            pbar = None
+            progress = None
+
+        anim.save(filename, writer=writer, progress_callback=progress)
+
+        if pbar is not None:
+            pbar.close()
+
         return self
 
     def _repr_html_(self):
