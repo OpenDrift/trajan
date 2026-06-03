@@ -52,8 +52,11 @@ speed = ds.traj.speed()
 
 #%%
 # Save the animation to an MP4 file (faster and smaller than GIF).
-(ds.traj.animate()
-    .color_by(speed, cmap='plasma', vmin=0, vmax=1,
+# Resample to 6-hourly to keep the frame count low.
+ds6h = ds.traj.gridtime('6h')
+speed6h = ds6h.traj.speed()
+(ds6h.traj.animate()
+    .color_by(speed6h, cmap='plasma', vmin=0, vmax=1,
               label='Speed  [m/s]')
     .show_trajectories(alpha=0.2)
     .set_title('Barents Sea drifters')
