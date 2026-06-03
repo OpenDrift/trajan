@@ -339,13 +339,10 @@ class Animation:
         else:
             sc = ax.scatter(x0, y0, c=marker_color, **sc_kwargs)
 
-        # Static custom title — drawn once into the background, never touched by blit.
-        if self._title not in (None, 'auto'):
-            ax.set_title(self._title)
-
-        # Animated timestamp — an axes-coordinate text artist fully owned by blit.
-        # Kept inside the plot area so it doesn't interact with the axis title at all.
-        timestamp_text = ax.text(
+        # Single animated text artist for title + timestamp.
+        # Never call ax.set_title() — that creates a non-animated Text that
+        # collides with this artist both visually and under blitting.
+        title_text = ax.text(
             0.5, 1.01, '',
             transform=ax.transAxes,
             ha='center', va='bottom',
@@ -365,10 +362,13 @@ class Animation:
                 pm.set_array(data_interp.isel(time=i).values.ravel())
 
             if self._title is not None:
-                timestamp_text.set_text(
-                    np.datetime_as_string(times[i], unit='s') + ' UTC')
+                timestamp = np.datetime_as_string(times[i], unit='s') + ' UTC'
+                if self._title == 'auto':
+                    title_text.set_text(timestamp)
+                else:
+                    title_text.set_text(f'{self._title}\n{timestamp}')
 
-            return [sc, timestamp_text] + [pm for pm, _ in overlay_artists]
+            return [sc, title_text] + [pm for pm, _ in overlay_artists]
 
         anim = FuncAnimation(fig, plot_frame, frames=frames,
                              interval=1000 // self._fps, blit=True)
