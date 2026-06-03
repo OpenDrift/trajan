@@ -15,7 +15,6 @@ def test_parcels_flatmesh(plot):
     else:
         plt.close()
 
-@pytest.mark.xfail
 def test_parcels_flatmesh_animate(plot):
     ds = xr.open_dataset('tests/test_data/parcels.zarr', engine='zarr')
     ds = ds.traj.set_crs(None)
@@ -23,7 +22,8 @@ def test_parcels_flatmesh_animate(plot):
     anim = ds.traj.animate()
 
     if plot:
-        plt.show()
+        anim.show()
     else:
-        anim._draw_was_started = True  # avoiding warning
-        plt.close()
+        fa = anim.build()
+        fa._draw_was_started = True
+        plt.close('all')

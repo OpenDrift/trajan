@@ -151,15 +151,20 @@ class Traj:
         return self.__plot__
 
     @property
-    def animate(self):
+    def animate(self) -> Animation:
         """
-        See :class:`trajan.animation.Animation`.
-        """
-        if self.__animate__ is None:
-            logger.debug(f'Setting up new animation object.')
-            self.__animate__ = Animation(self.ds)
+        Return an :class:`trajan.animation.Animation` builder for this dataset.
 
-        return self.__animate__
+        Call it (optionally with map kwargs) and then chain configuration
+        methods before calling :meth:`~trajan.animation.Animation.show` or
+        :meth:`~trajan.animation.Animation.save`.
+
+        Examples
+        --------
+        >>> ds.traj.animate().show()  # doctest: +SKIP
+        >>> ds.traj.animate(land='h').color_by('speed').save('out.gif')  # doctest: +SKIP
+        """
+        return Animation(self.ds)
 
     @property
     def tx(self):
