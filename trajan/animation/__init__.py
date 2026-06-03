@@ -339,12 +339,19 @@ class Animation:
         else:
             sc = ax.scatter(x0, y0, c=marker_color, **sc_kwargs)
 
-        # Title artist — mark animated so blitting redraws it each frame
-        if self._title is not None:
-            title_text = ax.set_title('')
-            title_text.set_animated(True)
-        else:
-            title_text = None
+        # Static custom title — drawn once into the background, never touched by blit.
+        if self._title not in (None, 'auto'):
+            ax.set_title(self._title)
+
+        # Animated timestamp — an axes-coordinate text artist fully owned by blit.
+        # Kept inside the plot area so it doesn't interact with the axis title at all.
+        timestamp_text = ax.text(
+            0.5, 1.01, '',
+            transform=ax.transAxes,
+            ha='center', va='bottom',
+            fontsize=plt.rcParams.get('axes.titlesize', 'large'),
+            animated=True, zorder=20,
+        )
 
         def plot_frame(i):
             xi = x[:, i] if x.ndim > 1 else x
@@ -357,17 +364,11 @@ class Animation:
             for pm, data_interp in overlay_artists:
                 pm.set_array(data_interp.isel(time=i).values.ravel())
 
-            timestamp = np.datetime_as_string(times[i], unit='s') + ' UTC'
-            if title_text is not None:
-                if self._title == 'auto':
-                    title_text.set_text(timestamp)
-                else:
-                    title_text.set_text(f'{self._title}\n{timestamp}')
+            if self._title is not None:
+                timestamp_text.set_text(
+                    np.datetime_as_string(times[i], unit='s') + ' UTC')
 
-            artists = [sc] + [pm for pm, _ in overlay_artists]
-            if title_text is not None:
-                artists.append(title_text)
-            return artists
+            return [sc, timestamp_text] + [pm for pm, _ in overlay_artists]
 
         anim = FuncAnimation(fig, plot_frame, frames=frames,
                              interval=1000 // self._fps, blit=True)
