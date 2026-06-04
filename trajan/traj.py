@@ -118,7 +118,7 @@ class Traj:
             output += f'Time variable:    {timevar.name}{list(timevar.sizes)}   ({len(timevar.sizes)}D)\n'
             try:
                 timestep = self.timestep()
-                timestep = timedelta(seconds=int(timestep))
+                timestep = timedelta(seconds=timestep.total_seconds())
             except:
                 timestep = '[self.timestep returns error]'  # TODO
             output += f'Timestep:       {timestep}\n'
