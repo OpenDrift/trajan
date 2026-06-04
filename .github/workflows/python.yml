@@ -59,6 +59,7 @@ jobs:
         run: |
           pip install build
           python -m build
+          ls -l dist/*
 
       - name: Upload wheels
         if: matrix.python-version == '3.14' && matrix.os == 'ubuntu'
@@ -87,5 +88,6 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
+          ls -l wheels/*
           pip install --upgrade typing-extensions twine
           twine upload --skip-existing wheels/*
