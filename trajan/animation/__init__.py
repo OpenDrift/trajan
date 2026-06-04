@@ -259,8 +259,8 @@ class Animation:
         overlay_artists = []
         for ov in self._overlays:
             data = ov['data']
-            lons = data.coords.get('lon', data.coords.get('longitude'))
-            lats = data.coords.get('lat', data.coords.get('latitude'))
+            lons = data.cf['longitude']
+            lats = data.cf['latitude']
             ov_vmin = (ov['vmin'] if ov['vmin'] is not None
                        else float(np.nanmin(data.values)))
             ov_vmax = (ov['vmax'] if ov['vmax'] is not None
