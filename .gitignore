@@ -4,3 +4,4 @@ examples/*.png
 /docs/source/generated/
 /docs/source/sg_execution_times.rst
 examples/out/
+*.mp4
