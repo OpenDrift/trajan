@@ -119,6 +119,7 @@ Methods
     Dataset.traj.skill
     Dataset.traj.velocity_components
     Dataset.traj.velocity_spectrum
+    Dataset.traj.concave_hull
     Dataset.traj.convex_hull
     Dataset.traj.convex_hull_contains_point
     Dataset.traj.get_area_convex_hull
@@ -126,6 +127,8 @@ Methods
     Dataset.traj.sel
     Dataset.traj.seltime
     Dataset.traj.iseltime
+    Dataset.traj.insert_nan_where
+    Dataset.traj.drop_where
     Dataset.traj.append
     Dataset.traj.crop
     Dataset.traj.contained_in
@@ -149,6 +152,25 @@ Plotting
 
    plot.Plot
    animation.Animation
+
+.. currentmodule:: trajan.animation
+
+Animation methods
+~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+   :template: autosummary/accessor_method.rst
+
+   Animation.color_by
+   Animation.show_trajectories
+   Animation.set_fps
+   Animation.set_markersize
+   Animation.set_title
+   Animation.overlay_variable
+   Animation.build
+   Animation.show
+   Animation.save
 
 
 
