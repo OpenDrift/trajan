@@ -12,7 +12,6 @@ authors = [
   { name = "Gaute Hope", email = "gauteh@met.no" },
   { name = "Knut-Frode Dagestad", email = "knutfd@met.no" },
 ]
-license = { text = "GPLv2" }
 dependencies = [
   "matplotlib>=3.5",
   "numpy>=1.23",
