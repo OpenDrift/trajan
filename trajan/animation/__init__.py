@@ -315,6 +315,10 @@ class Animation:
         x0 = x[:, 0] if x.ndim > 1 else x
         y0 = y[:, 0] if y.ndim > 1 else y
 
+        if is_cartesian:
+            ax.set_xlim(np.nanmin(x), np.nanmax(x))
+            ax.set_ylim(np.nanmin(y), np.nanmax(y))
+
         if colorarray is not None:
             sc = ax.scatter(x0, y0, c=colorarray[:, 0],
                             cmap=cmap_obj, vmin=vmin, vmax=vmax, **sc_kwargs)
