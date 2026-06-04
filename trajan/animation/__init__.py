@@ -211,18 +211,25 @@ class Animation:
 
     # -- Rendering ------------------------------------------------------------
 
-    def build(self):
+    def build(self, blit=True):
         """
         Build the :class:`matplotlib.animation.FuncAnimation`.
 
-        The result is cached; call :meth:`set_fps` to invalidate the cache
-        and rebuild on the next call.
+        The result is cached (for ``blit=True`` only); call :meth:`set_fps`
+        to invalidate the cache and rebuild on the next call.
+
+        Parameters
+        ----------
+        blit : bool, optional
+            Use blitting for faster rendering (default ``True``).  Pass
+            ``False`` when the output will be embedded as jshtml (Jupyter) to
+            avoid artefacts caused by the blit background-capture path.
 
         Returns
         -------
         matplotlib.animation.FuncAnimation
         """
-        if self._animation is not None:
+        if blit and self._animation is not None:
             return self._animation
 
         map_kwargs = dict(self._map_kwargs)  # copy so set_up_map can pop from it
@@ -308,7 +315,7 @@ class Animation:
                               else self.DEFAULT_LINE_COLOR))
 
         sc_kwargs = dict(s=self._markersize, alpha=self._alpha, zorder=10,
-                         animated=True)
+                         animated=blit)
         if is_geo:
             sc_kwargs['transform'] = self.gcrs
 
@@ -341,7 +348,7 @@ class Animation:
             transform=ax.transAxes,
             ha='right', va='bottom',
             fontsize='medium',
-            animated=True, zorder=20,
+            animated=blit, zorder=20,
             bbox=dict(facecolor='white', alpha=0.7, edgecolor='black', pad=4),
         )
 
@@ -363,8 +370,9 @@ class Animation:
             return [sc, timestamp_text] + [pm for pm, _ in overlay_artists]
 
         anim = FuncAnimation(fig, plot_frame, frames=frames,
-                             interval=1000 // self._fps, blit=True)
-        self._animation = anim
+                             interval=1000 // self._fps, blit=blit)
+        if blit:
+            self._animation = anim
         self._frames = frames
         return anim
 
@@ -379,7 +387,7 @@ class Animation:
         -------
         self
         """
-        anim = self.build()
+        anim = self.build(blit=False)
         try:
             __IPYTHON__
             from IPython.display import display, HTML
@@ -457,7 +465,7 @@ class Animation:
     def _repr_html_(self):
         """Embed the animation inline in a Jupyter notebook."""
         try:
-            anim = self.build()
+            anim = self.build(blit=False)
             plt.close(anim._fig)
             return anim.to_jshtml()
         except Exception as e:

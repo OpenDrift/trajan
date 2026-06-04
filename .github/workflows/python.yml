@@ -57,8 +57,8 @@ jobs:
 
       - name: Build wheels
         run: |
-          micromamba install poetry
-          poetry build
+          pip install build
+          python -m build
 
       - name: Upload wheels
         if: matrix.python-version == '3.14' && matrix.os == 'ubuntu'
