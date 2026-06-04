@@ -194,9 +194,9 @@ class Animation:
         Parameters
         ----------
         title : str or None
-            ``'auto'`` (default) shows the current time stamp per frame.
-            ``None`` suppresses the title entirely.
-            Any other string is used as a fixed title.
+            ``'auto'`` (default) shows the current time stamp per frame inside
+            the axes. ``None`` suppresses the timestamp entirely. Any other
+            string is used as a fixed axes title (timestamp still shown inside).
 
         Returns
         -------
@@ -351,15 +351,18 @@ class Animation:
         else:
             sc = ax.scatter(x0, y0, c=marker_color, **sc_kwargs)
 
-        # Single animated text artist for title + timestamp.
-        # Never call ax.set_title() — that creates a non-animated Text that
-        # collides with this artist both visually and under blitting.
-        title_text = ax.text(
-            0.5, 1.01, '',
+        # Static title (renders outside blit cycle, always visible)
+        if self._title is not None and self._title != 'auto':
+            ax.set_title(self._title)
+
+        # Timestamp shown inside the axes so it works correctly with blitting
+        timestamp_text = ax.text(
+            0.99, 0.01, '',
             transform=ax.transAxes,
-            ha='center', va='bottom',
-            fontsize=plt.rcParams.get('axes.titlesize', 'large'),
+            ha='right', va='bottom',
+            fontsize='medium',
             animated=True, zorder=20,
+            bbox=dict(facecolor='white', alpha=0.7, edgecolor='black', pad=4),
         )
 
         def plot_frame(i):
@@ -374,13 +377,10 @@ class Animation:
                 pm.set_array(data_interp.isel(time=i).values.ravel())
 
             if self._title is not None:
-                timestamp = np.datetime_as_string(times[i], unit='s') + ' UTC'
-                if self._title == 'auto':
-                    title_text.set_text(timestamp)
-                else:
-                    title_text.set_text(f'{self._title}\n{timestamp}')
+                timestamp_text.set_text(
+                    np.datetime_as_string(times[i], unit='s') + ' UTC')
 
-            return [sc, title_text] + [pm for pm, _ in overlay_artists]
+            return [sc, timestamp_text] + [pm for pm, _ in overlay_artists]
 
         anim = FuncAnimation(fig, plot_frame, frames=frames,
                              interval=1000 // self._fps, blit=True)
