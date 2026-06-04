@@ -37,12 +37,11 @@ def test_animate_barents_save_mp4(barents, tmp_path):
     if not matplotlib.animation.FFMpegWriter.isAvailable():
         import pytest
         pytest.skip('ffmpeg not available')
-    barents = barents.traj.iseltime(slice(0, 10))
+    barents = barents.traj.gridtime('6h').traj.iseltime(slice(0, 10))
     speed = barents.traj.speed()
     # land=None avoids cartopy shapefile download in CI
     (barents.traj.animate(land=None)
         .color_by(speed, cmap='plasma', vmin=0, vmax=1, label='Speed [m/s]')
-        .set_timestep('6h')
         .save(str(out)))
     assert out.exists() and out.stat().st_size > 0
     plt.close('all')

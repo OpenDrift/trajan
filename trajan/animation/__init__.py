@@ -61,7 +61,6 @@ class Animation:
         self._alpha = 1.0
         self._fps = 8
         self._title = 'auto'
-        self._timestep = None
         self._map_kwargs = {}
         self._overlays = []
         self._animation = None
@@ -134,26 +133,6 @@ class Animation:
         """
         self._show_trajectories = True
         self._trajectory_alpha = alpha
-        return self
-
-    def set_timestep(self, interval):
-        """
-        Resample the dataset to a fixed time step for animation.
-
-        By default the median time step of the dataset is used for irregular
-        datasets, and no resampling is done for regularly gridded ones.
-
-        Parameters
-        ----------
-        interval : str or pandas.Timedelta
-            Passed to :meth:`trajan.Traj.gridtime`, e.g. ``'6h'``.
-
-        Returns
-        -------
-        self
-        """
-        self._timestep = interval
-        self._animation = None  # invalidate cached animation
         return self
 
     def set_fps(self, fps):
@@ -236,8 +215,8 @@ class Animation:
         """
         Build the :class:`matplotlib.animation.FuncAnimation`.
 
-        The result is cached; call :meth:`set_timestep` or :meth:`set_fps`
-        to invalidate the cache and rebuild on the next call.
+        The result is cached; call :meth:`set_fps` to invalidate the cache
+        and rebuild on the next call.
 
         Returns
         -------
@@ -254,10 +233,7 @@ class Animation:
             ds = self.ds
             logger.debug('Dataset is already regularly gridded, skipping gridtime')
         else:
-            if self._timestep is not None:
-                timestep = self._timestep
-            else:
-                timestep = self.ds.traj.timestep()
+            timestep = self.ds.traj.timestep()
             ds = self.ds.traj.gridtime(timestep)
             logger.debug(f'Gridded dataset to {timestep}')
         times = ds.time.values   # 1-D array after gridtime
