@@ -14,7 +14,7 @@ def test_barents(barents, plot):
 
 def test_barents_linecolor(barents, plot):
     speed = barents.traj.speed()
-    mappable = barents.traj.plot(color=speed.where(speed<10),
+    mappable, ax = barents.traj.plot(color=speed.where(speed<10),
                                  linewidth=2, land='h', margin=.4)
 
     cb = plt.gcf().colorbar(mappable,

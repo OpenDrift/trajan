@@ -228,7 +228,7 @@ class Plot:
                     warnings.filterwarnings("ignore", category=RuntimeWarning)
                     paths = ax.plot(x, y, transform=dcrs, *args, **kwargs)
 
-        return paths
+        return paths, ax
 
     def scatter(self, *args, **kwargs):
         """
