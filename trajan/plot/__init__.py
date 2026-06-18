@@ -124,6 +124,17 @@ class Plot:
         gl = ax.gridlines(self.gcrs, draw_labels=True)
         gl.top_labels = None
 
+        # Cartopy's _draw_gridliner can fail with Shapely 2.x when the map
+        # boundary path is not a closed ring.  Wrap it so rendering never
+        # crashes, even on older Cartopy builds.
+        _original_draw_gridliner = gl._draw_gridliner
+        def _safe_draw_gridliner(*args, **kwargs):
+            try:
+                return _original_draw_gridliner(*args, **kwargs)
+            except Exception:
+                pass
+        gl._draw_gridliner = _safe_draw_gridliner
+
         if land is not None:
             add_land(ax,
                      lonmin,
