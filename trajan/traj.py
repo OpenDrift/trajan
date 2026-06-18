@@ -1224,12 +1224,21 @@ class Traj:
         method : str
             Outlier detection method:
 
-            - ``'speed'``: mask positions where the speed to the next position
-              exceeds *max_speed* [m/s].
-            - ``'nsigma_sliding'``: mask positions whose latitude **or** longitude
-              deviates more than *nsigma* standard deviations from the local mean
-              computed over a sliding window of half-width *side_half_width*.
-              Applied independently to latitude and longitude.
+            - ``'speed'``: walk through non-NaN positions in order and compare
+              each to the *last accepted* position.  Any position whose speed
+              from the last accepted position exceeds *max_speed* [m/s] is
+              masked.  Crucially, when a position is masked the "last accepted"
+              pointer is **not** advanced, so entire consecutive runs of
+              invalid positions (e.g. GPS no-fix sentinel values near (0, 0))
+              are cleared in a single O(N) pass without falsely masking the
+              valid positions that bracket the bad run.
+            - ``'nsigma_sliding'``: mask positions whose latitude **or**
+              longitude deviates more than *nsigma* standard deviations from
+              the local mean computed over a sliding window of half-width
+              *side_half_width*.  Applied independently to latitude and
+              longitude.  Note: this method is designed for isolated single-
+              point spikes; it is less effective for consecutive runs of
+              outliers.
 
         max_speed : float
             Maximum allowed speed [m/s]. Used with ``method='speed'``. Default: 10.

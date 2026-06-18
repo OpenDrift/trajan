@@ -43,14 +43,44 @@ def test_filter_speed_masks_spike(barents_with_spike):
     max_speed = 3.0
     filtered = barents_with_spike.traj.filter(method='speed', max_speed=max_speed)
 
-    # The spike at lon[0, 100] must be masked
-    assert np.isnan(filtered.lon.values[0, 100]) or np.isnan(filtered.lon.values[0, 99]), \
+    # The spike at lon[0, 100] must be masked (new algo masks the destination, not source)
+    assert np.isnan(filtered.lon.values[0, 100]), \
         "Speed filter did not mask the injected position spike"
 
     # No speed in the filtered dataset should exceed the threshold
     filtered_speed = filtered.traj.speed()
     assert float(filtered_speed.max(skipna=True)) <= max_speed, \
         f"High-speed positions remain after speed filter: max {float(filtered_speed.max(skipna=True)):.1f} m/s"
+
+
+def test_filter_speed_clears_stuck_gps_run(barents):
+    """Speed filter must clear an entire run of stuck GPS positions (e.g. (0,0) no-fix values),
+    not just the boundary points, and must NOT mask the valid positions on either side."""
+    import copy
+    ds = barents.copy(deep=True)
+    # Inject a run of 20 stuck-at-zero positions in the middle of trajectory 0
+    run_start, run_end = 200, 220
+    ds['lon'].values[0, run_start:run_end] = 1e-7
+    ds['lat'].values[0, run_start:run_end] = 1e-7
+    # shift times to include a big gap (simulate no-fix period)
+    for i in range(run_start, run_end):
+        ds['time'].values[0, i] = (
+            ds['time'].values[0, run_start - 1] +
+            np.timedelta64(int((i - run_start + 1) * 60), 's')
+        )
+
+    filtered = ds.traj.filter(method='speed', max_speed=3.0)
+
+    # All 20 stuck positions must be NaN
+    stuck = filtered.lon.values[0, run_start:run_end]
+    assert np.all(np.isnan(stuck)), \
+        f"Speed filter left {(~np.isnan(stuck)).sum()} stuck positions unmasked"
+
+    # Valid positions immediately before and after must NOT be masked
+    assert not np.isnan(filtered.lon.values[0, run_start - 1]), \
+        "Speed filter falsely masked the valid position before the bad run"
+    assert not np.isnan(filtered.lon.values[0, run_end]), \
+        "Speed filter falsely masked the valid position after the bad run"
 
 
 def test_filter_speed_removes_real_outliers(barents):

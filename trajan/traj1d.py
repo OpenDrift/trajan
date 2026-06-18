@@ -422,19 +422,54 @@ class Traj1d(Traj):
         lat_name = self.ty.name
 
         if method == 'speed':
-            # Compute per-step speed using actual time differences so the filter
-            # is correct for non-uniformly sampled trajectories too.
-            distance = self.distance_to_next()
-            time = self.ds[self.time_varname]
-            dt = time.diff(dim=self.obs_dim).astype('timedelta64[s]') / np.timedelta64(1, 's')
-            # Repeat the last value to match the length of distance_to_next()
-            dt = xr.concat((dt, dt.isel({self.obs_dim: -1})), dim=self.obs_dim)
-            dt = dt.assign_coords({self.obs_dim: self.ds[self.obs_dim]})
-            speed = distance / dt
-            mask = speed > max_speed
-            ds = self.ds.copy()
-            ds[lon_name] = self.ds[lon_name].where(~mask)
-            ds[lat_name] = self.ds[lat_name].where(~mask)
+            # Walk through non-NaN positions in order, comparing each to the
+            # last accepted "good" position.  When a position is too far away
+            # (speed > max_speed) it is masked and the "last good" pointer is
+            # NOT advanced, so the next position is still compared to the same
+            # good baseline.  This correctly clears entire runs of stuck/invalid
+            # GPS readings (e.g. no-fix sentinel values at (0,0)) in a single
+            # O(N) pass without falsely masking the valid positions that bracket
+            # the bad run.
+            geod = pyproj.Geod(ellps='WGS84')
+            ds = self.ds.copy(deep=True)
+            n_traj = ds.sizes[self.trajectory_dim] if self.trajectory_dim else 1
+
+            for ti in range(n_traj):
+                if self.trajectory_dim:
+                    lons  = ds[lon_name].values[ti].copy().astype(float)
+                    lats  = ds[lat_name].values[ti].copy().astype(float)
+                else:
+                    lons  = ds[lon_name].values.copy().astype(float)
+                    lats  = ds[lat_name].values.copy().astype(float)
+                times = ds[self.time_varname].values  # 1D, shared across trajectories
+
+                valid = ~(np.isnan(lons) | np.isnan(lats) | pd.isnull(times))
+                indices = np.where(valid)[0]
+                if len(indices) < 2:
+                    continue
+
+                prev = indices[0]
+                for idx in indices[1:]:
+                    dt = (times[idx] - times[prev]) / np.timedelta64(1, 's')
+                    if dt <= 0:
+                        lons[idx] = np.nan
+                        lats[idx] = np.nan
+                        continue
+                    _, _, dist = geod.inv(lons[prev], lats[prev], lons[idx], lats[idx])
+                    if dist / dt > max_speed:
+                        lons[idx] = np.nan
+                        lats[idx] = np.nan
+                        # keep prev unchanged — next position compares to same baseline
+                    else:
+                        prev = idx
+
+                if self.trajectory_dim:
+                    ds[lon_name].values[ti] = lons
+                    ds[lat_name].values[ti] = lats
+                else:
+                    ds[lon_name].values[:] = lons
+                    ds[lat_name].values[:] = lats
+
             return ds
 
         elif method == 'nsigma_sliding':
