@@ -21,7 +21,7 @@ print(ds.traj)
 
 #%%
 # Plotting trajectories, colored by oil viscosity
-mappable = ds.traj.plot(color=ds.viscosity, alpha=1)
+mappable, _ = ds.traj.plot(color=ds.viscosity, alpha=1)
 plt.title('Oil trajectories')
 plt.colorbar(mappable, orientation='horizontal', label=f'Oil viscosity  [{ds.viscosity.units}]')
 plt.show()

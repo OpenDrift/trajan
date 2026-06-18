@@ -4,7 +4,7 @@
 
 ```bash
 # Run all tests (includes doctests in source files)
-pytest
+mamba run -n opendrift pytest
 
 # Run a single test
 pytest tests/test_repr.py::test_repr_1d
@@ -54,4 +54,15 @@ Animation lives in `trajan/animation/__init__.py`, accessed as `ds.traj.animate(
 - **Polyfill pattern** — methods not natively supported by a layout can often be implemented by converting to `Traj1d` (via `gridtime` or `to_1d`), applying the operation, then collecting results back into the original or 2D dataset.
 - **Animated matplotlib artists must be inside the axes** — with `blit=True`, only artists that are children of the axes are correctly restored after a window resize/move. Use `ax.text()` with `animated=True` for per-frame text; do not use `ax.set_title()` for updating content. Return all animated artists from the frame function.
 - **Test fixtures** are defined in `tests/fixtures.py` and imported into all tests via `conftest.py`. Example datasets live in `examples/` (`barents.nc.xz`, `openoil.nc`). Add new shared fixtures there.
+- **`Traj2d` per-trajectory operations** — to implement a method that operates on individual trajectories in `Traj2d`, use the `trajectories().map()` delegation pattern: convert each trajectory to 1D, apply the 1D implementation, then convert back. Example:
+  ```python
+  def mymethod(self, **kwargs):
+      return self.trajectories().map(
+          lambda d: ensure_time_dim(
+              d.traj.to_1d().traj.mymethod(**kwargs),
+              self.time_varname
+          ).traj.to_2d(self.obs_dim)
+      )
+  ```
+  Implement the logic in `Traj1d.mymethod()`, declare `@abstractmethod` in `Traj`, and delegate in `Traj2d` using this pattern.
 - **Slow tests** should be marked `@pytest.mark.slow` or `@pytest.mark.veryslow` so they are skipped in normal runs.

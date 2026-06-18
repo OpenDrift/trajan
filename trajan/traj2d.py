@@ -323,3 +323,15 @@ class Traj2d(Traj):
 
     def skill(self):
         raise ValueError('Not implemented for 2D datasets')
+
+    def filter(self, method='speed', **kwargs) -> xr.Dataset:
+        """Filter outlier positions from trajectories.
+
+        See :meth:`trajan.traj.Traj.filter` for full documentation.
+        """
+        return self.trajectories().map(
+            lambda d: ensure_time_dim(
+                d.traj.to_1d().traj.filter(method=method, **kwargs),
+                self.time_varname
+            ).traj.to_2d(self.obs_dim)
+        )

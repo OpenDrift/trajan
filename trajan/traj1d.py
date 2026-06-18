@@ -1,13 +1,46 @@
 import numpy as np
 import xarray as xr
-import numpy as np
 import pandas as pd
 import logging
 import pyproj
-from .traj import Traj
+from .traj import Traj, ensure_time_dim
 from . import skill
 
 logger = logging.getLogger(__name__)
+
+
+def _nsigma_sliding_filter(arr, nsigma=5.0, side_half_width=2):
+    """Apply a sliding n-sigma outlier filter to a 1D numpy array.
+
+    For each central point at index ``i``, if that point deviates more than
+    ``nsigma`` standard deviations from the mean of its neighbours in
+    ``[i-side_half_width, i+side_half_width]`` (excluding itself), it is set to NaN.
+    Points within ``side_half_width`` of either end are left unchanged.
+
+    Parameters
+    ----------
+    arr : numpy.ndarray, shape (N,)
+        Input 1-D array.
+    nsigma : float
+        Number of standard deviations for the outlier threshold. Default: 5.
+    side_half_width : int
+        Number of neighbours on each side of the central point. Default: 2.
+
+    Returns
+    -------
+    numpy.ndarray
+        Copy of the input array with outliers replaced by NaN.
+    """
+    arr = np.array(arr, dtype=float)
+    n = len(arr)
+    for i in range(side_half_width, n - side_half_width):
+        neighbours = np.concatenate([arr[i - side_half_width:i],
+                                     arr[i + 1:i + side_half_width + 1]])
+        mean = np.mean(neighbours)
+        std = np.std(neighbours)
+        if np.abs(arr[i] - mean) > nsigma * std:
+            arr[i] = np.nan
+    return arr
 
 
 class Traj1d(Traj):
@@ -379,3 +412,48 @@ class Traj1d(Traj):
         numobs = self.ds.sizes[self.obs_dim]
         logger.debug(f'Trimming {firstindex} points from start and {numobs - lastindex} points from end')
         return self.ds.isel(time=slice(firstindex, lastindex))
+
+    def filter(self, method='speed', max_speed=10., nsigma=5.0, side_half_width=2) -> xr.Dataset:
+        """Filter outlier positions from trajectories.
+
+        See :meth:`trajan.traj.Traj.filter` for full documentation.
+        """
+        lon_name = self.tx.name
+        lat_name = self.ty.name
+
+        if method == 'speed':
+            # Compute per-step speed using actual time differences so the filter
+            # is correct for non-uniformly sampled trajectories too.
+            distance = self.distance_to_next()
+            time = self.ds[self.time_varname]
+            dt = time.diff(dim=self.obs_dim).astype('timedelta64[s]') / np.timedelta64(1, 's')
+            # Repeat the last value to match the length of distance_to_next()
+            dt = xr.concat((dt, dt.isel({self.obs_dim: -1})), dim=self.obs_dim)
+            dt = dt.assign_coords({self.obs_dim: self.ds[self.obs_dim]})
+            speed = distance / dt
+            mask = speed > max_speed
+            ds = self.ds.copy()
+            ds[lon_name] = self.ds[lon_name].where(~mask)
+            ds[lat_name] = self.ds[lat_name].where(~mask)
+            return ds
+
+        elif method == 'nsigma_sliding':
+            ds = self.ds.copy(deep=True)
+            n_traj = ds.sizes[self.trajectory_dim] if self.trajectory_dim else 1
+            for ti in range(n_traj):
+                if self.trajectory_dim:
+                    ds[lat_name].values[ti] = _nsigma_sliding_filter(
+                        ds[lat_name].values[ti], nsigma, side_half_width)
+                    ds[lon_name].values[ti] = _nsigma_sliding_filter(
+                        ds[lon_name].values[ti], nsigma, side_half_width)
+                else:
+                    ds[lat_name].values[:] = _nsigma_sliding_filter(
+                        ds[lat_name].values, nsigma, side_half_width)
+                    ds[lon_name].values[:] = _nsigma_sliding_filter(
+                        ds[lon_name].values, nsigma, side_half_width)
+            return ds
+
+        else:
+            raise ValueError(
+                f"Unknown filter method: '{method}'. Choose 'speed' or 'nsigma_sliding'."
+            )

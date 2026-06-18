@@ -1215,6 +1215,52 @@ class Traj:
         Append trajectories from other dataset to this.
         """
 
+    @abstractmethod
+    def filter(self, method='speed', max_speed=10., nsigma=5.0, side_half_width=2) -> xr.Dataset:
+        """Filter outlier positions from trajectories.
+
+        Parameters
+        ----------
+        method : str
+            Outlier detection method:
+
+            - ``'speed'``: mask positions where the speed to the next position
+              exceeds *max_speed* [m/s].
+            - ``'nsigma_sliding'``: mask positions whose latitude **or** longitude
+              deviates more than *nsigma* standard deviations from the local mean
+              computed over a sliding window of half-width *side_half_width*.
+              Applied independently to latitude and longitude.
+
+        max_speed : float
+            Maximum allowed speed [m/s]. Used with ``method='speed'``. Default: 10.
+        nsigma : float
+            Outlier threshold in number of standard deviations. Used with
+            ``method='nsigma_sliding'``. Default: 5.
+        side_half_width : int
+            Half-width of the sliding window (number of neighbours on each side).
+            Used with ``method='nsigma_sliding'``. Default: 2.
+
+        Returns
+        -------
+        xarray.Dataset
+            Dataset with outlier lat/lon positions set to NaN. Time and other
+            variables are left unchanged.
+
+        See Also
+        --------
+        speed : Calculate the speed along trajectories.
+
+        Examples
+        --------
+        >>> import xarray as xr
+        >>> import trajan as _
+        >>> import lzma
+        >>> b = lzma.open('examples/barents.nc.xz')
+        >>> ds = xr.open_dataset(b)
+        >>> filtered = ds.traj.filter(method='speed', max_speed=3.)
+        >>> filtered = ds.traj.filter(method='nsigma_sliding', nsigma=5., side_half_width=2)
+        """
+
     def crop(self,
              lonmin=-360,
              lonmax=360,

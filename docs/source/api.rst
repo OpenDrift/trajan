@@ -129,6 +129,7 @@ Methods
     Dataset.traj.iseltime
     Dataset.traj.insert_nan_where
     Dataset.traj.drop_where
+    Dataset.traj.filter
     Dataset.traj.append
     Dataset.traj.crop
     Dataset.traj.contained_in

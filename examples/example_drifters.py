@@ -61,7 +61,7 @@ ds = ds.traj.insert_nan_where(ds.traj.time_to_next()>np.timedelta64(3, 'h'))
 
 #%%
 # Plotting trajectories colored by drifter speed
-mappable = ds.traj.plot(color=speed)
+mappable, _ = ds.traj.plot(color=speed)
 
 cb = plt.gcf().colorbar(mappable,
           orientation='horizontal', pad=.05, aspect=30, shrink=.8, drawedges=False)
@@ -120,4 +120,36 @@ plt.show()
 #%%
 # Do a basic animation of the drift of the drifters
 ds.traj.animate().show()
+
+#%%
+# Filtering outlier positions
+# ---------------------------
+# The :meth:`filter` method provides a convenient interface for common
+# outlier-removal strategies, setting suspect lat/lon positions to NaN
+# while leaving the time axis intact.
+#
+# **Speed filter** — positions from which the speed to the next observation
+# exceeds a given threshold (here 3 m/s) are masked. We reload the original
+# (uncleaned) dataset to illustrate the effect.
+with lzma.open('barents.nc.xz') as barents:
+    ds_raw = xr.open_dataset(barents)
+    ds_raw.load()
+
+ds_speed = ds_raw.traj.filter(method='speed', max_speed=3.)
+
+#%%
+# **n-sigma sliding filter** — positions whose latitude or longitude deviates
+# more than *nsigma* standard deviations from the local mean in a sliding
+# window of half-width *side_half_width* are masked (applied independently
+# to latitude and longitude).
+ds_sigma = ds_raw.traj.filter(method='nsigma_sliding', nsigma=5., side_half_width=2)
+
+#%%
+# Comparing raw and filtered trajectories
+_, ax = ds_raw.traj.plot(color='gray', alpha=0.4, label='raw', land='mask')
+ds_speed.traj.plot(ax=ax, color='steelblue', label='speed filter (3 m/s)')
+ds_sigma.traj.plot(ax=ax, color='firebrick', label='n-sigma filter (5σ)')
+plt.legend()
+plt.title('Effect of outlier filters')
+plt.show()
 
