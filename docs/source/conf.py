@@ -12,8 +12,8 @@ project = 'TrajAn'
 copyright = '2022-2024, G. Hope and K. F. Dagestad'
 author = 'G. Hope and K. F. Dagestad'
 
-release = 'latest (git / main)'
-version = 'latest (git / main)'
+release = ''
+version = ''
 
 # -- General configuration
 
