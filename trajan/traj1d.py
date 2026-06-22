@@ -3,7 +3,7 @@ import xarray as xr
 import pandas as pd
 import logging
 import pyproj
-from .traj import Traj, ensure_time_dim
+from .traj import Traj, ensure_time_dim, inherit_docstrings
 from . import skill
 
 logger = logging.getLogger(__name__)
@@ -43,6 +43,7 @@ def _nsigma_sliding_filter(arr, nsigma=5.0, side_half_width=2):
     return arr
 
 
+@inherit_docstrings
 class Traj1d(Traj):
     """
     A structured dataset, where each trajectory is always given at the same times. Typically the output from a model or from a gridded dataset.
@@ -52,14 +53,6 @@ class Traj1d(Traj):
         super().__init__(ds, trajectory_dim, obs_dim, time_varname)
 
     def timestep(self):
-        """
-        Calculate the time step between observations.
-
-        Returns
-        -------
-        pd.Timedelta
-            Time step between observations.
-        """
         return pd.Timedelta((self.ds.time[1] - self.ds.time[0]).values)
 
     def is_1d(self):
@@ -69,19 +62,6 @@ class Traj1d(Traj):
         return False
 
     def to_2d(self, obs_dim='obs'):
-        """
-        Convert the dataset to a 2D representation.
-
-        Parameters
-        ----------
-        obs_dim : str, optional
-            Name of the observation dimension in the 2D representation, by default 'obs'.
-
-        Returns
-        -------
-        xarray.Dataset
-            Dataset with a 2D representation of trajectories.
-        """
         ds = self.ds.copy()
         time = ds[self.time_varname].rename({self.time_varname: obs_dim}).expand_dims(
             dim={self.trajectory_dim: ds.sizes[self.trajectory_dim]}
@@ -95,30 +75,10 @@ class Traj1d(Traj):
         return self.ds.copy()
 
     def time_to_next(self):
-        """
-        Calculate the time difference to the next observation.
-
-        Returns
-        -------
-        xarray.DataArray
-            Time difference to the next observation with the same dimensions as the dataset.
-            Attributes:
-            - units: seconds
-        """
         time_step = self.ds.time[1] - self.ds.time[0]
         return xr.DataArray(time_step, name="time_to_next", attrs={"units": "seconds"})
 
     def velocity_spectrum(self):
-        """
-        Calculate the velocity spectrum for a single trajectory.
-
-        Returns
-        -------
-        xarray.DataArray
-            Velocity spectrum with dimensions ('period').
-            Attributes:
-            - units: power
-        """
         if self.ds.sizes[self.trajectory_dim] > 1:
             raise ValueError('Spectrum can only be calculated for a single trajectory')
 
@@ -145,6 +105,10 @@ class Traj1d(Traj):
         return da
 
     def rotary_spectrum(self):
+        """Calculate the rotary spectrum for a single trajectory.
+
+        .. note:: This method is not yet fully implemented.
+        """
         ### TODO unfinished method
 
         from .tools import rotary_spectra
@@ -210,25 +174,6 @@ class Traj1d(Traj):
         return s
 
     def skill(self, expected, method='liu-weissberg', **kwargs) -> xr.DataArray:
-        """
-        Calculate the skill score for trajectories.
-
-        Parameters
-        ----------
-        expected : Traj1d
-            Expected trajectory dataset.
-        method : str, optional
-            Skill score method, by default 'liu-weissberg'.
-        **kwargs : dict
-            Additional arguments for the skill score calculation.
-
-        Returns
-        -------
-        xarray.DataArray
-            Skill score with dimensions matching the dataset.
-            Attributes:
-            - method: Skill score calculation method.
-        """
         expected = expected.traj  # Normalize
         expected_trajdim = expected.trajectory_dim
         self_trajdim = self.trajectory_dim
@@ -414,10 +359,6 @@ class Traj1d(Traj):
         return self.ds.isel(time=slice(firstindex, lastindex))
 
     def filter(self, method='speed', max_speed=10., nsigma=5.0, side_half_width=2) -> xr.Dataset:
-        """Filter outlier positions from trajectories.
-
-        See :meth:`trajan.traj.Traj.filter` for full documentation.
-        """
         lon_name = self.tx.name
         lat_name = self.ty.name
 

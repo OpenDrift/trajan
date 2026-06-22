@@ -49,7 +49,7 @@ def detect_trajectory_dim(ds):
 
 @xr.register_dataset_accessor("traj")
 class TrajA(Traj):
-    def __new__(cls, ds):
+    def __new__(cls, ds) -> "Traj":
 
         trajectory_dim = detect_trajectory_dim(ds)
 

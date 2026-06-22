@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import logging
 
-from .traj import Traj, ensure_time_dim
+from .traj import Traj, ensure_time_dim, inherit_docstrings
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,7 @@ def __require_obs_dim__(f):
     return wrapper
 
 
+@inherit_docstrings
 class Traj2d(Traj):
     """
     A unstructured dataset, where each trajectory may have observations at different times. Typically from a collection of drifters.
@@ -28,33 +29,10 @@ class Traj2d(Traj):
         super().__init__(ds, trajectory_dim, obs_dim, time_varname)
 
     def timestep(self, average=np.nanmedian):
-        """
-        Calculate the median time step between observations.
-
-        Parameters
-        ----------
-        average : callable, optional
-            Function to calculate the average time step, by default `np.nanmedian`.
-
-        Returns
-        -------
-        pd.Timedelta
-            Median time step between observations.
-        """
         td = self.ds.time.diff(dim=self.obs_dim)
         return pd.Timedelta(average(td))
 
     def time_to_next(self):
-        """
-        Calculate the time difference to the next observation.
-
-        Returns
-        -------
-        xarray.DataArray
-            Time difference to the next observation with the same dimensions as the dataset.
-            Attributes:
-            - units: seconds
-        """
         time = self.ds.time
         lenobs = self.ds.sizes[self.obs_dim]
         td = time.diff(dim=self.obs_dim)
@@ -325,10 +303,6 @@ class Traj2d(Traj):
         raise ValueError('Not implemented for 2D datasets')
 
     def filter(self, method='speed', **kwargs) -> xr.Dataset:
-        """Filter outlier positions from trajectories.
-
-        See :meth:`trajan.traj.Traj.filter` for full documentation.
-        """
         return self.trajectories().map(
             lambda d: ensure_time_dim(
                 d.traj.to_1d().traj.filter(method=method, **kwargs),

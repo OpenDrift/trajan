@@ -8,6 +8,7 @@ https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions
 from abc import abstractmethod
 from datetime import timedelta
 from functools import cache
+import inspect
 import pyproj
 import numpy as np
 import xarray as xr
@@ -20,6 +21,18 @@ from .plot import Plot
 from .animation import Animation
 
 logger = logging.getLogger(__name__)
+
+
+def inherit_docstrings(cls):
+    """Class decorator that copies missing docstrings from parent class methods."""
+    for name, method in inspect.getmembers(cls, predicate=inspect.isfunction):
+        if method.__doc__ is None:
+            for parent in cls.__mro__[1:]:
+                parent_method = parent.__dict__.get(name)
+                if parent_method and getattr(parent_method, '__doc__', None):
+                    method.__doc__ = parent_method.__doc__
+                    break
+    return cls
 
 
 def detect_tx_variable(ds):
@@ -528,6 +541,22 @@ class Traj:
         """
 
     @abstractmethod
+    def timestep(self, average=None) -> pd.Timedelta:
+        """Calculate the time step between observations.
+
+        Parameters
+        ----------
+        average : callable, optional
+            Function to aggregate multiple time steps (e.g. ``np.nanmedian``).
+            Ignored for 1D datasets where the time step is uniform.
+
+        Returns
+        -------
+        pd.Timedelta
+            Time step between observations.
+        """
+
+    @abstractmethod
     def is_2d(self) -> bool:
         """Returns True if dataset is 2D, i.e. time is a 2D variable and not a coordinate variable.
 
@@ -666,12 +695,13 @@ class Traj:
 
     @abstractmethod
     def time_to_next(self) -> pd.Timedelta:
-        """Returns the timedelta between time steps.
+        """Returns the time difference to the next observation.
 
         Returns
         -------
-        DataArray
-            Scalar timedelta for 1D objects (fixed timestep), and DataArray of same size as input for 2D objects
+        xarray.DataArray
+            Scalar timedelta for 1D datasets (fixed timestep), or DataArray of the
+            same shape as the dataset for 2D datasets. Attributes include ``units: seconds``.
 
         See Also
         --------
@@ -681,6 +711,13 @@ class Traj:
 
     @abstractmethod
     def velocity_spectrum(self) -> xr.DataArray:
+        """Calculate the velocity spectrum for a single trajectory.
+
+        Returns
+        -------
+        xarray.DataArray
+            Velocity spectrum with dimensions ('period') and ``units: power`` attribute.
+        """
         pass
 
     # def rotary_spectrum(self):
@@ -1205,8 +1242,17 @@ class Traj:
 
     @abstractmethod
     def to_2d(self, obs_dim='obs') -> xr.Dataset:
-        """
-        Convert dataset into a 2D dataset from.
+        """Convert the dataset to a 2D representation.
+
+        Parameters
+        ----------
+        obs_dim : str, optional
+            Name of the observation dimension in the 2D representation, by default 'obs'.
+
+        Returns
+        -------
+        xarray.Dataset
+            Dataset with a 2D representation of trajectories.
         """
 
     @abstractmethod
