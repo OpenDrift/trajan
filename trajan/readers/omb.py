@@ -488,4 +488,15 @@ def read_omb_csv(path_in: Path|pd.DataFrame,
         "created with trajan.reader.omb from a Rock7 Iridium CSV file of OMB transmissions"
     )
 
+    # Ensure time variables are encoded with a clean epoch and float dtype so
+    # xarray's numpy-based decoder (xarray >= 2025) can round-trip through
+    # netCDF. Using float64 avoids int64 overflow when NaT fill values are
+    # decoded as large integer offsets.
+    for tvar in ("time", "time_waves_imu"):
+        if tvar in xr_result:
+            xr_result[tvar].encoding.update({
+                "units": "seconds since 1970-01-01",
+                "dtype": "float64",
+            })
+
     return xr_result

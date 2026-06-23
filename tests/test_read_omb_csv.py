@@ -20,7 +20,7 @@ def test_read_csv_omb_default_waves(test_data, tmpdir):
 
     ds.to_netcdf(tmpdir / 'test.nc')
 
-    ds2 = xr.open_dataset(tmpdir / 'test.nc')
+    ds2 = xr.open_dataset(tmpdir / 'test.nc', decode_cf=True)
     assert ds2.attrs['time_coverage_start'] == '2022-11-12T00:00:37'
     assert ds2.attrs['time_coverage_end'] == '2022-11-12T02:30:27'
 
