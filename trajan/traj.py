@@ -5,10 +5,13 @@ Presently supporting Cf convention H.4.1
 https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html#_multidimensional_array_representation_of_trajectories.
 """
 
+from __future__ import annotations
+
 from abc import abstractmethod
 from datetime import timedelta
 from functools import cache
 import inspect
+from typing import TYPE_CHECKING
 import pyproj
 import numpy as np
 import xarray as xr
@@ -19,6 +22,9 @@ import cartopy.crs
 
 from .plot import Plot
 from .animation import Animation
+
+if TYPE_CHECKING:
+    from . import Dataset
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +107,7 @@ def grid_area(lons, lats):
 
 
 class Traj:
-    ds: xr.Dataset
+    ds: Dataset
 
     __plot__: Plot
     __animate__: Animation
@@ -468,7 +474,7 @@ class Traj:
         else:
             return None
 
-    def set_crs(self, crs) -> xr.Dataset:
+    def set_crs(self, crs) -> Dataset:
         """
         Returns a new dataset with the CF-supported grid-mapping / projection set to `crs`.
 
@@ -570,7 +576,7 @@ class Traj:
                         creator_email=None,
                         title=None,
                         summary=None,
-                        **kwargs) -> xr.Dataset:
+                        **kwargs) -> Dataset:
         """
         Return a new dataset with CF-standard and common attributes set.
 
@@ -724,7 +730,7 @@ class Traj:
     #     pass
 
     @abstractmethod
-    def distance_to(self, other) -> xr.Dataset:
+    def distance_to(self, other) -> Dataset:
         """
         Distance between trajectories or a single point.
 
@@ -1002,7 +1008,7 @@ class Traj:
                             attrs={"units": "m2"})
 
     @abstractmethod
-    def gridtime(self, times, time_varname=None) -> xr.Dataset:
+    def gridtime(self, times, time_varname=None) -> Dataset:
         """Interpolate dataset to a regular time interval or a different grid.
 
         Parameters
@@ -1022,7 +1028,7 @@ class Traj:
         """
 
     @abstractmethod
-    def sel(self, *args, **kwargs) -> xr.Dataset:
+    def sel(self, *args, **kwargs) -> Dataset:
         """Select on each trajectory. On 1D datasets this is just a shortcut for `Dataset.sel`.
 
         Parameters
@@ -1041,7 +1047,7 @@ class Traj:
         """
 
     @abstractmethod
-    def seltime(self, t0=None, t1=None) -> xr.Dataset:
+    def seltime(self, t0=None, t1=None) -> Dataset:
         """Select observations in time window between `t0` and `t1` (inclusive). For 1D datasets prefer to use `xarray.Dataset.sel`.
 
         Parameters
@@ -1060,7 +1066,7 @@ class Traj:
         """
 
     @abstractmethod
-    def iseltime(self, i) -> xr.Dataset:
+    def iseltime(self, i) -> Dataset:
         """Select observations by index (of non-nan, time, observation) across
         trajectories. For 1D datasets prefer to use `xarray.Dataset.isel`.
 
@@ -1142,7 +1148,7 @@ class Traj:
         """
 
     @abstractmethod
-    def skill(self, expected, method='liu-weissberg', **kwargs) -> xr.Dataset:
+    def skill(self, expected, method='liu-weissberg', **kwargs) -> Dataset:
         """
         Compare the skill score between this trajectory and an `expected` trajectory.
 
@@ -1209,7 +1215,7 @@ class Traj:
         """
 
     @abstractmethod
-    def condense_obs(self) -> xr.Dataset:
+    def condense_obs(self) -> Dataset:
         """
         Move all observations to the first index, so that the observation
         dimension is reduced to a minimum. When creating ragged arrays the
@@ -1234,14 +1240,14 @@ class Traj:
         """
 
     @abstractmethod
-    def to_1d(self) -> xr.Dataset:
+    def to_1d(self) -> Dataset:
         """
         Convert dataset into a 1D dataset from. This is only possible if the
         dataset has a single trajectory.
         """
 
     @abstractmethod
-    def to_2d(self, obs_dim='obs') -> xr.Dataset:
+    def to_2d(self, obs_dim='obs') -> Dataset:
         """Convert the dataset to a 2D representation.
 
         Parameters
@@ -1256,13 +1262,13 @@ class Traj:
         """
 
     @abstractmethod
-    def append(self, da, obs_dims=None) -> xr.Dataset:
+    def append(self, da, obs_dims=None) -> Dataset:
         """
         Append trajectories from other dataset to this.
         """
 
     @abstractmethod
-    def filter(self, method='speed', max_speed=10., nsigma=5.0, side_half_width=2) -> xr.Dataset:
+    def filter(self, method='speed', max_speed=10., nsigma=5.0, side_half_width=2) -> Dataset:
         """Filter outlier positions from trajectories.
 
         Parameters

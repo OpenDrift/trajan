@@ -17,7 +17,14 @@ from . import readers as _
 
 from . import waves as _
 
+from .traj import Traj
+
+# Runtime alias so `trajan.Dataset` is usable as a value (e.g. isinstance checks).
+# The `.pyi` stub declares the typed subclass with `.traj` typed as Traj.
+Dataset = xr.Dataset
+
 logger = logging.getLogger(__name__)
+
 
 __version__ = importlib.metadata.version("trajan")
 
