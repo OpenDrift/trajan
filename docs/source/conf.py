@@ -41,6 +41,8 @@ sphinx_gallery_conf = {
      'thumbnail_size': (300, 300),
      'junit': '../../test-results/sphinx-gallery/junit.xml',
      'reset_modules': ('matplotlib'),
+     'matplotlib_animations': True,
+     'savefig_kwargs': {'bbox_inches': 'tight'},
 }
 
 extensions = [
