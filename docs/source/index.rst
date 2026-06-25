@@ -5,7 +5,7 @@ TrajAn is a Python package with functionality to handle trajectory datasets foll
 
 Trajectory datasets contain position time series from e.g. drifting buoys, or output from lagrangian models.
 
-The source code is available on https://github.com/OpenDrift/trajan
+The source code is available on GitHub: https://github.com/OpenDrift/trajan
 
 Installation
 ------------
@@ -55,19 +55,20 @@ Usage
 Trajectory datasets from different models and observations tend to have many small differences. TrajAn expects the dataset to be `CF-compliant <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html#trajectory-data>`_. However, the standard does leave some room for interpretation.
 
 Generally, TrajAn supports two types of data layout:
-  1) trajectories sampled at different times (unstructured or irregular grid), almost every dataset from real observations.
-  2) trajectories sampled at uniform (or regular) grid, typical the output from a model.
+  1) Ragged: trajectories sampled at different times (unstructured or irregular grid), almost every dataset from real observations.
+  2) Orthogonal: trajectories sampled at uniform (or regular) grid, typical the output from a model.
 
-We refer to the first type as _2D_ since time is a function of trajectory and observation, while the second type is _1D_ and time is only a function of observation.
-__TrajAn__ will detect which type of dataset you have and you will have access to the appropriate methods for the type data layout.
+For Ragged datasets is time function of trajectory and observation, while for Orthognal datasets time is only a function of observation.
 
-While the first type (_2D_) is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a _2D_ dataset to _1D_ by using :meth:`trajan.traj2d.Traj2d.gridtime`.
+TrajAn will detect which type of dataset you have and you will have access to the appropriate methods for the type data layout.
 
-Methods applicable to both types of datasets can be found in: :mod:`trajan.traj`, methods for _1D_ datasets: :mod:`trajan.traj.traj1d`, and _2D_: :mod:`trajan.traj.traj2d`. All methods are forwarded to the accessor, so you call the methods on `Dataset.traj`:
+While the first type (Ragged) is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a Ragged dataset to Orthogonal by using :meth:`trajan.trajRagged.TrajRagged.gridtime`.
+
+Methods applicable to both types of datasets can be found in: :mod:`trajan.traj`, methods for Orthogonal datasets: :mod:`trajan.traj.trajOrthogonal`, and Ragged: :mod:`trajan.traj.trajRagged`. All methods are forwarded to the accessor, so you call the methods on `Dataset.traj`:
 
 .. code-block:: python
 
-   ds = ds.traj.gridtime('1H')   # grid dataset to every hour (a 2D method)
+   ds = ds.traj.gridtime('1H')   # grid dataset to every hour
    ds.traj.plot()                # plot dataset
 
 

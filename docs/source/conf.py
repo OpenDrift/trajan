@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import os, sys
 sys.path.insert(0, os.path.abspath('../..'))
 
@@ -37,6 +40,7 @@ sphinx_gallery_conf = {
      'abort_on_example_error': False,
      'thumbnail_size': (300, 300),
      'junit': '../../test-results/sphinx-gallery/junit.xml',
+     'reset_modules': ('matplotlib'),
 }
 
 extensions = [
