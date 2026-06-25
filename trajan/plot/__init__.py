@@ -104,9 +104,6 @@ class Plot:
             else:
                 fig = plt.figure(figsize=(figsize, figsize * aspect_ratio))
 
-            # fig.canvas.draw()  # maybe needed?
-            plt.tight_layout()
-
         else:
             fig = plt.gcf()
             if len(fig.axes) > 0:
@@ -132,6 +129,8 @@ class Plot:
                      fast=(land == 'mask' or land == 'fast'),
                      lscale=land,
                      globe=crs.globe)
+
+        fig.tight_layout()
 
         return ax
 
@@ -167,7 +166,8 @@ class Plot:
         #       using self.ds.traj.tlon/tlat
         x = self.ds.traj.tx.values.T
         y = self.ds.traj.ty.values.T
-        dcrs = self.ds.traj.ccrs
+        #dcrs = self.ds.traj.ccrs
+        dcrs = self.gcrs
 
         cartesian = self.__cartesian__
 
