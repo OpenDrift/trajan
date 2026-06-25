@@ -20,7 +20,7 @@ def __require_obs_dim__(f):
 
 
 @inherit_docstrings
-class Traj2d(Traj):
+class TrajRagged(Traj):
     """
     A unstructured dataset, where each trajectory may have observations at different times. Typically from a collection of drifters.
     """
@@ -40,10 +40,10 @@ class Traj2d(Traj):
         td.coords[self.obs_dim] = time[self.obs_dim]  # Same time index as initial
         return td.astype("timedelta64[s]").rename("time_to_next").assign_attrs({"units": "seconds"})
 
-    def is_1d(self):
+    def is_orthogonal(self):
         return False
 
-    def is_2d(self):
+    def is_ragged(self):
         return True
 
     def insert_nan_where(self, condition):
@@ -221,12 +221,12 @@ class Traj2d(Traj):
 
     def sel(self, *args, **kwargs):
         return self.trajectories().map(
-            lambda d: ensure_time_dim(d.traj.to_1d().traj.sel(*args, **kwargs), self.time_varname).traj.to_2d(self.obs_dim))
+            lambda d: ensure_time_dim(d.traj.to_orthogonal().traj.sel(*args, **kwargs), self.time_varname).traj.to_ragged(self.obs_dim))
 
     def seltime(self, t0=None, t1=None):
         # Using TrajAn sel method that allows NaN
         return self.trajectories().map(
-            lambda d: ensure_time_dim(d.traj.to_1d().traj.seltime(t0, t1), self.time_varname).traj.to_2d(self.obs_dim))
+            lambda d: ensure_time_dim(d.traj.to_orthogonal().traj.seltime(t0, t1), self.time_varname).traj.to_ragged(self.obs_dim))
 
     @__require_obs_dim__
     def iseltime(self, i):
@@ -244,10 +244,10 @@ class Traj2d(Traj):
 
         return self.trajectories().map(select)
 
-    def to_1d(self):
+    def to_orthogonal(self):
         if self.ds.sizes[self.trajectory_dim] > 1:
             raise ValueError(
-                "Can not convert a 2D dataset with multiple trajectories to 1D."
+                "Can not convert a Ragged dataset with multiple trajectories to Orthogonal."
             )
         else:
             ds = self.ds.copy()
@@ -255,7 +255,7 @@ class Traj2d(Traj):
             # Do not remove NaN's since these now have meaning
             #ds = ds.dropna(self.obs_dim, how='all')
 
-            # For 1D objects, we rename obs-dimension to name of time variable
+            # For Orthogonal datasets, we rename obs-dimension to name of time variable
             # so that time becomes a coordinate variable,
             # i.e. typically:   time(traj, obs) -> time(time)
             ds = ds.assign_coords({self.obs_dim: ds[self.time_varname]})
@@ -267,7 +267,7 @@ class Traj2d(Traj):
             #_, ui = np.unique(ds[self.time_varname], return_index=True)
             #ds = ds.isel({self.time_varname: ui})
 
-            # Keep trajectory dimension, although always length 1 for 1D objects
+            # Keep trajectory dimension, although always length 1 for single trajectories
             ds = ds.assign_coords({self.trajectory_dim: ds[self.trajectory_dim]})
 
             return ds
@@ -292,7 +292,7 @@ class Traj2d(Traj):
             Dataset interpolated to the specified time grid.
         """
         gridded = self.ds.groupby(self.trajectory_dim).map(
-                lambda d: ensure_time_dim(d.traj.to_1d().traj.gridtime(*args, **kwargs), self.time_varname))
+                lambda d: ensure_time_dim(d.traj.to_orthogonal().traj.gridtime(*args, **kwargs), self.time_varname))
 
         # TODO: trajectory index should be preserved so that this should not be necessary
         gridded = gridded.assign_coords({self.trajectory_dim: self.ds[self.trajectory_dim]})
@@ -300,12 +300,12 @@ class Traj2d(Traj):
         return gridded
 
     def skill(self):
-        raise ValueError('Not implemented for 2D datasets')
+        raise ValueError('Not implemented for Ragged datasets')
 
     def filter(self, method='speed', **kwargs) -> xr.Dataset:
         return self.trajectories().map(
             lambda d: ensure_time_dim(
-                d.traj.to_1d().traj.filter(method=method, **kwargs),
+                d.traj.to_orthogonal().traj.filter(method=method, **kwargs),
                 self.time_varname
-            ).traj.to_2d(self.obs_dim)
+            ).traj.to_ragged(self.obs_dim)
         )

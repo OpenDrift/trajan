@@ -57,7 +57,7 @@ def test_length(barents):
 
     np.testing.assert_allclose(l, lg, atol=20000)
 
-    bb = barents.isel(trajectory=0).traj.iseltime([0, -1]).traj.to_1d()
+    bb = barents.isel(trajectory=0).traj.iseltime([0, -1]).traj.to_orthogonal()
     np.testing.assert_almost_equal(bb.traj.distance_to_next().isel(time=0),
                                    bb.traj.length())
 
@@ -75,7 +75,7 @@ def test_distance_single_point(barents):
     print(d)
 
 
-def test_interpolate_1d_barents(barents):
+def test_interpolate_orthogonal_barents(barents):
     times = pd.date_range("2022-10-01", "2022-11-01", freq='6h')
 
     barents_gridded = barents.traj.gridtime(times)
@@ -157,7 +157,7 @@ def test_speed(barents, plot):
     else:
         plt.close()
 
-def test_speed_2d(barents):
+def test_speed_ragged(barents):
     s = barents.traj.speed()
     print(s)
 

@@ -24,13 +24,13 @@ assert 'obs' in ds.dims
 ds = ds.rename(drifter_names='trajectory').traj.condense_obs()
 print(ds)
 
-d1 = ds.isel(trajectory=0).traj.to_1d().traj.to_2d()
-d2 = ds.isel(trajectory=1).traj.to_1d().traj.to_2d()
+d1 = ds.isel(trajectory=0).traj.to_orthogonal().traj.to_ragged()
+d2 = ds.isel(trajectory=1).traj.to_orthogonal().traj.to_ragged()
 print("d1=", d1)
 print("d2=", d2)
 
 #%%
-# Concatenate two 2D datasets (with observation dimension).
+# Concatenate two Ragged datasets (with observation dimension).
 
 dc = xr.concat((d1, d2), dim='trajectory', join='outer')
 dc = dc.traj.condense_obs()
@@ -40,17 +40,17 @@ assert np.all(ds.lat.values[~np.isnan(ds.lat.values)] ==
               dc.lat.values[~np.isnan(dc.lat.values)])
 
 #%%
-# Concatenating two 1D datasets, with observations at different times.
+# Concatenating two Orthogonal datasets, with observations at different times.
 
-d1 = d1.traj.to_1d(
+d1 = d1.traj.to_orthogonal(
 )  # trivial conversion since `d1` only contains a single trajectory. No need for gridtime.
-d2 = d2.traj.to_1d()  # Also trivial for d2.
+d2 = d2.traj.to_orthogonal()  # Also trivial for d2.
 print(d1)
 
 assert 'obs' not in d1.dims
 
 #%%
-# Concatenating two 1D datasets will cause a lot of NaNs to be inserted.
+# Concatenating two Orthogonal datasets will cause a lot of NaNs to be inserted.
 d1 = d1.drop_duplicates('time')
 d2 = d2.drop_duplicates('time')
 dc = xr.concat((d1, d2), dim='trajectory', join='outer')
@@ -60,8 +60,8 @@ assert np.all(ds.lat.values[~np.isnan(ds.lat.values)] ==
               dc.lat.values[~np.isnan(dc.lat.values)])
 
 #%%
-# Converting to 2D and condensing the dataset will give a cleaner result.
-dc = xr.concat((d1.traj.to_2d(), d2.traj.to_2d()),
+# Converting to Ragged and condensing the dataset will give a cleaner result.
+dc = xr.concat((d1.traj.to_ragged(), d2.traj.to_ragged()),
                dim='trajectory', join='outer').traj.condense_obs()
 print(dc)
 assert dc.sizes['obs'] == ds.sizes['obs']

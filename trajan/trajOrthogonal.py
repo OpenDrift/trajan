@@ -44,7 +44,7 @@ def _nsigma_sliding_filter(arr, nsigma=5.0, side_half_width=2):
 
 
 @inherit_docstrings
-class Traj1d(Traj):
+class TrajOrthogonal(Traj):
     """
     A structured dataset, where each trajectory is always given at the same times. Typically the output from a model or from a gridded dataset.
     """
@@ -52,16 +52,16 @@ class Traj1d(Traj):
     def __init__(self, ds, trajectory_dim, obs_dim, time_varname):
         super().__init__(ds, trajectory_dim, obs_dim, time_varname)
 
-    def timestep(self):
+    def timestep(self):  # TODO: assumes constant timestep, but could be variable
         return pd.Timedelta((self.ds.time[1] - self.ds.time[0]).values)
 
-    def is_1d(self):
+    def is_orthogonal(self):
         return True
 
-    def is_2d(self):
+    def is_ragged(self):
         return False
 
-    def to_2d(self, obs_dim='obs'):
+    def to_ragged(self, obs_dim='obs'):
         ds = self.ds.copy()
         time = ds[self.time_varname].rename({self.time_varname: obs_dim}).expand_dims(
             dim={self.trajectory_dim: ds.sizes[self.trajectory_dim]}
@@ -71,7 +71,7 @@ class Traj1d(Traj):
         ds[obs_dim] = xr.DataArray(np.arange(0, ds.sizes[obs_dim]), dims=[obs_dim])
         return ds
 
-    def to_1d(self):
+    def to_orthogonal(self):
         return self.ds.copy()
 
     def time_to_next(self):

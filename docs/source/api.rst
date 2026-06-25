@@ -133,10 +133,10 @@ Methods
     Dataset.traj.append
     Dataset.traj.crop
     Dataset.traj.contained_in
-    Dataset.traj.is_1d
-    Dataset.traj.is_2d
-    Dataset.traj.to_1d
-    Dataset.traj.to_2d
+    Dataset.traj.is_orthogonal
+    Dataset.traj.is_ragged
+    Dataset.traj.to_orthogonal
+    Dataset.traj.to_ragged
     Dataset.traj.trajectories
     Dataset.traj.condense_obs
     Dataset.traj.make_grid

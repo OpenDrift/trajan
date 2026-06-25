@@ -18,7 +18,7 @@ path_to_test_data = Path.cwd().parent / "tests" / "test_data" / "xr_spotter_bulk
 
 xr_data = xr.load_dataset(path_to_test_data)
 
-# this is a ragged contiguous dataset; the data variables are 1D arrays
+# this is a contiguous ragged dataset; the data variables are 1D arrays
 xr_data
 
 # %%
@@ -29,17 +29,17 @@ plt.show()
 
 # %%
 
-# it is possible to get a 2d-array dataset version using trajan:
+# Convert ContiguousRaggedArray to RaggedArray (non-contiguous) dataset:
 
 # compare:
 print(f"{xr_data = }")
 
 # with:
-xr_data_as_2darray = xr_data.traj.to_2d()
-print(f"{xr_data_as_2darray = }")
+xr_data_as_ragged = xr_data.traj.to_ragged()
+print(f"{xr_data_as_ragged = }")
 
-# naturally, the 2darray version can be dumped to disk if you want:
-xr_data_as_2darray.to_netcdf("./xr_spotter_bulk_test_data_as_2darray.nc")
+# Dumping the Ragged dataset to disk:
+xr_data_as_ragged.to_netcdf("./xr_spotter_bulk_test_data_as_ragged.nc")
 
 # %%
 

@@ -99,7 +99,7 @@ def test_skillscores_cumulative():
     assert skill_div[-1] < skill_div[-2], "Score should decrease for accelerating divergence"
 
 
-def test_skillscores_cumulative_2d():
+def test_skillscores_cumulative_ragged():
     lon_obs = np.array([[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5]], dtype=float).T
     lat_obs = np.zeros_like(lon_obs)
     lon_model = lon_obs.copy()
@@ -143,7 +143,7 @@ def test_skillscores_cumulative_xarray(barents):
         skill_scalar.values.squeeze(), 5)
 
 
-def test_skillscores_2d():
+def test_skillscores_several():
     lon_obs = np.array([[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5]]).T
     lat_obs = np.array([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]).T
     lon_model = lon_obs
@@ -160,7 +160,7 @@ def test_skillscores_2d():
     assert np.testing.assert_array_almost_equal(
         da, np.array([[111319.5, 111319.5, 111319.5, 111319.5, 111319.5],
                       [111319.5, 111319.5, 111319.5, 111319.5, 111319.5]]).T, 1) is None
-    # DARPA skillscore does not yet support 2D arrays, TBD
+    # DARPA skillscore does not yet support Ragged arrays, TBD
     # Test Liu-Weissberg skillscore
     skill_lw = ta.skill.liu_weissberg(lon_obs, lat_obs, lon_model, lat_model)
     assert skill_lw.shape == (2,)
@@ -203,7 +203,7 @@ def test_opendrift(plot, tmpdir):
 
     dds = ta.from_dataframe(pd.DataFrame(drifter), name='label')
     dds = dds.drop_vars(['linewidth', 'color'])
-    dds = dds.traj.gridtime(dds.time.isel(trajectory=0).values) # convert to 1d dataset
+    dds = dds.traj.gridtime(dds.time.isel(trajectory=0).values) # convert to Orthogonal dataset
     print(dds)
 
     o = OceanDrift(loglevel=50)

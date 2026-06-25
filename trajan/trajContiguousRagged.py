@@ -9,8 +9,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 @inherit_docstrings
-class ContiguousRagged(Traj):
-    """An unstructured dataset, where each trajectory may have observations at different times, and all the data for the different trajectories are stored in single arrays with one dimension, contiguously, one trajectory after the other. Typically from a collection of drifters. This class convert continous ragged datasets into 2d datasets, so that the Traj2d methods can be leveraged."""
+class TrajContiguousRagged(Traj):
+    """An unstructured dataset, where each trajectory may have observations at different times, and all the data for the different trajectories are stored in single arrays with one dimension, contiguously, one trajectory after the other. Typically from a collection of drifters. This class convert ContinousRagged datasets into Ragged datasets, so that the TrajRagged methods can be leveraged."""
 
     rowvar: str  # TODO: Should have a more precise name than rowvar
 
@@ -18,7 +18,7 @@ class ContiguousRagged(Traj):
         self.rowvar = rowsizevar
         super().__init__(ds, trajectory_dim, obs_dim, time_varname)
 
-    def to_2d(self, obs_dim='obs'):
+    def to_ragged(self, obs_dim='obs'):
         global_attrs = self.ds.attrs
 
         nbr_trajectories = len(self.ds[self.trajectory_dim])
@@ -49,7 +49,7 @@ class ContiguousRagged(Traj):
         # it seems that we need to build the "backbone" of the Dataset independently first
         # (I have tried to put everything in a dict spec and build the Dataset in one go as it felt more elegant, but it did not work)
 
-        ds_converted_to_traj2d = xr.Dataset({
+        ds_converted_to_trajRagged = xr.Dataset({
             # meta vars
             'trajectory':
             xr.DataArray(
@@ -116,28 +116,28 @@ class ContiguousRagged(Traj):
             if crrt_data_var == "latitude":
                 crrt_data_var = "lat"
 
-            ds_converted_to_traj2d[crrt_data_var] = \
+            ds_converted_to_trajRagged[crrt_data_var] = \
                 xr.DataArray(dims=["trajectory", obs_dim],
                              data=crrt_var,
                              attrs=attrs)
 
         # copy initial global attributes
-        ds_converted_to_traj2d = ds_converted_to_traj2d.assign_attrs(
+        ds_converted_to_trajRagged = ds_converted_to_trajRagged.assign_attrs(
             global_attrs)
-        ds_converted_to_traj2d = ds_converted_to_traj2d.assign_attrs(
+        ds_converted_to_trajRagged = ds_converted_to_trajRagged.assign_attrs(
             trajan_modified=
-            "this was initially a contiguous ragged Dataset, which was converted to a Traj2d dataset by trajan"
+            "this was initially a contiguous ragged Dataset, which was converted to a TrajRagged dataset by trajan"
         )
 
-        return ds_converted_to_traj2d
+        return ds_converted_to_trajRagged
 
     @property
     def plot(self) -> Plot:
-        return self.to_2d().traj.plot
+        return self.to_ragged().traj.plot
 
     def timestep(self, average=np.median):
-        return self.to_2d().traj.timestep(average)
+        return self.to_ragged().traj.timestep(average)
 
     def gridtime(self, times, time_varname=None, round=True):
-        return self.to_2d().traj.gridtime(times, time_varname, round)
+        return self.to_ragged().traj.gridtime(times, time_varname, round)
 

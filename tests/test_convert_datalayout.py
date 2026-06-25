@@ -7,35 +7,35 @@ import pandas as pd
 from trajan.readers.omb import read_omb_csv
 
 
-def test_to2d(barents):
+def test_to_ragged(barents):
     # print(barents)
     gr = barents.traj.gridtime('1h')
     # print(gr)
 
-    assert gr.traj.is_1d()
+    assert gr.traj.is_orthogonal()
 
-    b2d = gr.traj.to_2d()
-    assert b2d.traj.is_2d()
+    b_ragged = gr.traj.to_ragged()
+    assert b_ragged.traj.is_ragged()
 
 
-def test_to1d(barents):
+def test_to_orthogonal(barents):
     # print(barents)
     gr = barents.traj.gridtime('1h')
-    assert gr.traj.is_1d()
+    assert gr.traj.is_orthogonal()
 
-    gr = gr.traj.to_1d()
-    assert gr.traj.is_1d()
+    gr = gr.traj.to_orthogonal()
+    assert gr.traj.is_orthogonal()
 
     with pytest.raises(ValueError):
-        barents.traj.to_1d()
+        barents.traj.to_orthogonal()
 
-    print('converting to 1d')
-    gr = barents.isel(trajectory=0).traj.to_1d()
-    assert gr.traj.is_1d()
+    print('converting to orthogonal')
+    gr = barents.isel(trajectory=0).traj.to_orthogonal()
+    assert gr.traj.is_orthogonal()
 
 
 def test_trajectories_group_barents(barents):
-    assert barents.traj.is_2d()
+    assert barents.traj.is_ragged()
     # print(barents)
 
     def a(t):
@@ -49,7 +49,7 @@ def test_trajectories_group_barents(barents):
 def test_trajectories_group_omb(test_data):
     path_to_test_data = test_data / 'csv' / 'omb1.csv'
     ds = read_omb_csv(path_to_test_data)
-    assert ds.traj.is_2d()
+    assert ds.traj.is_ragged()
 
     print(ds.lon.values)
 

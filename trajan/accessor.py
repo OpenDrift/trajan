@@ -8,9 +8,9 @@ xr.set_options(keep_attrs=True)
 logger = logging.getLogger(__name__)
 
 from .traj import Traj, detect_tx_variable
-from .traj1d import Traj1d
-from .traj2d import Traj2d
-from .ragged import ContiguousRagged
+from .trajOrthogonal import TrajOrthogonal
+from .trajRagged import TrajRagged
+from .trajContiguousRagged import TrajContiguousRagged
 
 
 def detect_time_variable(ds, obs_dim):
@@ -76,13 +76,13 @@ class TrajA(Traj):
 
         tx = detect_tx_variable(ds)
 
-        # if we have a 1D dims, this is most likely some contiguous data
-        # there may be a few exceptions though, so be ready to default to the classical 2D parser below
+        # if we have a 1D arrays, this is most likely some contiguous data
+        # there may be a few exceptions though, so be ready to default to the classical Ragged parser below
         if len(tx.dims) == 1:
-            # only support ContiguousRagged for now
-            ocls = ContiguousRagged
+            # only support TrajContiguousRagged for now
+            ocls = TrajContiguousRagged
 
-            # we have a dataset where data are stored in 1D array
+            # we have a dataset where data are stored in 1D arrays
             # NOTE: this is probably not standard; something to point to the CF conventions?
             # NOTE: for now, there is no discovery of the "index" dim, this is hardcorded; any way to do better?
             if "index" in tx.dims:
@@ -123,10 +123,10 @@ class TrajA(Traj):
                 return ocls(ds, trajectory_dim, obs_dim, timecoord, rowsizevar)
 
             else:
-                logging.debug(f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual; try to parse with Traj1d or Traj2d")
+                logging.debug(f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual; try to parse with TrajOrthogonal or TrajRagged")
 
-        # we have a ds where 2D arrays are used to store data, this is either Traj1d or Traj2d
-        # there may also be some slightly unusual cases where these Traj1d and Traj2d classes will be used on data with 1D arrays
+        # we have a ds where 2D arrays are used to store data, this is either TrajOrthogonal or TrajRagged
+        # there may also be some slightly unusual cases where these TrajOrthogonal and TrajRagged classes will be used on data with 1D arrays
         if 'obs' in tx.dims:
             obs_dim = 'obs'
             time_varname = detect_time_variable(ds, obs_dim)
@@ -157,15 +157,15 @@ class TrajA(Traj):
             f"Detected obs-dim: {obs_dim}, detected time-variable: {time_varname}.")
 
         if obs_dim is None:
-            ocls = Traj1d
+            ocls = TrajOrthogonal
 
         elif len(ds[time_varname].shape) <= 1:
-            logger.debug('Detected structured (1D) trajectory dataset')
-            ocls = Traj1d
+            logger.debug('Detected Orthogonal trajectory dataset')
+            ocls = TrajOrthogonal
 
         elif len(ds[time_varname].shape) == 2:
-            logger.debug('Detected un-structured (2D) trajectory dataset')
-            ocls = Traj2d
+            logger.debug('Detected Ragged trajectory dataset')
+            ocls = TrajRagged
 
         else:
             raise ValueError(
