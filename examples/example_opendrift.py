@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 import xarray as xr
 import trajan as ta
 
+import logging
+logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
+
 #%%
 # Demonstrating how a trajectory dataset (from OpenDrift)
 # can be analysed and plotted with Trajan
