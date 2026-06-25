@@ -11,7 +11,7 @@ def test_interpret_sfy(test_data):
     assert ds.traj.obs_dim == 'package'
     assert ds.traj.time_varname == 'position_time'
 
-    assert ds.traj.is_2d()
+    assert ds.traj.is_ragged()
 
 
 def test_plot_sfy(test_data, plot):
@@ -31,7 +31,7 @@ def test_gridtime(test_data):
     dg = ds.traj.gridtime('1h')
     print(dg)
 
-@pytest.mark.xfail(reason='timestep methods seems to fail for Traj2d datasets')
+@pytest.mark.xfail(reason='timestep methods seems to fail for TrajRagged datasets')
 def test_timestep(test_data):
     ds = xr.open_dataset(test_data / 'bug32.nc')
     print(ds.traj.timestep())

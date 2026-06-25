@@ -538,8 +538,8 @@ class Traj:
         return ds
 
     @abstractmethod
-    def is_1d(self) -> bool:
-        """Returns True if dataset is 1D, i.e. time is a 1D coordinate variable.
+    def is_orthogonal(self) -> bool:
+        """Returns True if dataset is orthogonal, i.e. time is a 1D coordinate variable.
 
         Returns
         -------
@@ -554,7 +554,7 @@ class Traj:
         ----------
         average : callable, optional
             Function to aggregate multiple time steps (e.g. ``np.nanmedian``).
-            Ignored for 1D datasets where the time step is uniform.
+            Ignored for Orthogonal datasets where the time step is uniform (TODO: handle variable timestep also for Orthogonal datasets).
 
         Returns
         -------
@@ -563,8 +563,8 @@ class Traj:
         """
 
     @abstractmethod
-    def is_2d(self) -> bool:
-        """Returns True if dataset is 2D, i.e. time is a 2D variable and not a coordinate variable.
+    def is_ragged(self) -> bool:
+        """Returns True if dataset is Ragged, i.e. time is a 2D variable and not a coordinate variable.
 
         Returns
         -------
@@ -706,8 +706,8 @@ class Traj:
         Returns
         -------
         xarray.DataArray
-            Scalar timedelta for 1D datasets (fixed timestep), or DataArray of the
-            same shape as the dataset for 2D datasets. Attributes include ``units: seconds``.
+            Scalar timedelta for Orthogonal datasets with fixed timestep, or DataArray of the
+            same shape as the dataset for Ragged datasets. Attributes include ``units: seconds``.
 
         See Also
         --------
@@ -1024,12 +1024,12 @@ class Traj:
         Returns
         -------
         Dataset
-            A new dataset interpolated to the target times. The dataset will be 1D (i.e. gridded) and the time dimension will be named `time`.
+            A new dataset interpolated to the target times. The dataset will be Orthogonal (i.e. gridded) and the time dimension will be named `time`.
         """
 
     @abstractmethod
     def sel(self, *args, **kwargs) -> Dataset:
-        """Select on each trajectory. On 1D datasets this is just a shortcut for `Dataset.sel`.
+        """Select on each trajectory. On Orthogonal datasets this is just a shortcut for `Dataset.sel`.
 
         Parameters
         ----------
@@ -1048,7 +1048,7 @@ class Traj:
 
     @abstractmethod
     def seltime(self, t0=None, t1=None) -> Dataset:
-        """Select observations in time window between `t0` and `t1` (inclusive). For 1D datasets prefer to use `xarray.Dataset.sel`.
+        """Select observations in time window between `t0` and `t1` (inclusive). For Orthogonal datasets prefer to use `xarray.Dataset.sel`.
 
         Parameters
         ----------
@@ -1068,7 +1068,7 @@ class Traj:
     @abstractmethod
     def iseltime(self, i) -> Dataset:
         """Select observations by index (of non-nan, time, observation) across
-        trajectories. For 1D datasets prefer to use `xarray.Dataset.isel`.
+        trajectories. For Orthogonal datasets prefer to use `xarray.Dataset.isel`.
 
         Parameters
         ----------
@@ -1240,25 +1240,25 @@ class Traj:
         """
 
     @abstractmethod
-    def to_1d(self) -> Dataset:
+    def to_orthogonal(self) -> Dataset:
         """
-        Convert dataset into a 1D dataset from. This is only possible if the
+        Convert dataset into Orthogonal dataset from. This is only possible if the
         dataset has a single trajectory.
         """
 
     @abstractmethod
-    def to_2d(self, obs_dim='obs') -> Dataset:
-        """Convert the dataset to a 2D representation.
+    def to_ragged(self, obs_dim='obs') -> Dataset:
+        """Convert the dataset to a Ragged representation.
 
         Parameters
         ----------
         obs_dim : str, optional
-            Name of the observation dimension in the 2D representation, by default 'obs'.
+            Name of the observation dimension in the Ragged representation, by default 'obs'.
 
         Returns
         -------
         xarray.Dataset
-            Dataset with a 2D representation of trajectories.
+            Dataset with a Ragged representation of trajectories.
         """
 
     @abstractmethod

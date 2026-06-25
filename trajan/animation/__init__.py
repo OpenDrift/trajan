@@ -236,7 +236,7 @@ class Animation:
         ax = self.ds.traj.plot.set_up_map(map_kwargs)
         fig = ax.get_figure()
 
-        if self.ds.traj.is_1d():
+        if self.ds.traj.is_orthogonal():
             ds = self.ds
             logger.debug('Dataset is already regularly gridded, skipping gridtime')
         else:
