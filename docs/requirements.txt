@@ -5,3 +5,4 @@ sphinx-autosummary-accessors
 matplotlib
 numpydoc
 pydata-sphinx-theme
+cartopy>=0.20
