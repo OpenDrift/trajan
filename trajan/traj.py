@@ -1220,12 +1220,14 @@ class Traj:
         Original:
 
         .............. Observations --->
+
         trajectory 1: | t01 | t02 | t03 | t04 | t05 | nan | nan | nan | nan |
         trajectory 2: | nan | nan | nan | nan | nan | t11 | t12 | t13 | t14 |
 
         After condensing:
 
         .............. Observations --->
+
         trajectory 1: | t01 | t02 | t03 | t04 | t05 |
         trajectory 2: | t11 | t12 | t13 | t14 | nan |
 
