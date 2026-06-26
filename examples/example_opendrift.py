@@ -14,11 +14,6 @@ import trajan as ta
 #%%
 # Importing a trajectory dataset from a simulation with OpenDrift.
 ds = xr.open_dataset('openoil.nc')
-print(ds.traj.tlat, 'TLAT')
-print(ds.traj.ty, 'TY')
-stop
-
-stop
 
 #%%
 # Displaying some basic information about this dataset
