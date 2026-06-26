@@ -166,8 +166,8 @@ class Plot:
         #       using self.ds.traj.tlon/tlat
         x = self.ds.traj.tx.values.T
         y = self.ds.traj.ty.values.T
-        #dcrs = self.ds.traj.ccrs
-        dcrs = self.gcrs
+        dcrs = self.ds.traj.ccrs
+        #dcrs = self.gcrs
 
         cartesian = self.__cartesian__
 
