@@ -119,6 +119,7 @@ class Traj:
         self.__plot__ = None
         self.__animate__ = None
         self.__gcrs__ = pyproj.CRS.from_epsg(4326)
+        #self.__gcrs__ = pyproj.CRS.from_epsg(32662)
         self.trajectory_dim = trajectory_dim  # name of trajectory dimension
         self.obs_dim = obs_dim  # dimension along which time increases
         self.time_varname = time_varname
@@ -226,13 +227,10 @@ class Traj:
         --------
         tx, tlat
         """
-        if self.crs.is_geographic:
+        if self.crs is None or self.crs.is_geographic:
             return self.tx
         else:
-            if self.crs is None:
-                return self.tx
-            else:
-                return self.transform(self.__gcrs__).traj.tlon
+            return self.transform(self.__gcrs__).traj.tlon
 
     @property
     def tlat(self) -> xr.DataArray:
@@ -243,13 +241,10 @@ class Traj:
         --------
         ty, tlon
         """
-        if self.crs.is_geographic:
+        if self.crs is None or self.crs.is_geographic:
             return self.ty
         else:
-            if self.crs is None:
-                return self.ty
-            else:
-                return self.transform(self.__gcrs__).traj.tlat
+            return self.transform(self.__gcrs__).traj.tlat
 
     @cache
     def transform(self, to_crs):
