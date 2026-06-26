@@ -7,9 +7,6 @@ import matplotlib.pyplot as plt
 import xarray as xr
 import trajan as ta
 
-import shapely
-print(shapely.geos_version)
-
 #%%
 # Demonstrating how a trajectory dataset (from OpenDrift)
 # can be analysed and plotted with Trajan
