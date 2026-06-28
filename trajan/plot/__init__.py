@@ -167,8 +167,6 @@ class Plot:
         x = self.ds.traj.tx.values.T
         y = self.ds.traj.ty.values.T
         dcrs = self.ds.traj.ccrs
-        if dcrs is not None and dcrs.is_geographic:
-            dcrs = self.gcrs  # avoid axis order issue with EPSG:4326
 
         cartesian = self.__cartesian__
 
