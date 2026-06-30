@@ -144,7 +144,8 @@ class TrajRagged(Traj):
             "this was initially a contiguous ragged Dataset, which was converted to a TrajRagged dataset by trajan"
         )
 
-        return TrajRagged(ds_converted_to_trajRagged, trajectory_dim, obs_dim, time_varname)
+        return TrajRagged(ds_converted_to_trajRagged, trajectory_dim, obs_dim,
+                          time_varname)
 
     def timestep(self, average=np.nanmedian):
         td = self.ds.time.diff(dim=self.obs_dim)
@@ -410,6 +411,12 @@ class TrajRagged(Traj):
                 {self.trajectory_dim: ds[self.trajectory_dim]})
 
             return ds
+
+    def to_ragged(self, obs_dim='obs'):
+        if self.obs_dim != obs_dim:
+            return self.ds.rename({self.obs_dim: obs_dim}).copy()
+        else:
+            return self.ds.copy()
 
     @__require_obs_dim__
     def gridtime(self, *args, **kwargs):

@@ -24,7 +24,7 @@ from ..plot import Plot
 from ..animation import Animation
 
 if TYPE_CHECKING:
-    from . import Dataset
+    from .. import Dataset
 
 logger = logging.getLogger(__name__)
 
@@ -114,15 +114,15 @@ class Traj:
 
     __gcrs__: pyproj.CRS
 
-    def __init__(self, ds, trajectory_dim, obs_dim, time_varname):
+    def __init__(self, ds: Dataset, trajectory_dim, obs_dim, time_varname):
         self.ds = ds
         self.__plot__ = None
         self.__animate__ = None
         self.__gcrs__ = pyproj.CRS.from_epsg(4326)
         #self.__gcrs__ = pyproj.CRS.from_epsg(32662)
-        self.trajectory_dim = trajectory_dim  # name of trajectory dimension
-        self.obs_dim = obs_dim  # dimension along which time increases
-        self.time_varname = time_varname
+        self.trajectory_dim: str = trajectory_dim  # name of trajectory dimension
+        self.obs_dim: str = obs_dim  # dimension along which time increases
+        self.time_varname: str = time_varname
 
     def __repr__(self):
         output = '=======================\n'
@@ -814,7 +814,8 @@ class Traj:
         distance = xr.DataArray(distance, coords=lonfrom.coords, dims=lon.dims)
         distance = xr.concat((distance, distance.isel({self.obs_dim: -1})),
                              dim=self.obs_dim)  # repeating last time step to
-        distance = distance.assign_coords({self.obs_dim: self.ds[self.obs_dim]})
+        distance = distance.assign_coords(
+            {self.obs_dim: self.ds[self.obs_dim]})
         return distance
 
     def azimuth_to_next(self):
@@ -1268,7 +1269,11 @@ class Traj:
         """
 
     @abstractmethod
-    def filter(self, method='speed', max_speed=10., nsigma=5.0, side_half_width=2) -> Dataset:
+    def filter(self,
+               method='speed',
+               max_speed=10.,
+               nsigma=5.0,
+               side_half_width=2) -> Dataset:
         """Filter outlier positions from trajectories.
 
         Parameters
@@ -1649,5 +1654,6 @@ class Traj:
 
         """
         bins = np.arange(self.ds.sizes[self.trajectory_dim] + 1) - 1
-        tids = xr.DataArray(dims=(self.trajectory_dim,), data=np.arange(self.ds.sizes[self.trajectory_dim]))
+        tids = xr.DataArray(dims=(self.trajectory_dim, ),
+                            data=np.arange(self.ds.sizes[self.trajectory_dim]))
         return self.ds.groupby_bins(tids, bins)
