@@ -6,11 +6,10 @@ import inspect
 import pytest
 
 from trajan.traj import Traj
-from trajan.trajOrthogonal import TrajOrthogonal
-from trajan.trajRagged import TrajRagged
-from trajan.trajContiguousRagged import TrajContiguousRagged
+from trajan.traj.orthogonal import TrajOrthogonal
+from trajan.traj.ragged import TrajRagged
 
-SUBCLASSES = [TrajOrthogonal, TrajRagged, TrajContiguousRagged]
+SUBCLASSES = [TrajOrthogonal, TrajRagged]
 
 # Methods on Traj that have docstrings (the source of truth)
 BASE_METHODS = {
@@ -46,4 +45,5 @@ def test_all_public_methods_have_docstrings(cls):
             continue
         if not getattr(method, '__doc__', None):
             missing.append(f"{cls.__name__}.{name}")
-    assert not missing, "Missing docstrings:\n" + "\n".join(f"  {m}" for m in missing)
+    assert not missing, "Missing docstrings:\n" + "\n".join(f"  {m}"
+                                                            for m in missing)

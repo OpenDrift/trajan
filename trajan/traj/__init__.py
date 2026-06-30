@@ -20,8 +20,8 @@ import pandas as pd
 import logging
 import cartopy.crs
 
-from .plot import Plot
-from .animation import Animation
+from ..plot import Plot
+from ..animation import Animation
 
 if TYPE_CHECKING:
     from . import Dataset

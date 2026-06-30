@@ -3,8 +3,8 @@ import xarray as xr
 import pandas as pd
 import logging
 import pyproj
-from .traj import Traj, ensure_time_dim, inherit_docstrings
-from . import skill
+from . import Traj, inherit_docstrings
+from .. import skill
 
 logger = logging.getLogger(__name__)
 

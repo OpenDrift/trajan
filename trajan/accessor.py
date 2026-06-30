@@ -8,9 +8,8 @@ xr.set_options(keep_attrs=True)
 logger = logging.getLogger(__name__)
 
 from .traj import Traj, detect_tx_variable
-from .trajOrthogonal import TrajOrthogonal
-from .trajRagged import TrajRagged
-from .trajContiguousRagged import TrajContiguousRagged
+from .traj.orthogonal import TrajOrthogonal
+from .traj.ragged import TrajRagged
 
 
 def detect_time_variable(ds, obs_dim):
@@ -22,6 +21,7 @@ def detect_time_variable(ds, obs_dim):
 
     raise ValueError("No time variable detected")
 
+
 def detect_trajectory_dim(ds):
     logger.debug('Detecting trajectory dimension')
     if 'trajectory_id' in ds.cf.cf_roles:  # This is the proper CF way
@@ -30,15 +30,20 @@ def detect_trajectory_dim(ds):
             return trajectory_var.name
         else:
             if len(trajectory_var.dims) > 1:
-                logger.debug(f'trajectory_id is {trajectory_var.name}, but dimensions '
-                               'have other names: {str(list(trajectory_var.sizes))}')
-            elif len(trajectory_var.dims) == 1:  # Using the single dimension name
+                logger.debug(
+                    f'trajectory_id is {trajectory_var.name}, but dimensions '
+                    'have other names: {str(list(trajectory_var.sizes))}')
+            elif len(trajectory_var.dims
+                     ) == 1:  # Using the single dimension name
                 return list(trajectory_var.sizes)[0]
             else:
-                logger.debug('Single trajectory, a trajectory dimension will be added')
+                logger.debug(
+                    'Single trajectory, a trajectory dimension will be added')
                 return None
 
-    logger.debug('No trajectory_id attribute/variable found, trying to identify by name.')
+    logger.debug(
+        'No trajectory_id attribute/variable found, trying to identify by name.'
+    )
     tx = detect_tx_variable(ds)
     for tdn in ['trajectory', 'traj']:  # Common names of trajectory dimension
         if tdn in tx.dims:
@@ -49,6 +54,7 @@ def detect_trajectory_dim(ds):
 
 @xr.register_dataset_accessor("traj")
 class TrajA(Traj):
+
     def __new__(cls, ds) -> "Traj":
 
         trajectory_dim = detect_trajectory_dim(ds)
@@ -57,14 +63,18 @@ class TrajA(Traj):
             if 'trajectory_id' in ds.cf.cf_roles:
                 trajectory_id = ds.cf.cf_roles['trajectory_id']
                 if len(trajectory_id) > 1:
-                        raise ValueError(f'Dataset has several trajectory_id variables: {trajectory_id}')
+                    raise ValueError(
+                        f'Dataset has several trajectory_id variables: {trajectory_id}'
+                    )
                 else:
                     trajectory_id = trajectory_id[0]
-                    logger.debug(f'Using trajectory_id variable name ({trajectory_id}) '
-                                   'as trajectory dimension name')
+                    logger.debug(
+                        f'Using trajectory_id variable name ({trajectory_id}) '
+                        'as trajectory dimension name')
                     trajectory_dim = trajectory_id
                     ds = ds.set_coords(trajectory_dim)
-                    ds = ds.expand_dims(trajectory_dim, create_index_for_new_dim=False)
+                    ds = ds.expand_dims(trajectory_dim,
+                                        create_index_for_new_dim=False)
             else:
                 logger.debug('Creating new trajectory dimension "trajectory"')
                 trajectory_dim = 'trajectory'
@@ -79,9 +89,6 @@ class TrajA(Traj):
         # if we have a 1D arrays, this is most likely some contiguous data
         # there may be a few exceptions though, so be ready to default to the classical Ragged parser below
         if len(tx.dims) == 1:
-            # only support TrajContiguousRagged for now
-            ocls = TrajContiguousRagged
-
             # we have a dataset where data are stored in 1D arrays
             # NOTE: this is probably not standard; something to point to the CF conventions?
             # NOTE: for now, there is no discovery of the "index" dim, this is hardcorded; any way to do better?
@@ -99,7 +106,9 @@ class TrajA(Traj):
                 if len(with_standard_name_time_and_dim_index) == 1:
                     timecoord = with_standard_name_time_and_dim_index[0]
                 else:
-                    raise ValueError(f"cannot deduce the timecoord; we have the following candidates: {with_standard_name_time_and_dim_index = }")
+                    raise ValueError(
+                        f"cannot deduce the timecoord; we have the following candidates: {with_standard_name_time_and_dim_index = }"
+                    )
 
                 # KFD TODO: the below detection should be generalized to dynamic dimension names
 
@@ -111,19 +120,26 @@ class TrajA(Traj):
                 if len(with_dim_trajectory) == 1:
                     rowsizevar = with_dim_trajectory[0]
                 else:
-                    raise ValueError(f"cannot deduce rowsizevar; we have the following candidates: {with_dim_trajectory = }")
+                    raise ValueError(
+                        f"cannot deduce rowsizevar; we have the following candidates: {with_dim_trajectory = }"
+                    )
                 # sanity check
                 if not np.sum(ds[rowsizevar].to_numpy()) == len(ds[obs_dim]):
-                    raise ValueError("mismatch between the index length and the sum of the deduced trajectory lengths")
+                    raise ValueError(
+                        "mismatch between the index length and the sum of the deduced trajectory lengths"
+                    )
 
                 logger.debug(
                     f"1D storage dataset; detected: {obs_dim = }, {timecoord = }, {trajectory_dim = }, {rowsizevar}"
                 )
 
-                return ocls(ds, trajectory_dim, obs_dim, timecoord, rowsizevar)
+                return TrajRagged.from_contiguous(ds, trajectory_dim, obs_dim,
+                                                  timecoord, rowsizevar)
 
             else:
-                logging.debug(f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual; try to parse with TrajOrthogonal or TrajRagged")
+                logging.debug(
+                    f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual; try to parse with TrajOrthogonal or TrajRagged"
+                )
 
         # we have a ds where 2D arrays are used to store data, this is either TrajOrthogonal or TrajRagged
         # there may also be some slightly unusual cases where these TrajOrthogonal and TrajRagged classes will be used on data with 1D arrays
@@ -132,7 +148,7 @@ class TrajA(Traj):
             time_varname = detect_time_variable(ds, obs_dim)
 
         elif 'index' in tx.dims:
-            obs_dim = 'obs'
+            obs_dim = 'index'
             time_varname = detect_time_variable(ds, obs_dim)
 
         elif 'time' in tx.dims:
@@ -154,7 +170,8 @@ class TrajA(Traj):
                 logger.debug('No time or obs dimension detected.')
 
         logger.debug(
-            f"Detected obs-dim: {obs_dim}, detected time-variable: {time_varname}.")
+            f"Detected obs-dim: {obs_dim}, detected time-variable: {time_varname}."
+        )
 
         if obs_dim is None:
             ocls = TrajOrthogonal
@@ -169,7 +186,7 @@ class TrajA(Traj):
 
         else:
             raise ValueError(
-                    f'Time variable has more than two dimensions: {time_varname}: {ds[time_varname].shape} / {ds[time_varname].dims}'
+                f'Time variable has more than two dimensions: {time_varname}: {ds[time_varname].shape} / {ds[time_varname].dims}'
             )
 
         # TODO: The provided attributes could perhaps be added here before returning

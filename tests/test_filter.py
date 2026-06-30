@@ -3,7 +3,7 @@ import pytest
 import xarray as xr
 import trajan as _
 
-from trajan.trajOrthogonal import _nsigma_sliding_filter
+from trajan.traj.orthogonal import _nsigma_sliding_filter
 from trajan.readers.omb import sliding_filter_nsigma
 
 

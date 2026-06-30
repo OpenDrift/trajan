@@ -7,6 +7,7 @@ def test_convert_ragged(test_data, plot):
     ds = xr.open_dataset(test_data / 'xr_spotter_bulk_test_data.nc')
 
     # let us check that the conversion worked well, and that all main functionalities are working
+    print(ds.traj)
 
     # plotting
     ds.traj.plot()
