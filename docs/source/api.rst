@@ -136,6 +136,7 @@ Methods
     Dataset.traj.is_orthogonal
     Dataset.traj.is_ragged
     Dataset.traj.to_orthogonal
+    Dataset.traj.to_ortho
     Dataset.traj.to_ragged
     Dataset.traj.trajectories
     Dataset.traj.condense_obs
