@@ -1240,6 +1240,15 @@ class Traj:
             A new Dataset with observations condensed.
         """
 
+    def to_ortho(self) -> Dataset:
+        """
+        Convert dataset into Orthogonal dataset from. This is only possible if the
+        dataset has a single trajectory.
+
+        Alias for `to_orthogonal`.
+        """
+        return self.to_orthogonal()
+
     @abstractmethod
     def to_orthogonal(self) -> Dataset:
         """
