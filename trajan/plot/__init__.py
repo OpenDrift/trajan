@@ -198,14 +198,12 @@ class Plot:
                 points = np.array([x[:, i].T, y[:, i].T]).T.reshape(-1, 1, 2)
                 segments = np.concatenate([points[:-1], points[1:]], axis=1)
                 if cartesian:
-                    lc = LineCollection(segments,
-                                        norm=norm,
-                                        *args,
-                                        **kwargs)
+                    lc = LineCollection(segments, norm=norm, *args, **kwargs)
                 else:
                     with warnings.catch_warnings():
                         # Disable warnings due to transforming NaN values in trajectories
-                        warnings.filterwarnings("ignore", category=RuntimeWarning)
+                        warnings.filterwarnings("ignore",
+                                                category=RuntimeWarning)
                         lc = LineCollection(segments,
                                             norm=norm,
                                             transform=dcrs,
@@ -333,12 +331,11 @@ class Plot:
         if 'edgecolor' not in kwargs:
             kwargs['edgecolor'] = color
 
-        paths = ax.add_geometries(
-            [polygon],
-            color='none',
-            facecolor='none',
-            crs=self.gcrs,
-            **kwargs)
+        paths = ax.add_geometries([polygon],
+                                  color='none',
+                                  facecolor='none',
+                                  crs=self.gcrs,
+                                  **kwargs)
 
         ## TODO: might not work for cartesian plots
         #line_segments = [hull.points[simplex] for simplex in hull.simplices]

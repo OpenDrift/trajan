@@ -466,7 +466,7 @@ class Traj:
         crs = self.crs
 
         if crs == self.__gcrs__:
-            return cartopy.crs.Geodetic()
+            return cartopy.crs.PlateCarree()
         elif crs is not None:
             return cartopy.crs.CRS(crs.to_json_dict())
         else:
