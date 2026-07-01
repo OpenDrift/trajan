@@ -62,7 +62,7 @@ For Ragged datasets is time function of trajectory and observation, while for Or
 
 TrajAn will detect which type of dataset you have and you will have access to the appropriate methods for the type data layout.
 
-While the first type (Ragged) is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a Ragged dataset to Orthogonal by using :meth:`trajan.trajRagged.TrajRagged.gridtime`.
+While the first type (Ragged) is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a Ragged dataset to Orthogonal by using :meth:`trajan.traj.Ragged.gridtime`.
 
 Methods applicable to both types of datasets can be found in: :mod:`trajan.traj`, methods for Orthogonal datasets: :mod:`trajan.traj.trajOrthogonal`, and Ragged: :mod:`trajan.traj.trajRagged`. All methods are forwarded to the accessor, so you call the methods on `Dataset.traj`:
 

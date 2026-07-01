@@ -8,8 +8,8 @@ xr.set_options(keep_attrs=True)
 logger = logging.getLogger(__name__)
 
 from .traj import Traj, detect_tx_variable
-from .traj.orthogonal import TrajOrthogonal
-from .traj.ragged import TrajRagged
+from .traj.orthogonal import Orthogonal
+from .traj.ragged import Ragged
 
 
 def detect_time_variable(ds, obs_dim):
@@ -133,16 +133,16 @@ class TrajA(Traj):
                     f"1D storage dataset; detected: {obs_dim = }, {timecoord = }, {trajectory_dim = }, {rowsizevar}"
                 )
 
-                return TrajRagged.from_contiguous(ds, trajectory_dim, obs_dim,
+                return Ragged.from_contiguous(ds, trajectory_dim, obs_dim,
                                                   timecoord, rowsizevar)
 
             else:
                 logging.debug(
-                    f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual; try to parse with TrajOrthogonal or TrajRagged"
+                    f"{ds} has {tx.dims = } which is of dimension 1 but is not index; this is a bit unusual; try to parse with Orthogonal or Ragged"
                 )
 
-        # we have a ds where 2D arrays are used to store data, this is either TrajOrthogonal or TrajRagged
-        # there may also be some slightly unusual cases where these TrajOrthogonal and TrajRagged classes will be used on data with 1D arrays
+        # we have a ds where 2D arrays are used to store data, this is either Orthogonal or Ragged
+        # there may also be some slightly unusual cases where these Orthogonal and Ragged classes will be used on data with 1D arrays
         if 'obs' in tx.dims:
             obs_dim = 'obs'
             time_varname = detect_time_variable(ds, obs_dim)
@@ -174,15 +174,15 @@ class TrajA(Traj):
         )
 
         if obs_dim is None:
-            ocls = TrajOrthogonal
+            ocls = Orthogonal
 
         elif len(ds[time_varname].shape) <= 1:
             logger.debug('Detected Orthogonal trajectory dataset')
-            ocls = TrajOrthogonal
+            ocls = Orthogonal
 
         elif len(ds[time_varname].shape) == 2:
             logger.debug('Detected Ragged trajectory dataset')
-            ocls = TrajRagged
+            ocls = Ragged
 
         else:
             raise ValueError(

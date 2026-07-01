@@ -31,7 +31,7 @@ def test_gridtime(test_data):
     dg = ds.traj.gridtime('1h')
     print(dg)
 
-@pytest.mark.xfail(reason='timestep methods seems to fail for TrajRagged datasets')
+@pytest.mark.xfail(reason='timestep methods seems to fail for Ragged datasets')
 def test_timestep(test_data):
     ds = xr.open_dataset(test_data / 'bug32.nc')
     print(ds.traj.timestep())

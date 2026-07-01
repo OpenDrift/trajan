@@ -44,7 +44,7 @@ def _nsigma_sliding_filter(arr, nsigma=5.0, side_half_width=2):
 
 
 @inherit_docstrings
-class TrajOrthogonal(Traj):
+class Orthogonal(Traj):
     """
     A structured dataset, where each trajectory is always given at the same times. Typically the output from a model or from a gridded dataset.
     """

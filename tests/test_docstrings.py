@@ -6,10 +6,10 @@ import inspect
 import pytest
 
 from trajan.traj import Traj
-from trajan.traj.orthogonal import TrajOrthogonal
-from trajan.traj.ragged import TrajRagged
+from trajan.traj.orthogonal import Orthogonal
+from trajan.traj.ragged import Ragged
 
-SUBCLASSES = [TrajOrthogonal, TrajRagged]
+SUBCLASSES = [Orthogonal, Ragged]
 
 # Methods on Traj that have docstrings (the source of truth)
 BASE_METHODS = {

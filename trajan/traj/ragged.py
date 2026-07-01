@@ -20,7 +20,7 @@ def __require_obs_dim__(f):
 
 
 @inherit_docstrings
-class TrajRagged(Traj):
+class Ragged(Traj):
     """
     A unstructured dataset, where each trajectory may have observations at different times. Typically from a collection of drifters.
     """
@@ -141,10 +141,10 @@ class TrajRagged(Traj):
             global_attrs)
         ds_converted_to_trajRagged = ds_converted_to_trajRagged.assign_attrs(
             trajan_modified=
-            "this was initially a contiguous ragged Dataset, which was converted to a TrajRagged dataset by trajan"
+            "this was initially a contiguous ragged Dataset, which was converted to a Ragged dataset by trajan"
         )
 
-        return TrajRagged(ds_converted_to_trajRagged, trajectory_dim, obs_dim,
+        return Ragged(ds_converted_to_trajRagged, trajectory_dim, obs_dim,
                           time_varname)
 
     def timestep(self, average=np.nanmedian):
