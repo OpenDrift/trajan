@@ -130,8 +130,6 @@ class Plot:
                      lscale=land,
                      globe=crs.globe)
 
-        fig.tight_layout()
-
         return ax
 
     def __call__(self, *args, **kwargs):

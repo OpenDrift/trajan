@@ -24,6 +24,7 @@ print(ds.traj)
 mappable, _ = ds.traj.plot(color=ds.viscosity, alpha=1)
 plt.title('Oil trajectories')
 plt.colorbar(mappable, orientation='horizontal', label=f'Oil viscosity  [{ds.viscosity.units}]')
+plt.tight_layout()
 plt.show()
 
 #%%
@@ -34,6 +35,7 @@ plt.show()
 # Extracting only the first 10 elements, and every 4th output time steps:
 ds.isel(trajectory=range(0, 10), time=range(0, len(ds.time), 4)).traj.plot()
 plt.title('First 10 elements, and every 4th time steps')
+plt.tight_layout()
 plt.show()
 
 #%%
