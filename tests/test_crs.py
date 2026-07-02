@@ -87,14 +87,10 @@ def test_proj_4326_platecarree_default():
     assert tla == approx(60., abs=0.00001)
 
 
-@pytest.mark.xfail(
-    condition=not proj_gt_98(),
-    reason='EPSG:4326 and cartopy PlateCarree are identical in proj>=9.8',
-    strict=True)
-def test_proj_4326_platecarree_ellipsoid():
-    # These used to be identical before Proj 9.8.1
+def test_proj_4326_platecarree_forced_sphere():
     dcrs = CRS.from_proj4("+proj=lonlat +datum=WGS84 +ellps=WGS84 +no_defs")
 
+    # Prior to Proj 9.8 this was the default, now it must be forced to match.
     WGS84_SEMIMAJOR_AXIS = 6378137
     gcrs = ccrs.PlateCarree(
         globe=ccrs.Globe(ellipse='WGS84',
@@ -153,7 +149,8 @@ def test_proj_4326_geodetic_default_vs_ellipsoid():
     assert tla == approx(60., abs=0.00001)
 
 @pytest.mark.xfail(
-    reason='cartopy PlateCarree with and without ellipsoid should never be equal.',
+    condition=proj_gt_98(),
+    reason='PlateCarree is using an elliptical globe in proj >= 9.8, prior to that these are identical and should not fail.',
     strict=True)
 def test_proj_platecarree_default_vs_ellipsoid():
     # This should fail on all versions of proj.
