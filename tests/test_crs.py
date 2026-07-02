@@ -70,7 +70,7 @@ def proj_gt_98():
     reason=
     'EPSG:4326 and cartopy PlateCarree are no longer identical in proj>=9.8',
     strict=True)
-def test_proj_4326_97():
+def test_proj_4326_platecarree_default():
     # These used to be identical before Proj 9.8.1
     dcrs = CRS.from_proj4("+proj=lonlat +datum=WGS84 +ellps=WGS84 +no_defs")
     # gcrs = CRS.from_proj4(
@@ -91,7 +91,7 @@ def test_proj_4326_97():
     condition=not proj_gt_98(),
     reason='EPSG:4326 and cartopy PlateCarree are identical in proj>=9.8',
     strict=True)
-def test_proj_4326_98():
+def test_proj_4326_platecarree_ellipsoid():
     # These used to be identical before Proj 9.8.1
     dcrs = CRS.from_proj4("+proj=lonlat +datum=WGS84 +ellps=WGS84 +no_defs")
 
@@ -114,10 +114,48 @@ def test_proj_4326_98():
     assert tla == approx(60., abs=0.00001)
 
 
+def test_proj_4326_geodetic_default():
+    dcrs = CRS.from_proj4("+proj=lonlat +datum=WGS84 +ellps=WGS84 +no_defs")
+    # gcrs = CRS.from_proj4(
+    #     "+proj=eqc +ellps=WGS84 +lon_0=0.0 +to_meter=111319.4907932736 +vto_meter=1 +no_defs"
+    # )
+    gcrs = ccrs.Geodetic()
+    print(gcrs)
+
+    t = Transformer.from_crs(dcrs, gcrs, always_xy=True)
+    print(t.transform(5, 60))
+
+    tlo, tla = t.transform(5, 60)
+    assert tlo == approx(5., abs=0.00001)
+    assert tla == approx(60., abs=0.00001)
+
+
+def test_proj_4326_geodetic_default_vs_ellipsoid():
+    # dcrs = CRS.from_proj4("+proj=lonlat +datum=WGS84 +ellps=WGS84 +no_defs")
+    dcrs = ccrs.Geodetic()
+
+    WGS84_SEMIMAJOR_AXIS = 6378137
+    gcrs = ccrs.Geodetic(
+        globe=ccrs.Globe(ellipse='WGS84',
+                         semimajor_axis=WGS84_SEMIMAJOR_AXIS,
+                         semiminor_axis=WGS84_SEMIMAJOR_AXIS))
+
+    print(gcrs)
+    # gcrs = CRS.from_proj4(
+    #     "+proj=eqc +ellps=WGS84 +lon_0=0.0 +to_meter=111319.4907932736 +vto_meter=1 +no_defs"
+    # )
+
+    t = Transformer.from_crs(dcrs, gcrs, always_xy=True)
+    print(t.transform(5, 60))
+
+    tlo, tla = t.transform(5, 60)
+    assert tlo == approx(5., abs=0.00001)
+    assert tla == approx(60., abs=0.00001)
+
 @pytest.mark.xfail(
     reason='cartopy PlateCarree with and without ellipsoid should never be equal.',
     strict=True)
-def test_proj_platecarree_ellipsoid():
+def test_proj_platecarree_default_vs_ellipsoid():
     # This should fail on all versions of proj.
     dcrs = ccrs.PlateCarree()
 
