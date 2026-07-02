@@ -112,3 +112,30 @@ def test_proj_4326_98():
     tlo, tla = t.transform(5, 60)
     assert tlo == approx(5., abs=0.00001)
     assert tla == approx(60., abs=0.00001)
+
+
+@pytest.mark.xfail(
+    reason='cartopy PlateCarree with and without ellipsoid should never be equal.',
+    strict=True)
+def test_proj_platecarree_ellipsoid():
+    # This should fail on all versions of proj.
+    dcrs = ccrs.PlateCarree()
+
+    WGS84_SEMIMAJOR_AXIS = 6378137
+    gcrs = ccrs.PlateCarree(
+        globe=ccrs.Globe(ellipse='WGS84',
+                         semimajor_axis=WGS84_SEMIMAJOR_AXIS,
+                         semiminor_axis=WGS84_SEMIMAJOR_AXIS))
+
+    print(dcrs)
+    print(gcrs)
+    # gcrs = CRS.from_proj4(
+    #     "+proj=eqc +ellps=WGS84 +lon_0=0.0 +to_meter=111319.4907932736 +vto_meter=1 +no_defs"
+    # )
+
+    t = Transformer.from_crs(dcrs, gcrs, always_xy=True)
+    print(t.transform(5, 60))
+
+    tlo, tla = t.transform(5, 60)
+    assert tlo == approx(5., abs=0.00001)
+    assert tla == approx(60., abs=0.00001)
