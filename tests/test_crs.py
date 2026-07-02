@@ -126,9 +126,9 @@ def test_proj_4326_geodetic_default():
     assert tla == approx(60., abs=0.00001)
 
 
-def test_proj_4326_geodetic_default_vs_ellipsoid():
+def test_proj_4326_geodetic_default_vs_forced_sphere():
     # dcrs = CRS.from_proj4("+proj=lonlat +datum=WGS84 +ellps=WGS84 +no_defs")
-    dcrs = ccrs.Geodetic()
+    dcrs = ccrs.Geodetic() # this is apparently always a sphere.
 
     WGS84_SEMIMAJOR_AXIS = 6378137
     gcrs = ccrs.Geodetic(
@@ -152,9 +152,9 @@ def test_proj_4326_geodetic_default_vs_ellipsoid():
     condition=proj_gt_98(),
     reason='PlateCarree is using an elliptical globe in proj >= 9.8, prior to that these are identical and should not fail.',
     strict=True)
-def test_proj_platecarree_default_vs_ellipsoid():
+def test_proj_platecarree_default_vs_forced_sphere():
     # This should fail on all versions of proj.
-    dcrs = ccrs.PlateCarree()
+    dcrs = ccrs.PlateCarree() # in Proj 9.8 this uses an ellipsoid, before it is a sphere, identical to the below.
 
     WGS84_SEMIMAJOR_AXIS = 6378137
     gcrs = ccrs.PlateCarree(
