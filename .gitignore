@@ -6,3 +6,4 @@ examples/*.png
 examples/out/
 *.mp4
 trajan.egg-info
+/results

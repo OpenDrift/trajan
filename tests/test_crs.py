@@ -189,14 +189,15 @@ def _random_points_in_extent(ds, n=100, seed=42):
     return rand_lons, rand_lats
 
 
+@pytest.mark.parametrize('with_random', [True, False], ids=['with_random', 'without_random'])
 @pytest.mark.mpl_image_compare
-def test_crs_bergen_and_opendrift(opendrift_sim, plot):
-    """Plot Bergen, 100 random points, and every tenth time-step of the opendrift trajectories."""
+def test_crs_bergen_and_opendrift(opendrift_sim, plot, with_random):
+    """Plot Bergen and every tenth time-step of the opendrift trajectories, optionally with random points."""
     BERGEN_LON, BERGEN_LAT = 5.324, 60.389
 
     ds = opendrift_sim.where(opendrift_sim.status >= 0)
     # proj = ds.traj.ccrs
-    proj = ccrs.PlateCarree()
+    proj = ccrs.Mercator()
 
     fig, ax = plt.subplots(subplot_kw={'projection': proj}, figsize=(8, 6))
     ax.coastlines(resolution='50m')
@@ -208,10 +209,10 @@ def test_crs_bergen_and_opendrift(opendrift_sim, plot):
     ax.scatter(lons, lats, s=2, color='steelblue', alpha=0.5,
                transform=ccrs.Geodetic(), label='Trajectories (every 10th step)')
 
-    # 100 random points within the extent
-    rand_lons, rand_lats = _random_points_in_extent(ds)
-    ax.plot(rand_lons, rand_lats, 'g^', markersize=6,
-            transform=ccrs.Geodetic(), label='Random points')
+    if with_random:
+        rand_lons, rand_lats = _random_points_in_extent(ds)
+        ax.plot(rand_lons, rand_lats, 'g^', markersize=6,
+                transform=ccrs.Geodetic(), label='Random points')
 
     # Bergen
     ax.plot(BERGEN_LON, BERGEN_LAT, 'r*', markersize=12,
@@ -226,9 +227,10 @@ def test_crs_bergen_and_opendrift(opendrift_sim, plot):
     return fig
 
 
+@pytest.mark.parametrize('with_random', [True, False], ids=['with_random', 'without_random'])
 @pytest.mark.mpl_image_compare
-def test_crs_bergen_and_opendrift_traj(opendrift_sim, plot):
-    """Plot Bergen, 100 random points, and every tenth time-step using ds.traj.plot()."""
+def test_crs_bergen_and_opendrift_traj(opendrift_sim, plot, with_random):
+    """Plot Bergen and every tenth time-step using ds.traj.plot(), optionally with random points."""
     BERGEN_LON, BERGEN_LAT = 5.324, 60.389
 
     ds = opendrift_sim.where(opendrift_sim.status >= 0)
@@ -236,10 +238,10 @@ def test_crs_bergen_and_opendrift_traj(opendrift_sim, plot):
     # Use trajan to set up the map and plot every 10th time-step
     _, ax = ds.isel(time=slice(None, None, 10)).traj.plot()
 
-    # 100 random points within the extent
-    rand_lons, rand_lats = _random_points_in_extent(ds)
-    ax.plot(rand_lons, rand_lats, 'g^', markersize=6,
-            transform=ccrs.Geodetic(), label='Random points')
+    if with_random:
+        rand_lons, rand_lats = _random_points_in_extent(ds)
+        ax.plot(rand_lons, rand_lats, 'g^', markersize=6,
+                transform=ccrs.Geodetic(), label='Random points')
 
     # Bergen
     ax.plot(BERGEN_LON, BERGEN_LAT, 'r*', markersize=12,
