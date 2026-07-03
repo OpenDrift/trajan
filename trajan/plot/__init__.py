@@ -22,7 +22,7 @@ class Plot:
 
     def __init__(self, ds):
         self.ds = ds
-        self.gcrs = ccrs.PlateCarree()
+        self.gcrs = ccrs.Geodetic()
 
     @property
     def __cartesian__(self):
@@ -113,12 +113,32 @@ class Plot:
                 logger.debug('Figure exists, setting up axes.')
 
         crs = crs if crs is not None else ccrs.Mercator()
-        self.gcrs = ccrs.PlateCarree(globe=crs.globe)
+        # PlateCarree with the same globe as the axes projection, used only
+        # for set_extent and gridlines which require a projection with x_limits.
+        pcrs = ccrs.PlateCarree(globe=crs.globe)
+
+        # Coastlines and map features are in WGS84 geodetic coordinates, so
+        # the data transform must also be Geodetic for correct alignment.
+        # PlateCarree (eqc) drifted away from Geodetic in proj >= 9.8 when
+        # EPSG:4326 switched from a sphere to a proper WGS84 ellipsoid. This
+        # block logs the magnitude of that drift for diagnostic purposes.
+        _lon_probe = float((lonmin + lonmax) / 2)
+        _lat_probe = float((latmin + latmax) / 2)
+        _xy_geodetic = crs.transform_point(_lon_probe, _lat_probe, ccrs.Geodetic())
+        _xy_platecarree = crs.transform_point(_lon_probe, _lat_probe, pcrs)
+        _shift = np.hypot(_xy_geodetic[0] - _xy_platecarree[0],
+                          _xy_geodetic[1] - _xy_platecarree[1])
+        logger.debug(
+            f'CRS probe at ({_lon_probe:.3f}, {_lat_probe:.3f}): '
+            f'Geodetic={_xy_geodetic}, PlateCarree={_xy_platecarree}, '
+            f'PlateCarree shift from Geodetic = {_shift:.1f} m '
+            f'(~0 on proj<9.8, ~50 km on proj>=9.8 — data uses Geodetic to match coastlines)'
+        )
 
         ax = fig.add_subplot(111, projection=crs)
-        ax.set_extent([lonmin, lonmax, latmin, latmax], crs=self.gcrs)
+        ax.set_extent([lonmin, lonmax, latmin, latmax], crs=pcrs)
 
-        gl = ax.gridlines(self.gcrs, draw_labels=['left', 'bottom'])
+        gl = ax.gridlines(pcrs, draw_labels=['left', 'bottom'])
 
         if land is not None:
             add_land(ax,

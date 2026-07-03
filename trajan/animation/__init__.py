@@ -48,7 +48,7 @@ class Animation:
 
     def __init__(self, ds):
         self.ds = ds
-        self.gcrs = ccrs.PlateCarree()
+        self.gcrs = ccrs.Geodetic()
         self._color = None
         self._cmap = None
         self._vmin = None
