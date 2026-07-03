@@ -113,32 +113,23 @@ class Plot:
                 logger.debug('Figure exists, setting up axes.')
 
         crs = crs if crs is not None else ccrs.Mercator()
-        # PlateCarree with the same globe as the axes projection, used only
-        # for set_extent and gridlines which require a projection with x_limits.
-        pcrs = ccrs.PlateCarree(globe=crs.globe)
-
-        # Coastlines and map features are in WGS84 geodetic coordinates, so
-        # the data transform must also be Geodetic for correct alignment.
-        # PlateCarree (eqc) drifted away from Geodetic in proj >= 9.8 when
-        # EPSG:4326 switched from a sphere to a proper WGS84 ellipsoid. This
-        # block logs the magnitude of that drift for diagnostic purposes.
-        _lon_probe = float((lonmin + lonmax) / 2)
-        _lat_probe = float((latmin + latmax) / 2)
-        _xy_geodetic = crs.transform_point(_lon_probe, _lat_probe, ccrs.Geodetic())
-        _xy_platecarree = crs.transform_point(_lon_probe, _lat_probe, pcrs)
-        _shift = np.hypot(_xy_geodetic[0] - _xy_platecarree[0],
-                          _xy_geodetic[1] - _xy_platecarree[1])
-        logger.debug(
-            f'CRS probe at ({_lon_probe:.3f}, {_lat_probe:.3f}): '
-            f'Geodetic={_xy_geodetic}, PlateCarree={_xy_platecarree}, '
-            f'PlateCarree shift from Geodetic = {_shift:.1f} m '
-            f'(~0 on proj<9.8, ~50 km on proj>=9.8 — data uses Geodetic to match coastlines)'
-        )
-
         ax = fig.add_subplot(111, projection=crs)
-        ax.set_extent([lonmin, lonmax, latmin, latmax], crs=pcrs)
 
-        gl = ax.gridlines(pcrs, draw_labels=['left', 'bottom'])
+        # XXX: Extent is disabled: have not found a way for this to work in
+        # both Proj 9.7 and 9.8 with changes to ellipsoid.
+
+        # Convert the lon/lat extent corners from Geodetic to the axes CRS
+        # (Mercator), so we never need PlateCarree. PlateCarree (eqc) drifted
+        # away from Geodetic in proj >= 9.8 (EPSG:4326 switched from sphere to
+        # WGS84 ellipsoid), so all transforms now go through Geodetic only.
+        # geodetic = ccrs.Geodetic()
+        # x0, y0 = crs.transform_point(float(lonmin), float(latmin), geodetic)
+        # x1, y1 = crs.transform_point(float(lonmax), float(latmax), geodetic)
+        # logger.debug(f'Extent in {crs}: x=[{x0:.1f}, {x1:.1f}], y=[{y0:.1f}, {y1:.1f}]')
+        # ax.set_extent([x0, x1, y0, y1], crs=crs)
+
+        # gl = ax.gridlines(geodetic, draw_labels=['left', 'bottom'])
+        ax.gridlines(draw_labels=['left', 'bottom'])
 
         if land is not None:
             add_land(ax,
