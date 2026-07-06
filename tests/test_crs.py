@@ -57,20 +57,7 @@ def test_barents_remove_crs(barents):
 # that GPS measurements and OpenDrift simulated positions are placed correctly in the
 # CRS used by GPS, and that the coastline and map positions are placed in the
 # correct positions.
-def proj_version():
-    return [int(vv) for vv in pyproj.__proj_version__.split('.')]
 
-
-def proj_gt_98():
-    v = proj_version()
-    return v[0] >= 9 and v[1] >= 8
-
-
-@pytest.mark.xfail(
-    condition=proj_gt_98(),
-    reason=
-    'EPSG:4326 and cartopy PlateCarree are no longer identical in proj>=9.8',
-    strict=True)
 def test_proj_4326_platecarree_default():
     # These used to be identical before Proj 9.8.1
     dcrs = CRS.from_proj4("+proj=lonlat +datum=WGS84 +ellps=WGS84 +no_defs")
@@ -149,10 +136,6 @@ def test_proj_4326_geodetic_default_vs_forced_sphere():
     assert tlo == approx(5., abs=0.00001)
     assert tla == approx(60., abs=0.00001)
 
-@pytest.mark.xfail(
-    condition=proj_gt_98(),
-    reason='PlateCarree is using an elliptical globe in proj >= 9.8, prior to that these are identical and should not fail.',
-    strict=True)
 def test_proj_platecarree_default_vs_forced_sphere():
     # This should fail on all versions of proj.
     dcrs = ccrs.PlateCarree() # in Proj 9.8 this uses an ellipsoid, before it is a sphere, identical to the below.

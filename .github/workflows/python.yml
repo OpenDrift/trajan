@@ -10,7 +10,7 @@ on:
 
 jobs:
   tests:
-    name: pytests (${{ matrix.os }} - ${{ matrix.python-version }} - ${{ matrix.proj-version }}, Miniforge)
+    name: pytests (${{ matrix.os }} - ${{ matrix.python-version }}, Miniforge)
     runs-on: ${{ matrix.os }}-latest
     defaults:
       run:
@@ -20,12 +20,6 @@ jobs:
       matrix:
         os: ["ubuntu", "macos", "windows"]
         python-version: [ '3.12', '3.13', '3.14' ]
-        proj-version: ['proj_97', 'proj_98']
-        include:
-          - proj-version: proj_97
-            proj-version-spec: 'proj=9.7.*'
-          - proj-version: proj_98
-            proj-version-spec: ''  # latest
     steps:
       - uses: actions/checkout@v4
       - uses: mamba-org/setup-micromamba@v2
@@ -36,9 +30,7 @@ jobs:
           init-shell: >-
             bash
             powershell
-          create-args: >-
-            python=${{ matrix.python-version }}
-            ${{ matrix.proj-version-spec }}
+          create-args: python=${{ matrix.python-version }}
 
 
       - name: Cache cartopy maps
@@ -69,7 +61,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mpl-results-${{ matrix.os }}-py${{ matrix.python-version }}-${{ matrix.proj-version }}
+          name: mpl-results-${{ matrix.os }}-py${{ matrix.python-version }}
           path: mpl-results
           if-no-files-found: ignore
 

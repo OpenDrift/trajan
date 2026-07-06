@@ -20,6 +20,7 @@ dependencies:
   - matplotlib
   - cartopy
   - pyproj
+  - proj<9.8
   - toml
   - click
   - roaring-landmask
