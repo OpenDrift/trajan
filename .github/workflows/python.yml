@@ -16,6 +16,7 @@ jobs:
       run:
         shell: bash -l {0}
     strategy:
+      fail-fast: false
       matrix:
         os: ["ubuntu", "macos", "windows"]
         python-version: [ '3.12', '3.13', '3.14' ]
@@ -37,7 +38,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/cartopy
-          key: cartopy-maps-gshhg-2.3.7
+          key: cartopy-maps-gshhg-2.3.7-ne50m
 
       - name: Download cartopy shapefiles
         if: steps.cache-cartopy.outputs.cache-hit != 'true'
@@ -50,10 +51,19 @@ jobs:
           rm gshhg-shp-2.3.7.zip
           python -c "import cartopy; list(map(cartopy.io.shapereader.gshhs, ('c', 'l', 'i', 'h', 'f')))"
           python -c "import cartopy; cartopy.io.shapereader.natural_earth(resolution='110m', category='cultural', name='admin_0_countries')"
+          python -c "import cartopy; cartopy.io.shapereader.natural_earth(resolution='50m', category='physical', name='coastline')"
 
       - name: Run tests
         run: |
-          pytest -vs --log-cli-level=debug
+          pytest -vs --log-cli-level=debug ${{ matrix.os != 'macos' && '--mpl --mpl-results-path=mpl-results --mpl-generate-summary=html' || '' }}
+
+      - name: Upload mpl diff results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpl-results-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: mpl-results
+          if-no-files-found: ignore
 
       - name: Build wheels
         run: |

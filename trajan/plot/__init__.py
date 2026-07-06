@@ -22,7 +22,7 @@ class Plot:
 
     def __init__(self, ds):
         self.ds = ds
-        self.gcrs = ccrs.PlateCarree()
+        self.gcrs = ccrs.Geodetic()
 
     @property
     def __cartesian__(self):
@@ -117,8 +117,7 @@ class Plot:
 
         ax = fig.add_subplot(111, projection=crs)
         ax.set_extent([lonmin, lonmax, latmin, latmax], crs=self.gcrs)
-
-        gl = ax.gridlines(self.gcrs, draw_labels=['left', 'bottom'])
+        ax.gridlines(self.gcrs, draw_labels=['left', 'bottom'])
 
         if land is not None:
             add_land(ax,
