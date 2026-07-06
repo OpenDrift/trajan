@@ -55,7 +55,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest -vs --log-cli-level=debug --mpl --mpl-results-path=mpl-results --mpl-generate-summary=html
+          pytest -vs --log-cli-level=debug ${{ matrix.os != 'macos' && '--mpl --mpl-results-path=mpl-results --mpl-generate-summary=html' || '' }}
 
       - name: Upload mpl diff results
         if: always()
