@@ -18,6 +18,54 @@ def __require_obs_dim__(f):
 
     return wrapper
 
+def detect_ncparticles_vars(ds, obs_dim):
+    """
+    Try to detect whether `ds` follows the nc_particles ragged-by-time
+    layout: a count variable indexed by a TIME dimension gives the number
+    of particles present at each time step, and an `id`-variable with
+    dims=(obs_dim,) identifies which particle each flattened-array entry
+    belongs to (needed since particle count varies over time).
+
+    Returns (id_varname, count_varname, time_varname) if detected,
+    otherwise None.
+    """
+    # id-variable: conventionally named "id" in nc_particles files
+    id_candidates = [
+        v for v in ds.variables
+        if ds[v].dims == (obs_dim, ) and v == 'id'
+    ]
+    if not id_candidates:
+        # fall back to any single (obs_dim,) integer-like variable that
+        # isn't the id itself, in case naming isn't "id" exactly
+        id_candidates = [
+            v for v in ds.variables if ds[v].dims == (obs_dim, )
+            and np.issubdtype(ds[v].dtype, np.integer) and v != 'time'
+        ]
+
+    # count-variable: single-dim var whose values sum to len(obs_dim),
+    # and whose dimension looks like a genuine time dimension
+    count_candidates = []
+    for v in ds.variables:
+        if len(ds[v].dims) != 1 or ds[v].dims[0] == obs_dim:
+            continue
+        dim = ds[v].dims[0]
+        try:
+            if int(np.sum(ds[v].to_numpy())) != ds.sizes[obs_dim]:
+                continue
+        except (TypeError, ValueError):
+            continue
+        is_time_dim = (dim == 'time' or v == 'particle_count' or
+                       (dim in ds.coords
+                        and ds[dim].attrs.get('standard_name') == 'time'))
+        if is_time_dim:
+            count_candidates.append(v)
+
+    if len(id_candidates) == 1 and len(count_candidates) == 1:
+        time_dim = ds[count_candidates[0]].dims[0]
+        return id_candidates[0], count_candidates[0], time_dim
+
+    return None
+
 
 @inherit_docstrings
 class Ragged(Traj):
@@ -140,12 +188,128 @@ class Ragged(Traj):
         ds_converted_to_trajRagged = ds_converted_to_trajRagged.assign_attrs(
             global_attrs)
         ds_converted_to_trajRagged = ds_converted_to_trajRagged.assign_attrs(
-            trajan_modified=
-            "this was initially a contiguous ragged Dataset, which was converted to a Ragged dataset by trajan"
+            trajan_converted_from='contiguous'
         )
 
         return Ragged(ds_converted_to_trajRagged, trajectory_dim, obs_dim,
                           time_varname)
+
+    @staticmethod
+    def from_ncparticles(ds,
+                          obs_dim='obs',
+                          time_varname='time',
+                          id_varname='id',
+                          count_varname='particle_count',
+                          data_dim='data') -> Traj:
+        """
+        An unstructured dataset following the nc_particles standard
+        (https://noaa-orr-erd.github.io/nc_particles/nc_particle_standard.html).
+
+        nc_particles files are "ragged by time": `count_varname(time)` gives the
+        number of particles present at each time step, and all per-particle data
+        (lat, lon, depth, mass, ...) is stored contiguously in a single flattened
+        `data_dim` array, one time step's worth of particles after another.
+        `id_varname(data)` gives the particle ID for each entry, allowing
+        particles created/destroyed during the run to be tracked across time
+        even though they don't occupy a fixed row/index.
+
+        This method inverts that "ragged-by-time" layout into the
+        "ragged-by-trajectory" representation used by trajan, where each row
+        holds the time-ordered observations for a single particle ID.
+        """
+        global_attrs = ds.attrs
+
+        if count_varname not in ds:
+            raise ValueError(f"{count_varname} not found in dataset")
+        if id_varname not in ds:
+            raise ValueError(
+                f"{id_varname} not found in dataset; particle identity across "
+                "time steps cannot be reconstructed without it")
+
+        time = ds[time_varname].to_numpy()
+        particle_count = ds[count_varname].to_numpy()
+
+        if particle_count.sum() != ds.sizes[data_dim]:
+            raise ValueError(
+                f"Sum of {count_varname} ({particle_count.sum()}) does not "
+                f"match size of {data_dim} dimension ({ds.sizes[data_dim]})")
+
+        # time index (into the `time` dim) for every entry of the flattened data array
+        time_index_of_data = np.repeat(np.arange(len(time)), particle_count)
+
+        # trajectory index for every entry, preserving order of first appearance
+        traj_index_of_data, unique_ids = pd.factorize(ds[id_varname].to_numpy(),
+                                                       sort=False)
+        nbr_trajectories = len(unique_ids)
+
+        # column (position within its own trajectory) for every entry; since the
+        # flattened array is ordered by increasing time, cumcount gives the
+        # correct time-ordered column index per trajectory, vectorized
+        col_of_data = pd.Series(traj_index_of_data).groupby(
+            traj_index_of_data).cumcount().to_numpy()
+
+        longest_trajectory = col_of_data.max() + 1
+
+        array_time = np.full((nbr_trajectories, longest_trajectory),
+                              np.datetime64('nat'),
+                              dtype='datetime64[ns]')
+        array_time[traj_index_of_data, col_of_data] = time[time_index_of_data]
+
+        ds_converted_to_trajRagged = xr.Dataset({
+            'trajectory':
+            xr.DataArray(
+                data=unique_ids,
+                dims=['trajectory'],
+                attrs={
+                    "cf_role": "trajectory_id",
+                    "standard_name": "platform_id",
+                    "units": "1",
+                    "long_name":
+                    "ID of each particle in the nc_particles dataset.",
+                }),
+            'time':
+            xr.DataArray(dims=['trajectory', obs_dim],
+                         data=array_time,
+                         attrs={
+                             "standard_name": "time",
+                             "long_name":
+                             "Time for the particle position records.",
+                         }),
+        })
+
+        for crrt_data_var in ds.data_vars:
+            if crrt_data_var in (count_varname, id_varname, time_varname):
+                continue
+            if len(ds[crrt_data_var].dims) != 1 or ds[crrt_data_var].dims[
+                    0] != data_dim:
+                logger.warning(
+                    f"Skipping {crrt_data_var}: expected single dim ({data_dim},), "
+                    f"got {ds[crrt_data_var].dims}")
+                continue
+
+            attrs = ds[crrt_data_var].attrs
+            values = ds[crrt_data_var].to_numpy()
+
+            crrt_var = np.full((nbr_trajectories, longest_trajectory), np.nan)
+            crrt_var[traj_index_of_data, col_of_data] = values
+
+            # same renaming quirk as in from_contiguous
+            if crrt_data_var == "longitude":
+                crrt_data_var = "lon"
+            if crrt_data_var == "latitude":
+                crrt_data_var = "lat"
+
+            ds_converted_to_trajRagged[crrt_data_var] = xr.DataArray(
+                dims=['trajectory', obs_dim], data=crrt_var, attrs=attrs)
+
+        ds_converted_to_trajRagged = ds_converted_to_trajRagged.assign_attrs(
+            global_attrs)
+        ds_converted_to_trajRagged = ds_converted_to_trajRagged.assign_attrs(
+            trajan_converted_from='nc_particles'
+        )
+
+        return Ragged(ds_converted_to_trajRagged, 'trajectory', obs_dim,
+                      time_varname)
 
     def timestep(self, average=np.nanmedian):
         td = self.ds.time.diff(dim=self.obs_dim)
@@ -345,7 +509,6 @@ class Ragged(Traj):
 
         # Increase obs_dims to size of max
         for o in obs_dims:
-            print(o)
             N = max(ds.sizes[o], da.sizes[o])
             ds = ds.pad({o: (0, N - ds.sizes[o])})
             da = da.pad({o: (0, N - da.sizes[o])})

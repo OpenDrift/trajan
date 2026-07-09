@@ -9,15 +9,27 @@ logger = logging.getLogger(__name__)
 
 from .traj import Traj, detect_tx_variable
 from .traj.orthogonal import Orthogonal
-from .traj.ragged import Ragged
+from .traj.ragged import Ragged, detect_ncparticles_vars
 
 
 def detect_time_variable(ds, obs_dim):
     logger.debug(f'Detecting time-variable for "{obs_dim}"..')
-    # TODO: should use cf-xarray here
-    for v in ds.variables:
-        if obs_dim in ds[v].dims and 'time' in v:
-            return v
+    time_variables = ds.cf.standard_names.get('time', None)
+    if time_variables is not None:
+        for varname in time_variables:
+            if obs_dim in ds[varname].dims:
+                return varname
+    logger.warning(f'No time CF-variable with dimension {obs_dim}')
+
+    for varname, var in ds.variables.items():
+        if obs_dim in var.dims and 'time' in varname:
+            logger.warning(f'Found instead variable with time in name: {varname}')
+            return varname
+
+    if time_variables is not None:
+        time_variables = time_variables[0]
+        logger.warning(f'Returning time coordinate name: {time_variables}')
+        return time_variables
 
     raise ValueError("No time variable detected")
 
@@ -27,6 +39,7 @@ def detect_trajectory_dim(ds):
     if 'trajectory_id' in ds.cf.cf_roles:  # This is the proper CF way
         trajectory_var = ds.cf['trajectory_id']
         if trajectory_var.name in trajectory_var.sizes:  # Check that this is a dimension
+            logger.debug(f'Found CF trajectory dimension "{trajectory_var.name}"')
             return trajectory_var.name
         else:
             if len(trajectory_var.dims) > 1:
@@ -58,6 +71,11 @@ class TrajA(Traj):
     def __new__(cls, ds) -> "Traj":
 
         trajectory_dim = detect_trajectory_dim(ds)
+        tx = detect_tx_variable(ds)
+        if len(tx.dims) > 0:
+            obs_dim_candidate = tx.dims[0]
+        else:
+            obs_dim_candidate = None
 
         if trajectory_dim is None:
             if 'trajectory_id' in ds.cf.cf_roles:
@@ -76,6 +94,21 @@ class TrajA(Traj):
                     ds = ds.expand_dims(trajectory_dim,
                                         create_index_for_new_dim=False)
             else:
+                # Check if this could be a ncparticles file
+                ncparticles = detect_ncparticles_vars(ds, obs_dim_candidate)
+                if ncparticles is not None:
+                    id_varname, count_varname, time_varname = ncparticles
+                    logger.debug(
+                        f"1D storage dataset; detected nc_particles-style ragged-by-time "
+                        f"layout: {obs_dim_candidate = }, {id_varname = }, "
+                        f"{count_varname = }, {time_varname = }")
+                    return Ragged.from_ncparticles(ds,
+                                                    obs_dim=obs_dim_candidate,
+                                                    time_varname=time_varname,
+                                                    id_varname=id_varname,
+                                                    count_varname=count_varname,
+                                                    data_dim=obs_dim_candidate)
+
                 logger.debug('Creating new trajectory dimension "trajectory"')
                 trajectory_dim = 'trajectory'
                 ds = ds.expand_dims({trajectory_dim: 1})
@@ -84,14 +117,13 @@ class TrajA(Traj):
         obs_dim = None
         time_varname = None
 
-        tx = detect_tx_variable(ds)
-
         # if we have a 1D arrays, this is most likely some contiguous data
         # there may be a few exceptions though, so be ready to default to the classical Ragged parser below
         if len(tx.dims) == 1:
             # we have a dataset where data are stored in 1D arrays
             # NOTE: this is probably not standard; something to point to the CF conventions?
             # NOTE: for now, there is no discovery of the "index" dim, this is hardcorded; any way to do better?
+
             if "index" in tx.dims:
                 obs_dim = "index"
 

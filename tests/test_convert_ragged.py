@@ -28,3 +28,12 @@ def test_convert_ragged(test_data, plot):
     print("the trajanized ds:")
     print(ds.traj.ds)
     print("----------------------------------------")
+
+    assert ds.traj.ds.trajan_converted_from == 'contiguous'
+
+def test_convert_ncparticles(test_data, plot):
+    ds = xr.open_dataset(test_data / 'gnome_nc_particles.nc')
+
+    print(ds.traj)
+
+    assert ds.traj.ds.trajan_converted_from == 'nc_particles'
