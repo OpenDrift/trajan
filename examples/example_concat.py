@@ -3,11 +3,8 @@ Concatenating drifter datasets
 ==============================
 """
 import numpy as np
-import lzma
 import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
 import xarray as xr
-import pandas as pd
 import trajan as ta
 
 #%%

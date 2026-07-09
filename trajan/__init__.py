@@ -251,7 +251,7 @@ def trajectory_dict_to_dataset(trajectory_dict,
             else:
                 variable_attributes[var] = {}
     time = np.empty((num_drifters, num_times), dtype='datetime64[s]')
-    time[:] = np.datetime64('nat')
+    time[:] = np.datetime64('NaT', 's')
 
     # Fill arrays with data from dictionaries
     for drifter_num, (drifter_name,

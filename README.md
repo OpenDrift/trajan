@@ -26,14 +26,11 @@ pip install trajan
 TrajAn exposes a `.traj` accessor on xarray Datasets:
 
 ```python
-import lzma
 import xarray as xr
 import trajan as ta
 
 # Open a CF-trajectory dataset (e.g. from drifting buoys)
-with lzma.open("barents.nc.xz") as f:
-    ds = xr.open_dataset(f)
-    ds.load()
+ds = xr.open_dataset('barents.nc')
 
 # Basic map plot — geographic projection is chosen automatically
 ds.traj.plot()
