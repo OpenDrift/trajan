@@ -68,10 +68,8 @@ jobs:
       - name: Build wheels
         run: |
           pip install build
-          python -m build --wheel
+          python -m build
           ls -l dist/*
-        env:
-          SETUPTOOLS_SCM_PRETEND_VERSION: "0.0.0"  # If using setuptools_scm
 
       - name: Upload wheels
         if: matrix.python-version == '3.14' && matrix.os == 'ubuntu'

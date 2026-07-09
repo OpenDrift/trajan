@@ -26,3 +26,4 @@ dependencies:
   - roaring-landmask
   - cf_xarray>=0.8.0
   - opendrift
+  - expat
