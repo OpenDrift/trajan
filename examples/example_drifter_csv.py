@@ -2,7 +2,6 @@
 Read a position log from a CSV file and convert it to a CF-compatible dataset
 =============================================================================
 """
-import pandas as pd
 import trajan as ta
 import matplotlib.pyplot as plt
 
@@ -14,4 +13,3 @@ print(ds)
 ds.traj.plot(color=None, label=ds.trajectory.values)
 plt.legend()
 plt.show()
-

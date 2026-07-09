@@ -16,27 +16,21 @@ import trajan as ta
 ds = xr.open_dataset(ta.DATA_DIR + 'gnome_nc_particles.nc')
 print(ds)
 
+#%%
+# Displaying what is detected by TrajAn
 print(ds.traj)
 
 #%%
-# Basic plot
-ds.traj.plot(land='mask')
+# Plotting
 
-#%%
-# Convert from Ragged to Orthogonal
-ds_ortho = ds.traj.gridtime('1h')
-
-#%%
-# Plotting a mean trajectory
+ds.traj.plot(land='mask')                      # plotting all trajectories
+ds_ortho = ds.traj.gridtime('1h')              # convert from Ragged to Orthogonal
 ds_ortho.mean('trajectory').traj.plot(color='r', label='Mean trajectory')
-
-#%%
 # Plotting initial and final element locations, and a convex hull
 ds_ortho.isel(time=0).traj.plot.scatter(color='k', s=80, zorder=100, label='Initial positions')
 ds_ortho.isel(time=-1).traj.plot.scatter(color='b', s=80, zorder=100, label='Final positions')
 ds_ortho.isel(time=-1).traj.plot.convex_hull(color='g', label='Convex hull of final positions')
 #ds_ortho.isel(time=10).traj.plot.convex_hull(color='y', label='Convex hull after 10 hours')
-
 plt.legend()
 plt.title('Sample trajectory dataset from nc_particles repository')
 plt.show()

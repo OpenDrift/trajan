@@ -2,7 +2,6 @@ import trajan as ta
 import xarray as xr
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def test_seltime(barents):

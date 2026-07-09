@@ -7,7 +7,6 @@ Start with ``ds.traj.animate()``, chain configuration methods, then call
 ``.show()`` to display interactively or ``.save()`` to write a file.
 """
 import logging
-import lzma
 import numpy as np
 import xarray as xr
 import coloredlogs

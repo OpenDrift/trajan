@@ -3,7 +3,6 @@ Analysing a drifter dataset
 ============================
 """
 import numpy as np
-import lzma
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import xarray as xr
