@@ -11,9 +11,7 @@ import trajan as ta
 
 #%%
 # Importing a dataset with two drifters in the Barents Sea
-with lzma.open('barents.nc.xz') as barents:
-    ds = xr.open_dataset(barents)
-    ds.load()
+ds = xr.open_dataset(ta.DATA_DIR + 'barents.nc')
 
 #%%
 # This follows the CF convention for trajectories

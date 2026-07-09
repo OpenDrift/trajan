@@ -277,11 +277,9 @@ class Traj:
         Transform dataset to UTM coordinates:
 
         >>> import xarray as xr
-        >>> import trajan as _
-        >>> import lzma
+        >>> import trajan as ta
         >>> import pyproj
-        >>> b = lzma.open('examples/barents.nc.xz')
-        >>> ds = xr.open_dataset(b)
+        >>> ds = xr.open_dataset(ta.DATA_DIR + 'barents.nc')
         >>> print(ds)
         <xarray.Dataset> Size: 110kB
         Dimensions:        (trajectory: 2, obs: 2287)
@@ -381,11 +379,9 @@ class Traj:
         Transform UTM coordinates to lat-lon
 
         >>> import xarray as xr
-        >>> import trajan as _
-        >>> import lzma
+        >>> import trajan as ta
         >>> import pyproj
-        >>> b = lzma.open('examples/barents.nc.xz')
-        >>> ds = xr.open_dataset(b)
+        >>> ds = xr.open_dataset(ta.DATA_DIR + 'barents.nc')
         >>> print(ds)
         <xarray.Dataset> Size: 110kB
         Dimensions:        (trajectory: 2, obs: 2287)
@@ -637,12 +633,12 @@ class Traj:
             'time_coverage_start':
             pd.to_datetime(
                 np.nanmin(ds[self.time_varname].values[ds[
-                    self.time_varname].values != np.datetime64('NaT')])).
+                    self.time_varname].values != np.datetime64('NaT', 'ns')])).
             isoformat() if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'time_coverage_end':
             pd.to_datetime(
                 np.nanmax(ds[self.time_varname].values[ds[
-                    self.time_varname].values != np.datetime64('NaT')])
+                    self.time_varname].values != np.datetime64('NaT', 'ns')])
             ).isoformat() if self.ds.sizes[self.obs_dim] > 0 else np.nan,
         })
 
@@ -1094,10 +1090,8 @@ class Traj:
         unstructured observations:
 
         >>> import xarray as xr
-        >>> import trajan as _
-        >>> import lzma
-        >>> b = lzma.open('examples/barents.nc.xz')
-        >>> ds = xr.open_dataset(b)
+        >>> import trajan as ta
+        >>> ds = xr.open_dataset(ta.DATA_DIR + 'barents.nc')
         >>> print(ds)
         <xarray.Dataset> Size: 110kB
         Dimensions:        (trajectory: 2, obs: 2287)
@@ -1189,10 +1183,8 @@ class Traj:
         --------
 
         >>> import xarray as xr
-        >>> import trajan as _
-        >>> import lzma
-        >>> b = lzma.open('examples/barents.nc.xz')
-        >>> ds = xr.open_dataset(b)
+        >>> import trajan as ta
+        >>> ds = xr.open_dataset(ta.DATA_DIR + 'barents.nc')
         >>> expected = ds.copy()
         >>> ds = ds.traj.gridtime('1h')
         >>> expected = expected.traj.gridtime(ds.time)
@@ -1334,10 +1326,8 @@ class Traj:
         Examples
         --------
         >>> import xarray as xr
-        >>> import trajan as _
-        >>> import lzma
-        >>> b = lzma.open('examples/barents.nc.xz')
-        >>> ds = xr.open_dataset(b)
+        >>> import trajan as ta
+        >>> ds = xr.open_dataset(ta.DATA_DIR + 'barents.nc')
         >>> filtered = ds.traj.filter(method='speed', max_speed=3.)
         >>> filtered = ds.traj.filter(method='nsigma_sliding', nsigma=5., side_half_width=2)
         """
@@ -1638,10 +1628,8 @@ class Traj:
         Calculate mean position of each trajectory:
 
         >>> import xarray as xr
-        >>> import trajan as _
-        >>> import lzma
-        >>> b = lzma.open('examples/barents.nc.xz')
-        >>> ds = xr.open_dataset(b)
+        >>> import trajan as ta
+        >>> ds = xr.open_dataset(ta.DATA_DIR + 'barents.nc')
         >>> p = ds.traj.trajectories().map(lambda t: t.mean('obs'))
 
         >>> p

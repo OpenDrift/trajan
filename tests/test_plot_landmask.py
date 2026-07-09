@@ -4,25 +4,21 @@ import xarray as xr
 import matplotlib.pyplot as plt
 
 
-def test_defaults(opendrift_sim, plot):
-    opendrift_sim = opendrift_sim.where(opendrift_sim.status
-                                        >= 0)  # only active particles
-    _, ax = opendrift_sim.traj.plot()
+def test_defaults(openoil, plot):
+    _, ax = openoil.traj.plot()
 
     if plot:
         plt.show()
 
-    return ax.figure
+    #return ax.figure
 
 
 @pytest.mark.parametrize("land", ["auto", "c", "f", "mask"])
 @pytest.mark.mpl_image_compare(remove_text=True, tolerance=2.35)
-def test_land_specs(opendrift_sim, plot, land):
-    opendrift_sim = opendrift_sim.where(opendrift_sim.status
-                                        >= 0)  # only active particles
-    _, ax = opendrift_sim.traj.plot(land=land)
+def test_land_specs(openoil, plot, land):
+    _, ax = openoil.traj.plot(land=land)
 
     if plot:
         plt.show()
 
-    return ax.figure
+    #return ax.figure

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import xarray as xr
 import trajan as ta
 
-ds = xr.open_dataset('../tests/test_data/parcels.zarr', engine='zarr')
+ds = xr.open_dataset(ta.DATA_DIR + 'parcels.zarr', engine='zarr')
 #%%
 # Print Xarray dataset
 print(ds)

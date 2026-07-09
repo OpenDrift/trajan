@@ -174,11 +174,11 @@ def _random_points_in_extent(ds, n=100, seed=42):
 
 @pytest.mark.parametrize('with_random', [True, False], ids=['with_random', 'without_random'])
 @pytest.mark.mpl_image_compare
-def test_crs_bergen_and_opendrift(opendrift_sim, plot, with_random):
+def test_crs_bergen_and_opendrift(openoil, plot, with_random):
     """Plot Bergen and every tenth time-step of the opendrift trajectories, optionally with random points."""
     BERGEN_LON, BERGEN_LAT = 5.324, 60.389
 
-    ds = opendrift_sim.where(opendrift_sim.status >= 0)
+    ds = openoil
     # proj = ds.traj.ccrs
     proj = ccrs.Mercator()
 
@@ -212,17 +212,15 @@ def test_crs_bergen_and_opendrift(opendrift_sim, plot, with_random):
 
 @pytest.mark.parametrize('with_random', [True, False], ids=['with_random', 'without_random'])
 @pytest.mark.mpl_image_compare
-def test_crs_bergen_and_opendrift_traj(opendrift_sim, plot, with_random):
+def test_crs_bergen_and_opendrift_traj(openoil, plot, with_random):
     """Plot Bergen and every tenth time-step using ds.traj.plot(), optionally with random points."""
     BERGEN_LON, BERGEN_LAT = 5.324, 60.389
 
-    ds = opendrift_sim.where(opendrift_sim.status >= 0)
-
     # Use trajan to set up the map and plot every 10th time-step
-    _, ax = ds.isel(time=slice(None, None, 10)).traj.plot()
+    _, ax = openoil.isel(time=slice(None, None, 10)).traj.plot()
 
     if with_random:
-        rand_lons, rand_lats = _random_points_in_extent(ds)
+        rand_lons, rand_lats = _random_points_in_extent(openoil)
         ax.plot(rand_lons, rand_lats, 'g^', markersize=6,
                 transform=ccrs.Geodetic(), label='Random points')
 

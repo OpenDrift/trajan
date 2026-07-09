@@ -206,10 +206,10 @@ def read_omb_csv(path_in: Path|pd.DataFrame,
     list_instruments = sorted(list(dict_entries.keys()))
 
     empty_time = np.full((trajectory, obs_gnss),
-                         np.datetime64('nat'),
+                         np.datetime64('NaT', 'ns'),
                          dtype='datetime64[ns]')
     empty_time_waves_imu = np.full((trajectory, obs_waves_imu),
-                                   np.datetime64('nat'),
+                                   np.datetime64('NaT', 'ns'),
                                    dtype='datetime64[ns]')
 
     # create and fill the xarray dataset

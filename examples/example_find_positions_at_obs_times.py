@@ -3,7 +3,7 @@ Finding the closest or interpolated positions at given times (e.g. wave observat
 =======================================================================================
 """
 
-from pathlib import Path
+import trajan as ta
 from trajan.readers.omb import read_omb_csv
 import xarray as xr
 import coloredlogs
@@ -12,8 +12,7 @@ coloredlogs.install(level='debug')
 
 #%%
 # Read the data
-data = Path.cwd().parent / "tests" / "test_data" / "csv" / "omb3.csv"
-ds = read_omb_csv(data)
+ds = read_omb_csv(ta.DATA_DIR + 'omb/omb3.csv')
 print(ds)
 
 #%%

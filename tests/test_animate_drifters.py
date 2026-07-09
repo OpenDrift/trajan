@@ -1,8 +1,11 @@
 import trajan as ta
 import xarray as xr
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
-def test_animate_barents(barents, plot):
+
+def test_animate_barents(plot, barents):
     anim = barents.traj.animate()
     if plot:
         anim.show()
@@ -11,7 +14,7 @@ def test_animate_barents(barents, plot):
         fa._draw_was_started = True
         plt.close('all')
 
-def test_animate_barents_color_by(barents, plot):
+def test_animate_barents_color_by(plot, barents):
     speed = barents.traj.speed()
     anim = barents.traj.animate().color_by(speed, cmap='plasma', vmin=0, vmax=2,
                                            label='Speed [m/s]')
@@ -22,7 +25,7 @@ def test_animate_barents_color_by(barents, plot):
         fa._draw_was_started = True
         plt.close('all')
 
-def test_animate_barents_show_trajectories(barents, plot):
+def test_animate_barents_show_trajectories(plot, barents):
     anim = barents.traj.animate().show_trajectories(alpha=0.2)
     if plot:
         anim.show()
@@ -31,7 +34,7 @@ def test_animate_barents_show_trajectories(barents, plot):
         fa._draw_was_started = True
         plt.close('all')
 
-def test_animate_barents_save_mp4(barents, tmp_path):
+def test_animate_barents_save_mp4(tmp_path, barents):
     import matplotlib.animation
     out = tmp_path / 'barents.mp4'
     if not matplotlib.animation.FFMpegWriter.isAvailable():

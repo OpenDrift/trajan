@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')  # Force Agg backend for all tests
 import pytest
 
 def pytest_addoption(parser):
