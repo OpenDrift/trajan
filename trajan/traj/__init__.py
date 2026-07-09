@@ -42,6 +42,7 @@ def inherit_docstrings(cls):
 
 
 def detect_tx_variable(ds):
+    # TODO: should use cf-xarray and standard_name
     if 'lon' in ds:
         return ds.lon
     elif 'longitude' in ds:
@@ -128,6 +129,13 @@ class Traj:
         output = '=======================\n'
         output += 'TrajAn info:\n'
         output += '------------\n'
+
+        output += f'Type: {type(self).__name__}'
+        converted_from =  self.ds.attrs.get('trajan_converted_from', None)
+        if converted_from is not None:
+            output += f'  (converted from {converted_from} by TrajAn)'
+        output += '\n'
+
         if self.trajectory_dim is None:
             output += 'Single trajectory (no trajectory dimension)\n'
         else:
@@ -135,20 +143,20 @@ class Traj:
         if self.time_varname is not None:
             output += f'{self.ds.sizes[self.obs_dim]} timesteps      [obs_dim: {self.obs_dim}]\n'
             timevar = self.ds[self.time_varname]
-            output += f'Time variable:    {timevar.name}{list(timevar.sizes)}   ({len(timevar.sizes)}D)\n'
+            output += f'Time variable:   {timevar.name}{list(timevar.sizes)}\n'
             try:
                 timestep = self.timestep()
                 timestep = timedelta(seconds=timestep.total_seconds())
             except:
                 timestep = '[self.timestep returns error]'  # TODO
-            output += f'Timestep:       {timestep}\n'
+            output += f'Timestep:        {timestep}\n'
             start_time = self.ds.time.min(skipna=True).data
             end_time = self.ds.time.max(skipna=True).data
-            output += f'Time coverage:  {start_time} - {end_time}\n'
+            output += f'Time coverage:   {start_time} - {end_time}\n'
         else:
             output += f'Dataset has no time variable'
-        output += f'Longitude span: {self.tx.min(skipna=True).data} to {self.tx.max(skipna=True).data}\n'
-        output += f'Latitude span:  {self.ty.min(skipna=True).data} to {self.ty.max(skipna=True).data}\n'
+        output += f'Longitude span:  {self.tx.min(skipna=True).data} to {self.tx.max(skipna=True).data}\n'
+        output += f'Latitude span:   {self.ty.min(skipna=True).data} to {self.ty.max(skipna=True).data}\n'
         output += 'Variables:\n'
         for var in self.ds.variables:
             if var not in ['trajectory', self.obs_dim]:
