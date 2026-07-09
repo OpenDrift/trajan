@@ -1,5 +1,6 @@
 import matplotlib
 matplotlib.use('Agg')
+matplotlib.rcParams['animation.html'] = 'html5'
 
 import os, sys
 sys.path.insert(0, os.path.abspath('../..'))
