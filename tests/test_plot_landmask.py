@@ -10,7 +10,7 @@ def test_defaults(openoil, plot):
     if plot:
         plt.show()
 
-    #return ax.figure
+    return ax.figure
 
 
 @pytest.mark.parametrize("land", ["auto", "c", "f", "mask"])
@@ -21,4 +21,4 @@ def test_land_specs(openoil, plot, land):
     if plot:
         plt.show()
 
-    #return ax.figure
+    return ax.figure
