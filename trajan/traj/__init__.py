@@ -633,12 +633,12 @@ class Traj:
             'time_coverage_start':
             pd.to_datetime(
                 np.nanmin(ds[self.time_varname].values[ds[
-                    self.time_varname].values != np.datetime64('NaT', 'ns')])).
+                    self.time_varname].values != np.datetime64('NaT', 's')])).
             isoformat() if self.ds.sizes[self.obs_dim] > 0 else np.nan,
             'time_coverage_end':
             pd.to_datetime(
                 np.nanmax(ds[self.time_varname].values[ds[
-                    self.time_varname].values != np.datetime64('NaT', 'ns')])
+                    self.time_varname].values != np.datetime64('NaT', 's')])
             ).isoformat() if self.ds.sizes[self.obs_dim] > 0 else np.nan,
         })
 

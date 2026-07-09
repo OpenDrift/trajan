@@ -100,7 +100,7 @@ class Ragged(Traj):
         # the time var (special case as it is of a different type)
 
         array_time = np.full((nbr_trajectories, longest_trajectory),
-                             np.datetime64('NaT', 'ns'),
+                             np.datetime64('NaT', 's'),
                              dtype='datetime64[ns]')
 
         start_index = 0
@@ -389,7 +389,7 @@ class Ragged(Traj):
                     s = np.split(olddata, insert_indices)
 
                     if np.issubdtype(var.dtype, np.datetime64):
-                        na = np.atleast_1d(np.datetime64('NaT', 'ns'))
+                        na = np.atleast_1d(np.datetime64('NaT', 's'))
                     else:
                         na = np.atleast_1d(np.nan)
                     newdata = np.concatenate(
