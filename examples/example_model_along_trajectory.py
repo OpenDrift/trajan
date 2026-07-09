@@ -14,7 +14,7 @@ print(ta.versions())
 
 #%%
 # Open drifter dataset from a CSV file
-ds = ta.read_csv('bug05_pos.csv.xz',
+ds = ta.read_csv(ta.DATA_DIR + 'omb/bug05_pos.csv',
                  lon='Longitude',
                  lat='Latitude',
                  time='Time',

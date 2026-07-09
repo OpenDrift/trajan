@@ -1,11 +1,10 @@
-from pathlib import Path
 from trajan.readers.omb import read_omb_csv
-import datetime
 import matplotlib.pyplot as plt
+import trajan as ta
 
 
-def test_plot_spectra_accessor(test_data, plot):
-    csv_in = test_data / 'csv/omb3.csv'
+def test_plot_spectra_accessor(plot):
+    csv_in = ta.DATA_DIR + 'omb/omb3.csv'
     ds = read_omb_csv(csv_in)
     print(ds)
     print(ds.elevation_energy_spectrum)

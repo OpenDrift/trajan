@@ -1,11 +1,11 @@
 import pytest
 import xarray as xr
-import trajan as _
+import trajan as ta
 import matplotlib.pyplot as plt
 
 
-def test_interpret_sfy(test_data):
-    ds = xr.open_dataset(test_data / 'bug32.nc')
+def test_interpret_sfy():
+    ds = xr.open_dataset(ta.DATA_DIR + 'omb/bug32.nc')
     print(ds)
 
     assert ds.traj.obs_dim == 'package'
@@ -14,8 +14,8 @@ def test_interpret_sfy(test_data):
     assert ds.traj.is_ragged()
 
 
-def test_plot_sfy(test_data, plot):
-    ds = xr.open_dataset(test_data / 'bug32.nc')
+def test_plot_sfy(plot):
+    ds = xr.open_dataset(ta.DATA_DIR + 'omb/bug32.nc')
     print(ds)
 
     ds.traj.plot()
@@ -24,14 +24,14 @@ def test_plot_sfy(test_data, plot):
         plt.show()
     plt.close('all')
 
-def test_gridtime(test_data):
-    ds = xr.open_dataset(test_data / 'bug32.nc')
+def test_gridtime():
+    ds = xr.open_dataset(ta.DATA_DIR + 'omb/bug32.nc')
     print(ds)
 
     dg = ds.traj.gridtime('1h')
     print(dg)
 
 @pytest.mark.xfail(reason='timestep methods seems to fail for Ragged datasets')
-def test_timestep(test_data):
-    ds = xr.open_dataset(test_data / 'bug32.nc')
+def test_timestep():
+    ds = xr.open_dataset(ta.DATA_DIR + 'omb/bug32.nc')
     print(ds.traj.timestep())

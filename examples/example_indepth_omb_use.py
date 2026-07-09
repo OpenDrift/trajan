@@ -6,7 +6,7 @@ Examples of leveraging xarray in combination with trajan to analyze OMB data
 # %%
 
 import matplotlib.pyplot as plt
-from pathlib import Path
+import trajan as ta
 from trajan.readers.omb import read_omb_csv
 import coloredlogs
 import datetime
@@ -40,8 +40,7 @@ coloredlogs.install(level='error')
 # We start by preparing some example data to work with
 
 # generate a trajan dataset
-path_to_test_data = Path.cwd().parent / "tests" / "test_data" / "csv" / "omb3.csv"
-xr_buoys = read_omb_csv(path_to_test_data)
+xr_buoys = read_omb_csv(ta.DATA_DIR + 'omb/omb3.csv')
 
 # %%
 

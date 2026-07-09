@@ -46,8 +46,8 @@ def test_trajectories_group_barents(barents):
     p = barents.traj.trajectories().map(a)
     print(p)
 
-def test_trajectories_group_omb(test_data):
-    path_to_test_data = test_data / 'csv' / 'omb1.csv'
+def test_trajectories_group_omb():
+    path_to_test_data = ta.DATA_DIR + 'omb/omb1.csv'
     ds = read_omb_csv(path_to_test_data)
     assert ds.traj.is_ragged()
 

@@ -1,32 +1,29 @@
 import pytest
-import lzma
 import xarray as xr
-from pathlib import Path
+import trajan as ta
+
 
 @pytest.fixture
 def plot(pytestconfig):
     return pytestconfig.getoption('plot')
 
 @pytest.fixture
-def opendrift_sim():
-    oil = Path(__file__).parent.parent / 'examples' / 'openoil.nc'
-    ds = xr.open_dataset(oil)
-    return ds
+def openoil():
+    with xr.open_dataset(ta.DATA_DIR + 'openoil.nc') as ds:
+        ds = ds.where(ds.status >= 0)  # to be removed
+        yield ds
 
 @pytest.fixture
 def barents():
-    fn = Path(__file__).parent.parent / 'examples' / 'barents.nc.xz'
-    with lzma.open(fn) as b:
-        ds = xr.open_dataset(b)
-        ds.load()
-        return ds
+    with xr.open_dataset(ta.DATA_DIR + 'barents.nc') as ds:
+        yield ds
+
+@pytest.fixture
+def parcels():
+    with xr.open_dataset(ta.DATA_DIR + 'parcels.zarr', engine='zarr') as ds:
+        yield ds
 
 @pytest.fixture
 def drifter_csv():
-    fn = Path(__file__).parent.parent / 'examples' / 'bug05_pos.csv.xz'
-    return fn
-
-@pytest.fixture
-def test_data():
-    fn = Path(__file__).parent / 'test_data'
+    fn = ta.DATA_DIR + 'omb/bug05_pos.csv'
     return fn

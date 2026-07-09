@@ -7,13 +7,14 @@ import matplotlib.pyplot as plt
 import xarray as xr
 import trajan as ta
 
+
 #%%
 # Demonstrating how a trajectory dataset (from OpenDrift)
 # can be analysed and plotted with Trajan
 
 #%%
 # Importing a trajectory dataset from a simulation with OpenDrift.
-ds = xr.open_dataset('openoil.nc')
+ds = xr.open_dataset(ta.DATA_DIR + 'openoil.nc')
 
 #%%
 # Displaying some basic information about this dataset

@@ -1,10 +1,10 @@
 import xarray as xr
-import trajan as _
+import trajan as ta
 import matplotlib.pyplot as plt
 
 
-def test_convert_ragged(test_data, plot):
-    ds = xr.open_dataset(test_data / 'xr_spotter_bulk_test_data.nc')
+def test_convert_ragged(plot):
+    ds = xr.open_dataset(ta.DATA_DIR + 'xr_spotter_bulk_test_data.nc')
 
     # let us check that the conversion worked well, and that all main functionalities are working
     print(ds.traj)
@@ -31,8 +31,8 @@ def test_convert_ragged(test_data, plot):
 
     assert ds.traj.ds.trajan_converted_from == 'contiguous'
 
-def test_convert_ncparticles(test_data, plot):
-    ds = xr.open_dataset(test_data / 'gnome_nc_particles.nc')
+def test_convert_ncparticles(plot):
+    ds = xr.open_dataset(ta.DATA_DIR + 'gnome_nc_particles.nc')
 
     print(ds.traj)
 

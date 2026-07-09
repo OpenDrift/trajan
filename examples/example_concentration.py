@@ -5,14 +5,14 @@ Calculating gridded concentrations
 import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
-import trajan as _
+import trajan as ta
 
 #%%
 # Demonstrating calculation and plotting of gridded concentrations
 
 #%%
 # Importing a trajectory dataset from an oil drift simulation (OpenOil)
-ds = xr.open_dataset('opv2025_subset.nc')
+ds = xr.open_dataset(ta.DATA_DIR + 'opv2025_subset.nc')
 
 #%%
 # Make a grid covering this dataset with a horizontal resolution of 200m

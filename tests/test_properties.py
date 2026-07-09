@@ -1,11 +1,9 @@
 import pytest
-import numpy as np
 import trajan as ta
 import xarray as xr
-import pandas as pd
 
-@pytest.mark.parametrize('ds', ['barents', 'opendrift_sim'])
-def test_timestep(ds, request):
-    ds = request.getfixturevalue(ds)
+@pytest.mark.parametrize('sample', ['barents.nc', 'openoil.nc'])
+def test_timestep(sample):
+    ds = xr.open_dataset(ta.DATA_DIR + sample)
     print(ds.traj.timestep())
 

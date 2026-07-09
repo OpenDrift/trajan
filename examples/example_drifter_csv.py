@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 #%%
 # Use the `read_csv` function:
-ds = ta.read_csv('bug05_pos.csv.xz', lon='Longitude', lat='Latitude', time='Time', name='Device')
+ds = ta.read_csv(ta.DATA_DIR + 'omb/bug05_pos.csv', lon='Longitude', lat='Latitude', time='Time', name='Device')
 print(ds)
 
 ds.traj.plot(color=None, label=ds.trajectory.values)

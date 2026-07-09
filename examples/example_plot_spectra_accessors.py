@@ -5,7 +5,7 @@ Plotting wave spectra data, using the accessor syntax
 
 # %%
 
-from pathlib import Path
+import trajan as ta
 from trajan.readers.omb import read_omb_csv
 import coloredlogs
 import datetime
@@ -18,8 +18,7 @@ coloredlogs.install(level='debug')
 # %%
 
 # load the data from an example file with several buoys and a bit of wave spectra data
-path_to_test_data = Path.cwd().parent / "tests" / "test_data" / "csv" / "omb3.csv"
-xr_data = read_omb_csv(path_to_test_data)
+xr_data = read_omb_csv(ta.DATA_DIR + 'omb/omb3.csv')
 
 # %%
 

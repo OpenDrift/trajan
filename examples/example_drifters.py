@@ -11,9 +11,7 @@ import trajan as ta
 
 #%%
 # Importing a dataset with two drifters in the Barents Sea
-with lzma.open('barents.nc.xz') as barents:
-    ds = xr.open_dataset(barents)
-    ds.load()
+ds = xr.open_dataset(ta.DATA_DIR + 'barents.nc')
 
 #%%
 # This follows the CF convention for trajectories
@@ -131,10 +129,7 @@ ds.traj.animate().show()
 # **Speed filter** — positions from which the speed to the next observation
 # exceeds a given threshold (here 3 m/s) are masked. We reload the original
 # (uncleaned) dataset to illustrate the effect.
-with lzma.open('barents.nc.xz') as barents:
-    ds_raw = xr.open_dataset(barents)
-    ds_raw.load()
-
+ds_raw = xr.open_dataset(ta.DATA_DIR + 'barents.nc')
 ds_speed = ds_raw.traj.filter(method='speed', max_speed=3.)
 
 #%%

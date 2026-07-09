@@ -17,9 +17,7 @@ coloredlogs.install(level=logging.DEBUG, logger=logging.getLogger('trajan'))
 
 #%%
 # Load the Barents Sea drifter dataset, drop short gaps and grid to 6-hourly.
-with lzma.open('barents.nc.xz') as barents:
-    ds = xr.open_dataset(barents)
-    ds.load()
+ds = xr.open_dataset(ta.DATA_DIR + 'barents.nc')
 
 ds = ds.traj.drop_where(ds.traj.time_to_next() < np.timedelta64(5, 'm'))
 ds = ds.traj.gridtime('6h')

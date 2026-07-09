@@ -2,6 +2,7 @@
 Trajan API
 """
 
+import os
 import importlib.metadata
 
 import collections
@@ -24,6 +25,8 @@ from .traj import Traj
 Dataset = xr.Dataset
 
 logger = logging.getLogger(__name__)
+
+DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'examples', 'data_dir')) + os.path.sep
 
 
 __version__ = importlib.metadata.version("trajan")

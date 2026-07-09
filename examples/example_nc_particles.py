@@ -13,7 +13,7 @@ import trajan as ta
 # This is a contiguous ragged format with a deviation from the CF-convention:
 # all elements for a given time are stored together, instead of the time series of individual elements
 
-ds = xr.open_dataset('../tests/test_data/gnome_nc_particles.nc')
+ds = xr.open_dataset(ta.DATA_DIR + 'gnome_nc_particles.nc')
 print(ds)
 
 print(ds.traj)

@@ -4,10 +4,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-def test_read_example_csv(drifter_csv, plot):
-    dc = pd.read_csv(drifter_csv)
-
-    ds = ta.read_csv(drifter_csv, name='Device', time='Time', lon='Longitude', lat='Latitude')
+def test_read_example_csv(plot):
+    dc = pd.read_csv(ta.DATA_DIR + 'omb/bug05_pos.csv')
+    ds = ta.read_csv(ta.DATA_DIR + 'omb/bug05_pos.csv', name='Device', time='Time', lon='Longitude', lat='Latitude')
     print(ds)
 
     assert len(dc) == ds.sizes['obs']
@@ -21,8 +20,8 @@ def test_read_example_csv(drifter_csv, plot):
         plt.show()
     plt.close('all')
 
-def test_concat(drifter_csv):
-    dc = pd.read_csv(drifter_csv)
+def test_concat():
+    dc = pd.read_csv(ta.DATA_DIR + 'omb/bug05_pos.csv')
     dc2 = dc.copy()
     dc2['Time'] = pd.to_datetime(dc['Time'], format='mixed') + pd.to_timedelta('1min')
     dc2['Device'] = 'drifter 2'
@@ -36,9 +35,9 @@ def test_concat(drifter_csv):
     # obs dim is same as max of dc and dc2
     assert len(dc2) == ds.sizes['obs']
 
-def test_lungard(test_data):
-    b16 = pd.read_csv(test_data / 'csv/bug16.csv.xz')
-    b23 = pd.read_csv(test_data / 'csv/bug23.csv.xz')
+def test_lungard():
+    b16 = pd.read_csv(ta.DATA_DIR + 'omb/bug16.csv')
+    b23 = pd.read_csv(ta.DATA_DIR + 'omb/bug23.csv')
 
     dc = pd.concat((b16, b23))
     print(dc)
@@ -60,8 +59,8 @@ def test_lungard(test_data):
     assert (np.isnan(ds.isel(trajectory=0).lon) == np.isnan(ds.isel(trajectory=0).lat)).all()
 
 
-def test_seals(test_data, tmpdir):
-    s = test_data / 'csv/seals.csv.xz'
+def test_seals(tmpdir):
+    s = ta.DATA_DIR + 'omb/seals.csv'
     ds = ta.read_csv(s, lat='Lat', lon='Lon', time='Timestamp', name='Instrument')
     print(ds)
 
@@ -70,9 +69,9 @@ def test_seals(test_data, tmpdir):
 
     ds.to_netcdf(tmpdir / 'test.nc')
 
-def test_condense_obs(test_data, tmpdir):
-    s = test_data / 'csv/seals.csv.xz'
-    ds = ta.read_csv(s, lat='Lat', lon='Lon', time='Timestamp', name='Instrument', __test_condense__=True)
+def test_condense_obs(tmpdir):
+    ds = ta.read_csv(ta.DATA_DIR + 'omb/seals.csv', lat='Lat', lon='Lon',
+                     time='Timestamp', name='Instrument', __test_condense__=True)
     print(ds)
 
     assert ds.sizes['trajectory'] == 5
