@@ -25,9 +25,6 @@ def main(tf, p, l):
     else:
         ds = xr.open_dataset(tf)
 
-    if 'status' in ds:  # hack for OpenDrift files
-        ds = ds.where(ds.status>=0)
-
     print(ds.traj)
 
     if p is True:
