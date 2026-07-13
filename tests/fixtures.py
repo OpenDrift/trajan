@@ -10,7 +10,6 @@ def plot(pytestconfig):
 @pytest.fixture
 def openoil():
     with xr.open_dataset(ta.DATA_DIR + 'openoil.nc') as ds:
-        ds = ds.where(ds.status >= 0)  # to be removed
         yield ds
 
 @pytest.fixture

@@ -40,9 +40,6 @@ def main(tf, land, start_time, end_time, margin):
     else:
         ds = xr.open_dataset(tf)
 
-    if 'status' in ds:  # hack for OpenDrift files
-        ds = ds.where(ds.status>=0)
-
     trajectory_names = None
     color = 'gray'
     dsub = ds.filter_by_attrs(cf_role='trajectory_id')
