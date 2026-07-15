@@ -23,12 +23,12 @@ or
 
    $ pip install trajan
 
-**Install from source (recommended to develop for Trajan)**
+**Install from source (recommended if you want to modify TrajAn code)**
 
 .. code-block:: console
 
    $ git clone git@github.com:OpenDrift/trajan.git
-   $ cd trajan  # move to the location of the trajan root, containing the pyproject.toml file
+   $ cd trajan
    $ pip install -e .
 
 Remember to re-install each time you have done an edit during the development process.
@@ -61,22 +61,22 @@ Generally, TrajAn supports two types of data layout:
 
 For Ragged datasets time is a 2D array with dimensions for trajectory and observation/time, while for Orthognal datasets time is a 1D array common for all trajectories.
 
-TrajAn will detect which type of dataset you have and you will have access to the appropriate methods for the type data layout. Contiguous ragged and `nc_particles <https://noaa-orr-erd.github.io/nc_particles/nc_particle_standard.html>`_ format ara internally modified to Ragged format.
+TrajAn will detect which type of dataset you have and you will have access to the appropriate methods for the type data layout. `Contiguous ragged <https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html#_contiguous_ragged_array_representation_of_trajectories>`_ and `nc_particles <https://noaa-orr-erd.github.io/nc_particles/nc_particle_standard.html>`_ format are internally converted to Ragged format.
 
 While the Ragged format is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a Ragged dataset to Orthogonal by using :meth:`xarray.Dataset.traj.gridtime`.
 
-Methods applicable to both types of datasets can be found in: :mod:`xarray.Dataset.traj`, methods for Orthogonal datasets: :mod:`xarray.Dataset.traj.orthogonal.Orthogonal`, and Ragged: :mod:`xarray.Dataset.traj.ragged.Ragged`. All methods are forwarded to the accessor, so you call the methods on :meth:`ds.traj`:
+Methods applicable to both types of datasets can be found in: :class:`trajan.accessor.TrajA`, methods for Orthogonal datasets: :class:`trajan.traj.orthogonal.Orthogonal`, and Ragged: :class:`trajan.traj.ragged.Ragged`. All methods are forwarded to the accessor, so you call the methods on :mod:`ds.traj`:
 
 .. code-block:: python
 
-   ds = ds.traj.gridtime('1H')   # grid dataset to every hour
+   ds = ds.traj.gridtime('1h')   # grid dataset to every hour
    ds.traj.plot()                # plot dataset
 
 
 Generic plotting is available in the standard `Xarray` way, and strives to stay as close to `matplotlib` as possible:
-:meth:`trajan.trajectory_accessor.TrajAccessor.plot`
+:meth:`ds.traj.plot <xarray.Dataset.traj.plot>`
 TrajAn also contains an animation builder mechanism the can be chained:
-:meth:`trajan.trajectory_accessor.TrajAccessor.animate`
+:meth:`ds.traj.animate <xarray.Dataset.traj.animate`
 
 Contents
 --------
