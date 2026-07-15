@@ -55,17 +55,21 @@ Usage
 
 Trajectory datasets from different models and observations tend to have many small differences. TrajAn expects the dataset to be `CF-compliant <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html#trajectory-data>`_. However, the standard does leave some room for interpretation.
 
-Generally, TrajAn supports two types of data layout:
-  1) Ragged: trajectories sampled at different times (unstructured or irregular grid), almost every dataset from real observations.
-  2) Orthogonal: trajectories sampled at uniform (or regular) grid, typical the output from a model.
-
-For Ragged datasets time is a 2D array with dimensions for trajectory and observation/time, while for Orthognal datasets time is a 1D array common for all trajectories.
+TrajAn supports two types of data layout:
+  1) Ragged: trajectories sampled at different times (unstructured or irregular grid), almost every dataset from real observations. Time is a 2D array with dimensions for trajectory and observation/time.
+  2) Orthogonal: trajectories sampled at uniform (or regular) grid, typical the output from a model. Time is a 1D array common for all trajectories.
 
 TrajAn will detect which type of dataset you have and you will have access to the appropriate methods for the type data layout. `Contiguous ragged <https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html#_contiguous_ragged_array_representation_of_trajectories>`_ and `nc_particles <https://noaa-orr-erd.github.io/nc_particles/nc_particle_standard.html>`_ format are internally converted to Ragged format.
 
-While the Ragged format is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefore convert a Ragged dataset to Orthogonal by using :meth:`ds.traj.gridtime <xarray.Dataset.traj.gridtime>`.
+While the Ragged format is more general it often limits analysis that require trajectories to be sampled at the same points. A Ragged dataset can therefore be converted to Orthogonal by using :meth:`ds.traj.gridtime <xarray.Dataset.traj.gridtime>`.
 
-Methods applicable to both types of datasets can be found in: `.traj accessor <https://opendrift.github.io/trajan/api.html#dataset>`_, methods for Orthogonal datasets: :class:`trajan.traj.orthogonal.Orthogonal`, and Ragged: :class:`trajan.traj.ragged.Ragged`. All methods are forwarded to the accessor, so you call the methods on :mod:`ds.traj`:
+Methods applicable to both types of datasets can be found in the `traj accessor <https://opendrift.github.io/trajan/api.html#dataset>`_
+
+Methods for Orthogonal datasets: :class:`trajan.traj.orthogonal.Orthogonal`
+
+Methods for Ragged datasets: :class:`trajan.traj.ragged.Ragged`.
+
+All methods are forwarded to the accessor, so you call the methods on :mod:`ds.traj`:
 
 .. code-block:: python
 
