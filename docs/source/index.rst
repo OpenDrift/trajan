@@ -74,9 +74,9 @@ Methods applicable to both types of datasets can be found in: :class:`trajan.acc
 
 
 Generic plotting is available in the standard `Xarray` way, and strives to stay as close to `matplotlib` as possible:
-:meth:`ds.traj.plot <xarray.Dataset.traj.plot>`
+:class:`ds.traj.plot <xarray.Dataset.traj.plot.Plot>`
 TrajAn also contains an animation builder mechanism the can be chained:
-:meth:`ds.traj.animate <xarray.Dataset.traj.animate`
+:class:`ds.traj.animation <xarray.Dataset.traj.animation.Animation`
 
 Contents
 --------

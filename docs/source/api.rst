@@ -73,6 +73,14 @@ Top-level API
 ..     DataArray.cf.__gt__
 ..     DataArray.cf.isin
 
+Classes
+-------
+.. autoclass:: trajan.traj.orthogonal.Orthogonal
+   :members:
+   :undoc-members:
+.. autoclass:: trajan.traj.ragged.Ragged
+   :members:
+   :undoc-members:
 
 Dataset
 -------

@@ -14,8 +14,8 @@ import xarray as xr
 from typing import Any
 
 from .traj import Traj as Traj
-from .traj1d import Traj1d as Traj1d
-from .traj2d import Traj2d as Traj2d
+from .traj.orthogonal import Orthogonal
+from .traj.ragged import Ragged
 
 class Dataset(xr.Dataset):
     """xarray Dataset with the trajan ``.traj`` accessor typed."""
