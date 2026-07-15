@@ -27,15 +27,16 @@ or
 
 .. code-block:: console
 
+   $ git clone git@github.com:OpenDrift/trajan.git
    $ cd trajan  # move to the location of the trajan root, containing the pyproject.toml file
-   $ pip install .
+   $ pip install -e .
 
 Remember to re-install each time you have done an edit during the development process.
 
 Usage
 -----
 
-*TrajAn* is an `Xarry extension <https://docs.xarray.dev/en/stable/internals/extending-xarray.html>`_. On drifter (or trajectory) datasets you can use the `.traj` accessor on `xarray.Dataset <https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html>`_ s. In order to register the accessor, _trajan_ needs to be imported:
+*TrajAn* is an `Xarry extension <https://docs.xarray.dev/en/stable/internals/extending-xarray.html>`_. On drifter (or trajectory) datasets you can use the `.traj` accessor on `xarray.Dataset <https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html>`_. In order to register the accessor, `trajan` needs to be imported:
 
 .. code-block:: python
 
@@ -58,13 +59,13 @@ Generally, TrajAn supports two types of data layout:
   1) Ragged: trajectories sampled at different times (unstructured or irregular grid), almost every dataset from real observations.
   2) Orthogonal: trajectories sampled at uniform (or regular) grid, typical the output from a model.
 
-For Ragged datasets is time function of trajectory and observation, while for Orthognal datasets time is only a function of observation.
+For Ragged datasets time is a 2D array with dimensions for trajectory and observation/time, while for Orthognal datasets time is a 1D array common for all trajectories.
 
-TrajAn will detect which type of dataset you have and you will have access to the appropriate methods for the type data layout.
+TrajAn will detect which type of dataset you have and you will have access to the appropriate methods for the type data layout. Contiguous ragged and `nc_particles <https://noaa-orr-erd.github.io/nc_particles/nc_particle_standard.html>`_ format ara internally modified to Ragged format.
 
-While the first type (Ragged) is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a Ragged dataset to Orthogonal by using :meth:`trajan.traj.Ragged.gridtime`.
+While the Ragged format is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a Ragged dataset to Orthogonal by using :meth:`trajan.traj.ragged.Ragged.gridtime`.
 
-Methods applicable to both types of datasets can be found in: :mod:`trajan.traj`, methods for Orthogonal datasets: :mod:`trajan.traj.trajOrthogonal`, and Ragged: :mod:`trajan.traj.trajRagged`. All methods are forwarded to the accessor, so you call the methods on `Dataset.traj`:
+Methods applicable to both types of datasets can be found in: :mod:`trajan.traj`, methods for Orthogonal datasets: :mod:`trajan.traj.orthogonal.Orthogonal`, and Ragged: :mod:`trajan.traj.ragged.Ragged`. All methods are forwarded to the accessor, so you call the methods on `ds.traj`:
 
 .. code-block:: python
 
@@ -72,7 +73,10 @@ Methods applicable to both types of datasets can be found in: :mod:`trajan.traj`
    ds.traj.plot()                # plot dataset
 
 
-Generic plotting is available in the standard `Xarray` way, and strives to stay as close to `matplotlib` as possible: (:meth:`trajan.trajectory_accessor.TrajAccessor.plot`) and animation (:meth:`trajan.trajectory_accessor.TrajAccessor.animate`).
+Generic plotting is available in the standard `Xarray` way, and strives to stay as close to `matplotlib` as possible:
+:meth:`trajan.trajectory_accessor.TrajAccessor.plot`
+TrajAn also contains an animation builder mechanism the can be chained:
+:meth:`trajan.trajectory_accessor.TrajAccessor.animate`
 
 Contents
 --------
