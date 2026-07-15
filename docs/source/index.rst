@@ -65,7 +65,7 @@ TrajAn will detect which type of dataset you have and you will have access to th
 
 While the Ragged format is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a Ragged dataset to Orthogonal by using :meth:`xarray.Dataset.traj.gridtime`.
 
-Methods applicable to both types of datasets can be found in: :class:`trajan.accessor.TrajA`, methods for Orthogonal datasets: :class:`trajan.traj.orthogonal.Orthogonal`, and Ragged: :class:`trajan.traj.ragged.Ragged`. All methods are forwarded to the accessor, so you call the methods on :mod:`ds.traj`:
+Methods applicable to both types of datasets can be found in: `.traj accessor <https://opendrift.github.io/trajan/api.html#dataset>`_, methods for Orthogonal datasets: :class:`trajan.traj.orthogonal.Orthogonal`, and Ragged: :class:`trajan.traj.ragged.Ragged`. All methods are forwarded to the accessor, so you call the methods on :mod:`ds.traj`:
 
 .. code-block:: python
 
@@ -74,9 +74,9 @@ Methods applicable to both types of datasets can be found in: :class:`trajan.acc
 
 
 Generic plotting is available in the standard `Xarray` way, and strives to stay as close to `matplotlib` as possible:
-:class:`ds.traj.plot <xarray.Dataset.traj.plot.Plot>`
+:attr:`ds.traj.plot <xarray.Dataset.traj.plot>` (see :class:`trajan.plot.Plot`)
 TrajAn also contains an animation builder mechanism the can be chained:
-:class:`ds.traj.animation <xarray.Dataset.traj.animation.Animation`
+:attr:`ds.traj.animate <xarray.Dataset.traj.animate>` (see :class:`trajan.animation.Animation`)
 
 Contents
 --------
