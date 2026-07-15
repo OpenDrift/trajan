@@ -63,7 +63,7 @@ For Ragged datasets time is a 2D array with dimensions for trajectory and observ
 
 TrajAn will detect which type of dataset you have and you will have access to the appropriate methods for the type data layout. `Contiguous ragged <https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html#_contiguous_ragged_array_representation_of_trajectories>`_ and `nc_particles <https://noaa-orr-erd.github.io/nc_particles/nc_particle_standard.html>`_ format are internally converted to Ragged format.
 
-While the Ragged format is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a Ragged dataset to Orthogonal by using :meth:`xarray.Dataset.traj.gridtime`.
+While the Ragged format is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefore convert a Ragged dataset to Orthogonal by using :meth:`ds.traj.gridtime <xarray.Dataset.traj.gridtime>`.
 
 Methods applicable to both types of datasets can be found in: `.traj accessor <https://opendrift.github.io/trajan/api.html#dataset>`_, methods for Orthogonal datasets: :class:`trajan.traj.orthogonal.Orthogonal`, and Ragged: :class:`trajan.traj.ragged.Ragged`. All methods are forwarded to the accessor, so you call the methods on :mod:`ds.traj`:
 
@@ -74,9 +74,12 @@ Methods applicable to both types of datasets can be found in: `.traj accessor <h
 
 
 Generic plotting is available in the standard `Xarray` way, and strives to stay as close to `matplotlib` as possible:
-:attr:`ds.traj.plot <xarray.Dataset.traj.plot>` (see :class:`trajan.plot.Plot`)
-TrajAn also contains an animation builder mechanism the can be chained:
-:attr:`ds.traj.animate <xarray.Dataset.traj.animate>` (see :class:`trajan.animation.Animation`)
+
+:attr:`ds.traj.plot() <xarray.Dataset.traj.plot>`
+
+TrajAn also contains an `animation builder mechanism <https://opendrift.github.io/trajan/gallery/example_animation.html>`_:
+
+:attr:`ds.traj.animate() <xarray.Dataset.traj.animate>`
 
 Contents
 --------
