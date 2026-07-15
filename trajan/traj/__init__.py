@@ -23,8 +23,6 @@ import cartopy.crs
 from ..plot import Plot
 from ..animation import Animation
 
-from .ragged import Ragged
-from .orthogonal import Orthogonal
 
 if TYPE_CHECKING:
     from .. import Dataset
