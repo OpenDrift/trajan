@@ -63,9 +63,9 @@ For Ragged datasets time is a 2D array with dimensions for trajectory and observ
 
 TrajAn will detect which type of dataset you have and you will have access to the appropriate methods for the type data layout. Contiguous ragged and `nc_particles <https://noaa-orr-erd.github.io/nc_particles/nc_particle_standard.html>`_ format ara internally modified to Ragged format.
 
-While the Ragged format is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a Ragged dataset to Orthogonal by using :meth:`trajan.traj.ragged.Ragged.gridtime`.
+While the Ragged format is more general it often limits analysis that require trajectories to be sampled at the same points, you can therefor convert a Ragged dataset to Orthogonal by using :meth:`xarray.Dataset.traj.gridtime`.
 
-Methods applicable to both types of datasets can be found in: :mod:`trajan.traj`, methods for Orthogonal datasets: :mod:`trajan.traj.orthogonal.Orthogonal`, and Ragged: :mod:`trajan.traj.ragged.Ragged`. All methods are forwarded to the accessor, so you call the methods on `ds.traj`:
+Methods applicable to both types of datasets can be found in: :mod:`xarray.Dataset.traj`, methods for Orthogonal datasets: :mod:`xarray.Dataset.traj.orthogonal.Orthogonal`, and Ragged: :mod:`xarray.Dataset.traj.ragged.Ragged`. All methods are forwarded to the accessor, so you call the methods on :meth:`ds.traj`:
 
 .. code-block:: python
 
