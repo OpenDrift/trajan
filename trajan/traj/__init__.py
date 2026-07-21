@@ -1205,7 +1205,7 @@ class Traj:
 
         >>> skill
         <xarray.DataArray 'Skillscore' (trajectory: 2)> Size: 16B
-        array([1.        , 0.60805799])
+        array([1.        , 0.60902624])
         Coordinates:
           * trajectory  (trajectory) int64 16B 0 1
         Attributes:
