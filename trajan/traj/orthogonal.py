@@ -330,7 +330,7 @@ class Orthogonal(Traj):
         #    {time_varname: np.where(~pd.isna(ds[time_varname].values))[0]})
 
         if ds.sizes[time_varname] > 0:
-            ds = ds.interp({time_varname: times})
+            ds = ds.interp({time_varname: times} kwargs={'fill_value': 'extrapolate'})
         else:
             logger.warning(f"time variable ({time_varname}) has zero size")
 
