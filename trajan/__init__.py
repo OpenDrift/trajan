@@ -174,6 +174,8 @@ def from_dataframe(df: pd.DataFrame,
     df[time] = pd.to_datetime(df[time], format='mixed')
 
     df = df.rename(columns={lat: 'lat', lon: 'lon', time: 'time'})
+    df['lat'] = np.float32(df['lat'])
+    df['lon'] = np.float32(df['lon'])
 
     if name is not None:
         if name in df.columns:
