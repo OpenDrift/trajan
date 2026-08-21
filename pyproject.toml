@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "trajan"
 requires-python = ">=3.8"
-version = "0.12.0"
+dynamic = ["version"]
 readme = "README.md"
 description = "Trajectory analysis package for simulated and observed trajectories"
 authors = [
@@ -33,6 +33,18 @@ trajanshow = "trajan.scripts.trajanshow:main"
 trajaninfo = "trajan.scripts.trajaninfo:main"
 
 [tool.setuptools_scm]
+# Version number construction and guessing based off most recent tag is done
+# with the following config. Going with a simple dev format, instead of the
+# opinonated versioning based off branches (which would be more useful on a
+# Release/Feature managed product.
+# See: https://github.com/pypa/setuptools_scm#version-number-construction.
+local_scheme = 'no-local-version'
+version_scheme = 'no-guess-dev'
+
+[tool.setuptools.dynamic]
+# Config for dynamic versioning from last Git tag. See:
+# https://github.com/pypa/setuptools_scm/
+version = { attr = "setuptools_scm.get_version" }
 
 [tool.pytest.ini_options]
 minversion = "6.0"
