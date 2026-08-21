@@ -101,4 +101,4 @@ jobs:
           ls -l wheels/*
           pip install --upgrade typing-extensions twine==6.0.1 pkginfo setuptools wheel build
           pip list
-          twine upload --skip-existing wheels/*
+          twine upload --verbose --skip-existing wheels/*
