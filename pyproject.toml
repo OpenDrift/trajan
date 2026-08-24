@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "trajan"
 requires-python = ">=3.8"
-dynamic = ["version"]
+version = "0.12.1"
 readme = "README.md"
 description = "Trajectory analysis package for simulated and observed trajectories"
 authors = [
